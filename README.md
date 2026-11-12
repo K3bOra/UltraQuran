@@ -40,11 +40,13 @@ Royal Emerald design: emerald glass, calm gold and a gilded Mushaf frame set wit
 
 <div align="center">
 
-### Ultra Quran V1.0.0
+### Ultra Quran V1.0.1
 
 </div>
 
 <ul dir="rtl">
+<li>رقم الإصدار بقى ظاهر على الشمال في آخر الشريط اللي تحت في كل الشاشات.</li>
+<li>إصلاح أسماء ابتهالات الشيخ نصر الدين طوبار النادرة (83 ابتهال) اللي كانت بتظهر بحروف متلخبطة من أرشيف الإنترنت نفسه؛ بقت مرقّمة من 01 لـ 83، ومعاها السنة الهجرية لو كانت معروفة.</li>
 <li>أول إصدار رسمي للترا قرآن على جيت هب: أمر تثبيت واحد لـ OpenATV وOpenBH وOpenPLi والدريم، بيسطّب Pillow وffmpeg ويعيد تشغيل الواجهة لوحده، وتحديث أونلاين من الزرار الأحمر بحزم متأكد منها.</li>
 <li>نافذة تحديث جديدة (الزرار الأحمر) بنفس تصميم الترا أوديو: ملاحظات الإصدار كاملة، وشريط تحميل، والأخضر «تحديث» والأحمر «رجوع».</li>
 <li>صور جديدة لـ6 مشايخ، منهم الحصري ومحمد رفعت والطبلاوي ومحمود علي البنا.</li>
@@ -54,6 +56,8 @@ Royal Emerald design: emerald glass, calm gold and a gilded Mushaf frame set wit
 <li>شريط مشغّل الفيديو: البارات اللي جنب البوستر بقت آخرها على نفس مستوى البوستر عند حافة الشاشة.</li>
 </ul>
 
+- The plugin version is now shown at the left end of the bottom bar on every screen.
+- Fixed the garbled titles of Sheikh Nasr El-Din Tobar's 83 rare ibtihalat (the names were already corrupted on the Internet Archive); they are now numbered 01 to 83, with the Hijri year where it was known.
 - The first official release of Ultra Quran on GitHub: one install command for OpenATV, OpenBH, OpenPLi and DreamOS that also installs Pillow and ffmpeg and restarts Enigma2, plus verified online updates from the red button.
 - A new online update window (red button) in the style of Ultra Audio: the full release notes, a download bar, and green Update / red Back keys.
 - New photos for six sheikhs, including Al-Husary, Mohamed Refaat, Al-Tablawi and Al-Banna.

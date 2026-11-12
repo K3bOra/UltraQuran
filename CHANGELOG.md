@@ -5,6 +5,15 @@ The current version and download data are in [update.json](https://github.com/K3
 
 الإصدار الحالي وبيانات التحميل موجودين في [update.json](https://github.com/K3bOra/UltraQuran/releases/latest/download/update.json).
 
+## V1.0.1
+### الجديد في V1.0.1
+
+- The plugin version is now shown at the left end of the bottom bar on every screen.<br>رقم الإصدار بقى ظاهر على الشمال في آخر الشريط اللي تحت في كل الشاشات.
+- Fixed the garbled titles of Sheikh Nasr El-Din Tobar's 83 rare ibtihalat (the names were already corrupted on the Internet Archive); they are now numbered 01 to 83, with the Hijri year where it was known.<br>إصلاح أسماء ابتهالات الشيخ نصر الدين طوبار النادرة (83 ابتهال) اللي كانت بتظهر بحروف متلخبطة من أرشيف الإنترنت نفسه؛ بقت مرقّمة من 01 لـ 83، ومعاها السنة الهجرية لو كانت معروفة.
+
+[Release and downloads](https://github.com/K3bOra/UltraQuran/releases/tag/v1.0.1)<br>
+[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraQuran/releases/tag/v1.0.1)
+
 ## V1.0.0
 ### الإصدار الأول V1.0.0
 
