@@ -1,0 +1,18 @@
+<!doctype html><html lang="ar"><head><meta charset="utf-8"><meta name="size" content="1600x150">
+<link rel="stylesheet" href="../base.css"><script src="../ornament.js"></script>
+<style>:root{--w:1600px;--h:150px}body{background:transparent}
+.t{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ar{font:700 44px/1.1 Amiri}.en{font:600 16px/1.2 Cairo;color:#d9e8e0;letter-spacing:.5px;margin-top:3px}</style></head><body>
+<div id="art"></div><div class="t"><div class="ar gilt" id="ar"></div><div class="en" id="en"></div></div>
+<script>
+const q=new URLSearchParams(location.search);
+document.getElementById('ar').textContent=q.get('ar');document.getElementById('en').textContent=q.get('en');
+const W=1600,cy=75,cw=560,ch=104;
+const l0=40,l1=W/2-cw/2-70,r0=W/2+cw/2+70,r1=W-40;
+document.getElementById('art').innerHTML=O.svg(
+ `<path d="M${l0} ${cy-5}H${l1}M${l0} ${cy+5}H${l1}M${r0} ${cy-5}H${r1}M${r0} ${cy+5}H${r1}" stroke="#c99a43" stroke-width="1.4"/>
+  <rect x="${l0+40}" y="${cy-4}" width="${l1-l0-80}" height="8" fill="url(#braid)" opacity=".9"/>
+  <rect x="${r0+40}" y="${cy-4}" width="${r1-r0-80}" height="8" fill="url(#braid)" opacity=".9"/>`+
+ O.rosette(l0,cy,15)+O.rosette(r1,cy,15)+O.rosette(l1+16,cy,11,false)+O.rosette(r0-16,cy,11,false)+
+ O.cartouche(W/2,cy,cw,ch));
+</script></body></html>

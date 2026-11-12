@@ -2,10 +2,12 @@
 
 Public gallery assets for the main README.
 
-Screenshots are taken on the receiver at 1920×1080 and saved as JPEG (quality ~88, under 900 KB each).
-Use exactly these file names; `scripts/check_page.py` fails the release if a referenced screenshot is missing.
+The images here are framed by `tools/page/build.js shots` from raw 1920×1080 captures in `tools/page/shots-raw/`
+(see [tools/page/README.md](../../tools/page/README.md)). Until a capture arrives its slot shows a "coming soon"
+plate, and `scripts/check_page.py` blocks the release.
 
-صور الصفحة الرئيسية للمستودع. الصور من الرسيفر بمقاس 1920×1080 وبصيغة JPEG (أقل من 900 كيلو للصورة)، وبنفس الأسماء دي بالظبط.
+الصور هنا متأطّرة من لقطات الرسيفر الأصلية (1920×1080) بنفس الأسماء دي. لحد ما الصورة الحقيقية توصل، مكانها
+بيبان «الصورة الحقيقية من البلجن قريبًا»، والنشر بيتمنع.
 
 | File | Screen / الشاشة |
 |:---|:---|

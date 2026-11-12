@@ -1,0 +1,40 @@
+<!doctype html><html lang="ar"><head><meta charset="utf-8"><meta name="size" content="1600x820">
+<link rel="stylesheet" href="../base.css"><script src="../ornament.js"></script>
+<style>
+:root{--w:1600px;--h:820px}
+.stars{opacity:.5}
+.glowL{position:absolute;left:60px;top:120px;width:820px;height:600px;background:radial-gradient(ellipse at center,rgba(214,178,94,.22),transparent 62%)}
+.title{position:absolute;right:92px;top:168px;width:600px;text-align:center}
+.kicker{font:600 22px/1 Cairo;color:var(--sage);letter-spacing:.2px}
+.name{font:700 168px/1.12 Amiri;margin-top:6px;filter:drop-shadow(0 4px 18px rgba(0,0,0,.6))}
+.latin{font:400 54px/1 Amiri;color:var(--ivory);letter-spacing:9px;margin-top:-6px}
+.lede{font:400 31px/1.6 Amiri;color:var(--ivory);margin-top:24px}
+.en{direction:ltr;font:400 19px/1.5 Cairo;color:var(--sage);margin-top:8px}
+.tv{position:absolute;left:96px;top:176px;width:812px;height:470px;padding:12px;border-radius:14px;
+  background:linear-gradient(160deg,#3a2f17,#0b0e0c 30%,#14130d 70%,#3a2f17);
+  box-shadow:0 0 0 2px #c99a43,0 0 0 7px #0b2a21,0 0 0 8.5px rgba(214,178,94,.55),0 40px 90px rgba(0,0,0,.75)}
+.tv img{display:block;width:100%;height:100%;border-radius:6px;object-fit:cover}
+.tv::after{content:"";position:absolute;inset:12px;border-radius:6px;background:linear-gradient(118deg,rgba(255,255,255,.13),transparent 26%)}
+.foot{position:absolute;left:400px;top:676px;width:200px;height:18px;border-radius:50%;background:radial-gradient(ellipse,rgba(214,178,94,.35),transparent 70%)}
+.cap{position:absolute;left:0;right:0;text-align:center;font:700 25px/1 Amiri}
+.cap.top{top:20px}.cap.bot{bottom:20px;font:600 19px/1 Cairo;letter-spacing:.4px}
+</style></head><body>
+<div class="stars"></div><div class="vignette"></div><div class="glowL"></div>
+<div class="tv"><img src="../hero-screen.jpg" id="screen"></div><div class="foot"></div>
+<div class="title ar">
+  <div class="name gilt">الترا قرآن</div>
+  <div class="latin">ULTRA QURAN</div>
+  <div id="rule" style="height:40px"></div>
+  <div class="lede">تلاوات ٢٦٠ قارئ، ومصحف مزخرف بالتفسير،<br>وموسوعات العلماء والمكتبة… على شاشة التلفزيون</div>
+  <div class="en">Recitations, an illuminated Mushaf and the great scholars, on your TV.</div>
+</div>
+<div id="art"></div>
+<div class="cap top gilt ar">الموسوعة الإسلامية</div>
+<div class="cap bot" style="color:#f6e2a6">Enigma2 &amp; DreamOS</div>
+<script>
+const W=1600,H=820;
+document.getElementById('art').innerHTML=O.svg(O.frame(W,H,18,13,24)+O.cartouche(W/2,25,300,46)+O.cartouche(W/2,H-25,300,46,'url(#emer)'));
+document.getElementById('rule').innerHTML=`<svg width="600" height="40" viewBox="0 0 600 40">${O.defs()}${O.rule(60,540,20,10)}</svg>`;
+const src=new URLSearchParams(location.search).get('screen'); if(src) document.getElementById('screen').src=src;
+</script>
+</body></html>

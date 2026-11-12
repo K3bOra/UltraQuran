@@ -1,0 +1,23 @@
+<!doctype html><html lang="ar"><head><meta charset="utf-8"><meta name="size" content="1600x420">
+<link rel="stylesheet" href="../base.css"><script src="../ornament.js"></script>
+<style>:root{--w:1600px;--h:420px}.stars{opacity:.3}
+.row{position:absolute;left:80px;right:80px;top:70px;bottom:70px;display:grid;grid-template-columns:1fr 1fr 1fr;direction:rtl}
+.s{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 34px}
+.num{width:96px;height:96px;position:relative}
+.num span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 36px/1 Amiri;color:#f6e2a6;padding-top:2px}
+.h{font:700 33px/1.25 Amiri;margin-top:12px}
+.a{font:400 18.5px/1.55 Cairo;color:var(--ivory);margin-top:4px}
+.e{font:600 14px/1.4 Cairo;color:var(--sage);margin-top:5px;direction:ltr}
+code{font:600 16px Cairo;color:#f6e2a6;background:rgba(0,0,0,.35);border:1px solid rgba(214,178,94,.4);border-radius:6px;padding:1px 8px;direction:ltr;display:inline-block}
+</style></head><body>
+<div class="stars"></div><div class="vignette" style="opacity:.6"></div><div id="art"></div><div class="row" id="row"></div>
+<script>
+const S=[["١","افتح الرسيفر","ادخل على الرسيفر بـ Telnet أو SSH بحساب <code>root</code>","Open Telnet or SSH as root"],
+["٢","الصق أمر التثبيت","الأمر بيختار حزمة جهازك، ويتأكد منها قبل التثبيت","Paste the command; it picks and verifies the right package"],
+["٣","ابدأ الاستماع","أعد تشغيل الواجهة، وافتح الترا قرآن من قايمة البلجنات","Restart the GUI and open Ultra Quran from Plugins"]];
+const ros=`<svg viewBox="-48 -48 96 96" width="96" height="96">${O.defs()}${O.rosette(0,0,44,true)}<circle r="25" fill="url(#ruby)" stroke="url(#gilt)" stroke-width="2.4"/></svg>`;
+document.getElementById('row').innerHTML=S.map(([n,h,a,e])=>`<div class="s"><div class="num">${ros}<span>${n}</span></div><div class="h gilt">${h}</div><div class="a">${a}</div><div class="e">${e}</div></div>`).join('');
+const W=1600,H=420; const c1=80+(W-160)/3, c2=80+2*(W-160)/3;
+document.getElementById('art').innerHTML=O.svg(O.frame(W,H,18,12,22)+
+ `<path d="M${c1} 110V${H-110}M${c2} 110V${H-110}" stroke="#c99a43" stroke-width="1.2" opacity=".55"/>`+O.rosette(c1,H/2,8,false)+O.rosette(c2,H/2,8,false));
+</script></body></html>

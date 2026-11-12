@@ -13,22 +13,29 @@ Settings ← General ← Danger Zone ← Change visibility، لأن:
 - البلجن المتسطب بيقرا `update.json` من فرع main عشان التحديث أونلاين (الزرار الأحمر).
 - خطوة التحقق الأخيرة في الإجراء بتنزّل الملفات من الرابط العام زي أي مستخدم.
 
+## الترقيم
+
+أول إصدار رسمي هو **V1.0.0**: الرقم ده لازم يكون في `Version` جوه الحزمتين وفي `VERSION` في `__init__.py` بتاع البلجن.
+بعد كده 1.0.1 للإصلاحات، و1.1.0 للإضافات.
+
 ## كل إصدار
 
 1. حط النسختين في `packages/` بأسمائهم الأصلية، واشيل القديم:
    `enigma2-plugin-extensions-ultraquran_<الإصدار>_all.ipk` و`…_all.deb`.
 2. حدّث `release-notes.json` بنفس رقم الإصدار، بالإنجليزي في `notes` وبالعربي في `notes_ar`.
    الملاحظات العربية هي اللي بتظهر جوه البلجن في رسالة التحديث.
-3. حدّث قسم «What's new — V…» في `README.md`، وزوّد الإصدار في أول `CHANGELOG.md`.
-4. لو فيه صور جديدة حطها في `docs/screenshots/` بنفس الأسماء المكتوبة في [docs/screenshots/README.md](docs/screenshots/README.md).
-5. جرّب محليًا:
+3. زوّد الإصدار في أول `CHANGELOG.md`.
+4. حدّث سطر `### Ultra Quran V…` تحت «الجديد» في `README.md`.
+5. لو فيه صور جديدة: حط اللقطات الأصلية في `tools/page/shots-raw/` بالأسماء المكتوبة في
+   [docs/screenshots/README.md](docs/screenshots/README.md)، وشغّل `node tools/page/build.js shots`. التفاصيل في [tools/page/README.md](tools/page/README.md).
+6. جرّب محليًا:
 
    ```sh
    python3 -B scripts/prepare_release.py
    python3 -B scripts/check_page.py
    ```
 
-6. من **Actions** اختار **Publish verified Ultra Quran release** وبعدين **Run workflow** على main.
+7. من **Actions** اختار **Publish verified Ultra Quran release** وبعدين **Run workflow** على main.
 
 ## الإجراء بيعمل إيه
 
@@ -46,11 +53,11 @@ Settings ← General ← Danger Zone ← Change visibility، لأن:
 
 ```json
 {
-  "version": "0.9.3",
-  "name": "Ultra Quran 0.9.3",
-  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v0.9.3/enigma2-plugin-extensions-ultraquran_0.9.3_all.ipk",
+  "version": "1.0.0",
+  "name": "Ultra Quran 1.0.0",
+  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.0.0/enigma2-plugin-extensions-ultraquran_1.0.0_all.ipk",
   "ipk_sha256": "…", "ipk_size": 0,
-  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v0.9.3/enigma2-plugin-extensions-ultraquran_0.9.3_all.deb",
+  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.0.0/enigma2-plugin-extensions-ultraquran_1.0.0_all.deb",
   "deb_sha256": "…", "deb_size": 0,
   "notes": ["…"],
   "notes_ar": ["…"]

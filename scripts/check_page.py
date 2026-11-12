@@ -3,6 +3,7 @@
 
 * every local image / file linked from README.md, CHANGELOG.md and docs exists in the repository;
 * README "What's new" and CHANGELOG.md mention the version in release-notes.json;
+* no screenshot is still a "coming soon" plate (hashes in docs/screenshots/PENDING);
 * screenshots are JPEG/PNG and not oversized.
 """
 from pathlib import Path
@@ -32,13 +33,19 @@ for page in PAGES:
 
 version = json.loads((BASE / 'release-notes.json').read_text(encoding='utf-8'))['version']
 readme = (BASE / 'README.md').read_text(encoding='utf-8')
-if "What's new — V%s" % version not in readme:
-    problems.append("README.md: update the \"What's new — V%s\" section" % version)
+if '### Ultra Quran V%s' % version not in readme:
+    problems.append('README.md: set the "### Ultra Quran V%s" line under What\'s new' % version)
 if '## V%s' % version not in (BASE / 'CHANGELOG.md').read_text(encoding='utf-8'):
     problems.append('CHANGELOG.md: add a "## V%s" entry' % version)
 
+import hashlib
+pending_file = BASE / 'docs/screenshots/PENDING'
+pending = set(line.split()[0] for line in pending_file.read_text().splitlines() if line.strip()) if pending_file.exists() else set()
 for shot in sorted((BASE / 'docs/screenshots').iterdir()):
-    if shot.name == 'README.md':
+    if shot.name in ('README.md', 'PENDING'):
+        continue
+    if hashlib.sha256(shot.read_bytes()).hexdigest() in pending:
+        problems.append('screenshot still a "coming soon" plate: ' + shot.name)
         continue
     if shot.suffix.lower() not in ('.jpg', '.png'):
         problems.append('screenshot must be .jpg or .png: ' + shot.name)

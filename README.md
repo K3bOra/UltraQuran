@@ -1,435 +1,259 @@
 <div align="center">
 
-[![Ultra Quran — Islamic encyclopedia for Enigma2 / الموسوعة الإسلامية لأجهزة Enigma2](assets/ultraquran-hero.png)](assets/ultraquran-hero.png)
+<a href="#overview"><img src="assets/ultraquran-hero.jpg" width="100%" alt="الترا قرآن — الموسوعة الإسلامية لأجهزة Enigma2 / Ultra Quran — Islamic encyclopedia for Enigma2" /></a>
 
-### The Quran, the scholars and the library. On your TV.
-### القرآن والعلماء والمكتبة… على شاشة التلفزيون.
+<br />
 
-260 reciters, an illuminated Mushaf with tafsir, thousands of lessons and sermons, radios and videos — built for Enigma2.
+[![Release](https://img.shields.io/github/v/release/K3bOra/UltraQuran?style=for-the-badge&label=release&labelColor=0b2a21&color=c99a43)](https://github.com/K3bOra/UltraQuran/releases/latest)
+[![Enigma2 & DreamOS](https://img.shields.io/badge/Enigma2-DreamOS-c99a43?style=for-the-badge&labelColor=0b2a21)](#compatibility)
+[![Python](https://img.shields.io/badge/python-3.x%20%7C%202.7-c99a43?style=for-the-badge&labelColor=0b2a21)](#compatibility)
+[![Downloads](https://img.shields.io/github/downloads/K3bOra/UltraQuran/total?style=for-the-badge&label=downloads&labelColor=0b2a21&color=7f1d2e)](https://github.com/K3bOra/UltraQuran/releases)
 
-260 قارئ، ومصحف مزخرف بالتفسير، وآلاف الدروس والخطب، وإذاعات وفيديوهات — على أجهزة Enigma2.
+<a href="#install"><img src="assets/button-install.png" width="300" alt="ثبّت الترا قرآن / Install Ultra Quran" /></a>
+<a href="https://github.com/K3bOra/UltraQuran/releases"><img src="assets/button-releases.png" width="300" alt="الإصدارات الرسمية / Official releases" /></a>
 
-[![Release / الإصدار](https://img.shields.io/github/v/release/K3bOra/UltraQuran?style=for-the-badge&label=RELEASE&labelColor=0b2a22&color=d9b45a)](https://github.com/K3bOra/UltraQuran/releases/latest)
-[![Platform / المنصة](https://img.shields.io/badge/PLATFORM-Enigma2%20%2F%20DreamOS-d9b45a?style=for-the-badge&labelColor=0b2a22)](#compatibility)
-[![Python / بايثون](https://img.shields.io/badge/PYTHON-3.x%20%2F%202.7-d9b45a?style=for-the-badge&labelColor=0b2a22)](#compatibility)
-[![Downloads / التنزيلات](https://img.shields.io/github/downloads/K3bOra/UltraQuran/total?style=for-the-badge&label=DOWNLOADS&labelColor=0b2a22&color=3fa37d)](https://github.com/K3bOra/UltraQuran/releases)
+<p dir="rtl"><b>تلاوات ٢٦٠ قارئ، ومصحف مزخرف بالتفسير، وموسوعات العلماء، والمكتبة الإسلامية كاملة… على شاشة التلفزيون.</b></p>
 
-Platform: Enigma2 (OpenATV · OpenBH · OpenPLi) / DreamOS · Python: 3.x / 2.7 · Screens: HD to 4K.
+Recitations by 260 reciters, an illuminated Mushaf with tafsir, the great scholars and a complete Islamic library — on your TV.
 
-المنصة: Enigma2 (OpenATV · OpenBH · OpenPLi) والدريم · بايثون: 3.x و2.7 · الشاشات: من HD لحد 4K.
+<p dir="rtl"><a href="#whats-new">الجديد</a> · <a href="#tour">الصور</a> · <a href="#sections">الأقسام</a> · <a href="#features">المميزات</a> · <a href="#install">التثبيت</a> · <a href="#faq">الأسئلة</a></p>
 
-[![Install Ultra Quran / تثبيت الترا قرآن](assets/action-install.svg)](#install)
-[![Official releases / الإصدارات الرسمية](assets/action-releases.svg)](https://github.com/K3bOra/UltraQuran/releases)
-
-**[التثبيت الرسمي](#install) · [تحميل الإصدارات الرسمية](https://github.com/K3bOra/UltraQuran/releases)**
-
-[What's new](#whats-new) · [Screenshots](#experience) · [Features](#features) · [Compatibility](#compatibility) · [Install](#install) · [FAQ](#faq)
-
-[الجديد](#whats-new) · [الصور](#experience) · [المميزات](#features) · [التوافق](#compatibility) · [التثبيت](#install) · [الأسئلة الشائعة](#faq)
+[What's new](#whats-new) · [Tour](#tour) · [Sections](#sections) · [Features](#features) · [Install](#install) · [FAQ](#faq)
 
 </div>
 
----
-
 <a name="overview"></a>
 
-## Meet Ultra Quran
-### تعرّف على الترا قرآن
+<p align="center"><img src="assets/heading-overview.png" width="100%" alt="تعرّف على الترا قرآن / Meet Ultra Quran" /></p>
 
-A complete Islamic encyclopedia on your receiver: Quran recitations by 260 reciters, a page-by-page illuminated Mushaf with tafsir, the Sheikh Al-Sha'rawi and Sheikh Kishk encyclopedias, Ibtihalat, structured audio lessons in tafsir, hadith, seerah and aqeedah, adhkar, Quran radios, a calendar and a quiz.
+<p dir="rtl">الترا قرآن موسوعة إسلامية كاملة على رسيفر Enigma2. تلاوات ٢٦٠ قارئ بصورهم ورواياتهم، ومصحف مزخرف صفحة بصفحة ومعاه التفسير الميسّر، وموسوعة الشيخ الشعراوي والشيخ كشك، وكبار المبتهلين، وأكتر من ٢٥٠٠ درس صوتي في التفسير والحديث والسيرة والعقيدة، والأذكار بنصها الكامل، و١٧٣ إذاعة… كله بالريموت، في ١٥ قسم.</p>
 
-موسوعة إسلامية كاملة على الرسيفر: تلاوات 260 قارئ، ومصحف مزخرف صفحة بصفحة ومعاه التفسير، وموسوعة الشيخ الشعراوي والشيخ كشك، والابتهالات، ودروس صوتية مرتبة في التفسير والحديث والسيرة والعقيدة، والأذكار، وإذاعات القرآن، والتقويم والمسابقات.
+Ultra Quran is a complete Islamic encyclopedia for Enigma2 receivers: 260 reciters with their portraits and riwayas, a page-by-page illuminated Mushaf with tafsir, the Sheikh Al-Sha'rawi and Sheikh Kishk encyclopedias, the great Ibtihalat masters, 2500+ audio lessons, the full adhkar and 173 radios — fifteen sections, all on the remote.
 
-Royal Emerald design: deep emerald glass, calm gold, one golden focus and straightforward remote navigation in all fifteen sections.
+<p dir="rtl">التصميم «الزمرد الملكي»: زجاج زمردي، ودهبي هادي، وإطار مصحف مذهّب بالياقوت. شغال على كل الشاشات من 720 لحد 4K.</p>
 
-تصميم «الزمرد الملكي»: زجاج زمردي عميق، ودهبي هادي، ومؤشر ذهبي واحد، وتنقل واضح بالريموت في الأقسام الـ 15 كلها.
-
-> Ultra Quran is a player and an index. Recitations, lessons, radios and videos are streamed from their public sources; the plugin does not host them.
->
-> الترا قرآن مشغّل وفهرس. التلاوات والدروس والإذاعات والفيديوهات بتشتغل من مصادرها العامة على الإنترنت، والبلجن مش بيستضيفها.
-
----
+Royal Emerald design: emerald glass, calm gold and a gilded Mushaf frame set with rubies — on every screen from 720p to 4K.
 
 <a name="whats-new"></a>
 
-## What's new — V0.9.3
-### الجديد في V0.9.3
+<p align="center"><img src="assets/heading-whats-new.png" width="100%" alt="الجديد / What's new" /></p>
 
-- Video player bar: the bars beside the poster now end level with the bottom of the poster at the screen edge, with a tighter gap between the upper panels and the lower bars.<br>شريط مشغّل الفيديو: البارات اللي جنب البوستر نزلت وبقت آخرها على نفس مستوى آخر البوستر عند حافة الشاشة، والمسافة بين القطع اللي فوق والبارين اللي تحت بقت أقل.
+<div align="center">
 
-[Full release notes and downloads](https://github.com/K3bOra/UltraQuran/releases/latest) · [Version history](CHANGELOG.md)
+### Ultra Quran V1.0.0
 
-[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraQuran/releases/latest) · [سجل الإصدارات](CHANGELOG.md)
+</div>
 
----
+<p dir="rtl">أول إصدار رسمي على جيت هب: أمر تثبيت واحد لكل الأجهزة، وتحديث أونلاين من الزرار الأحمر بحزم متأكد من بصمتها.</p>
 
-<a name="experience"></a>
+The first official release on GitHub: one install command for every receiver, and online updates from the red button with verified packages.
 
-## The experience
-### جولة داخل البلجن
+[Release notes and downloads](https://github.com/K3bOra/UltraQuran/releases/latest) · [Version history](CHANGELOG.md)
 
-### Home — Fifteen sections, one screen
-#### الرئيسية — 15 قسم في شاشة واحدة
+<a name="tour"></a>
 
-The ayah of the day, continue listening from where you stopped, the Hijri date and every section of the encyclopedia.
+<p align="center"><img src="assets/heading-tour.png" width="100%" alt="جولة داخل البلجن / A tour of the plugin" /></p>
 
-آية اليوم، وكمّل الاستماع من مكان ما وقفت، والتاريخ الهجري، وكل أقسام الموسوعة.
+<p align="center"><a href="docs/screenshots/01_home.jpg"><img src="docs/screenshots/01_home.jpg" width="100%" alt="الرئيسية / Home" /></a></p>
 
-[![Home / الرئيسية](docs/screenshots/01_home.jpg)](docs/screenshots/01_home.jpg)
+<p dir="rtl" align="center"><b>الرئيسية</b> — آية اليوم، وكمّل الاستماع من مكان ما وقفت، والتاريخ الهجري، والأقسام الـ ١٥.</p>
+<p align="center"><b>Home</b> — the ayah of the day, continue listening, the Hijri date and all fifteen sections.</p>
 
-### The Holy Quran — 260 reciters
-#### القرآن الكريم — 260 قارئ
+<table>
+<tr><td align="center" width="50%"><a href="docs/screenshots/02_quran_portal.jpg"><img src="docs/screenshots/02_quran_portal.jpg" alt="بوابة القرآن / Quran portal" /></a><br /><b>بوابة القرآن</b><br /><sub>Quran portal</sub></td><td align="center" width="50%"><a href="docs/screenshots/03_reciters.jpg"><img src="docs/screenshots/03_reciters.jpg" alt="مكتبة القرّاء / Reciter gallery" /></a><br /><b>مكتبة القرّاء</b><br /><sub>Reciter gallery</sub></td></tr>
+<tr><td align="center" width="50%"><a href="docs/screenshots/04_reciter_editions.jpg"><img src="docs/screenshots/04_reciter_editions.jpg" alt="صفحة القارئ / Reciter page" /></a><br /><b>صفحة القارئ والروايات</b><br /><sub>Reciter page</sub></td><td align="center" width="50%"><a href="docs/screenshots/05_surah_player.jpg"><img src="docs/screenshots/05_surah_player.jpg" alt="السور والمشغّل / Surahs and player" /></a><br /><b>السور والمشغّل</b><br /><sub>Surahs and player</sub></td></tr>
+</table>
 
-Great Egyptian reciters first, then every other reciter, with real portraits, biographies, riwayas and verified videos.
+<p align="center"><a href="docs/screenshots/06_mushaf.jpg"><img src="docs/screenshots/06_mushaf.jpg" width="100%" alt="المصحف الشريف / The Mushaf" /></a></p>
 
-كبار القراء المصريين الأول، وبعدهم باقي القراء، بصورهم الحقيقية وسِيَرهم ورواياتهم وفيديوهاتهم الموثّقة.
+<p dir="rtl" align="center"><b>المصحف الشريف</b> — ٦٠٤ صفحة محفوظة على الهارد في إطار الزمرد الملكي، وجنب كل صفحة التفسير الميسّر.</p>
+<p align="center"><b>The Mushaf</b> — 604 pages kept on your hard drive in the Royal Emerald frame, with the Al-Muyassar tafsir of every page.</p>
 
-| Quran Portal<br>بوابة القرآن | Reciter Gallery<br>مكتبة القرّاء |
-|:---:|:---:|
-| [![Quran portal / بوابة القرآن](docs/screenshots/02_quran_portal.jpg)](docs/screenshots/02_quran_portal.jpg) | [![Reciter gallery / مكتبة القرّاء](docs/screenshots/03_reciters.jpg)](docs/screenshots/03_reciters.jpg) |
-| **Reciter Page**<br>صفحة القارئ | **Surahs & Player**<br>السور والمشغّل |
-| [![Reciter page / صفحة القارئ](docs/screenshots/04_reciter_editions.jpg)](docs/screenshots/04_reciter_editions.jpg) | [![Surah player / مشغّل السور](docs/screenshots/05_surah_player.jpg)](docs/screenshots/05_surah_player.jpg) |
-
-### The Mushaf — Royal Emerald frame
-#### المصحف الشريف — إطار الزمرد الملكي
-
-All 604 pages, stored permanently on the hard drive, with the Al-Muyassar tafsir of every page beside it.
-
-صفحات المصحف الـ 604 محفوظة على الهارد، وجنب كل صفحة التفسير الميسّر بتاعها.
-
-[![Mushaf / المصحف الشريف](docs/screenshots/06_mushaf.jpg)](docs/screenshots/06_mushaf.jpg)
-
-### The great scholars
-#### موسوعات كبار العلماء
-
-Sheikh Al-Sha'rawi (1727 recordings and 1111 tafsir episodes by surah), Sheikh Kishk (254 sermons) and fourteen masters of Ibtihalat.
-
-الشيخ الشعراوي (1727 تسجيل و1111 حلقة تفسير مرئي مقسّمة بالسور)، والشيخ كشك (254 خطبة)، و14 من كبار المبتهلين.
-
-| Sheikh Al-Sha'rawi<br>الشيخ الشعراوي | Video Player<br>مشغّل الفيديو |
-|:---:|:---:|
-| [![Al-Sha'rawi / الشيخ الشعراوي](docs/screenshots/07_shaarawy.jpg)](docs/screenshots/07_shaarawy.jpg) | [![Video player / مشغّل الفيديو](docs/screenshots/10_video_player.jpg)](docs/screenshots/10_video_player.jpg) |
+<table>
+<tr><td align="center" width="50%"><a href="docs/screenshots/07_shaarawy.jpg"><img src="docs/screenshots/07_shaarawy.jpg" alt="الشيخ الشعراوي / Sheikh Al-Sha'rawi" /></a><br /><b>موسوعة الشيخ الشعراوي</b><br /><sub>Sheikh Al-Sha'rawi</sub></td><td align="center" width="50%"><a href="docs/screenshots/10_video_player.jpg"><img src="docs/screenshots/10_video_player.jpg" alt="مشغّل الفيديو / Video player" /></a><br /><b>مشغّل الفيديو</b><br /><sub>Video player</sub></td></tr>
+<tr><td align="center" width="50%"><a href="docs/screenshots/08_kishk.jpg"><img src="docs/screenshots/08_kishk.jpg" alt="الشيخ كشك / Sheikh Kishk" /></a><br /><b>موسوعة الشيخ كشك</b><br /><sub>Sheikh Kishk</sub></td><td align="center" width="50%"><a href="docs/screenshots/09_mubtahileen.jpg"><img src="docs/screenshots/09_mubtahileen.jpg" alt="المبتهلين / Ibtihalat" /></a><br /><b>المبتهلين والابتهالات</b><br /><sub>Mubtahileen & Ibtihalat</sub></td></tr>
+<tr><td align="center" width="50%"><a href="docs/screenshots/11_biography.jpg"><img src="docs/screenshots/11_biography.jpg" alt="السيرة الذاتية / Biography" /></a><br /><b>السيرة الذاتية الكاملة</b><br /><sub>Full biography</sub></td><td align="center" width="50%"><a href="docs/screenshots/12_library.jpg"><img src="docs/screenshots/12_library.jpg" alt="المكتبة الصوتية / Audio library" /></a><br /><b>المكتبة الصوتية</b><br /><sub>Audio library</sub></td></tr>
+</table>
 
 <details>
-<summary><b>More — Kishk, Ibtihalat & biographies / المزيد — كشك والابتهالات والسِّيَر</b></summary>
+<summary><b>صور أكتر — الأذكار والإذاعات والتقويم والمسابقات والتحديث / More screens</b></summary>
 
-**Sheikh Kishk**<br>الشيخ كشك
+<br />
 
-[![Sheikh Kishk / الشيخ كشك](docs/screenshots/08_kishk.jpg)](docs/screenshots/08_kishk.jpg)
+<table>
+<tr><td align="center" width="50%"><a href="docs/screenshots/13_adhkar.jpg"><img src="docs/screenshots/13_adhkar.jpg" alt="الأذكار والرقية / Adhkar" /></a><br /><b>الأذكار والرقية</b><br /><sub>Adhkar & Ruqyah</sub></td><td align="center" width="50%"><a href="docs/screenshots/14_radio.jpg"><img src="docs/screenshots/14_radio.jpg" alt="الإذاعات / Radios" /></a><br /><b>إذاعات القرآن</b><br /><sub>Quran radios</sub></td></tr>
+<tr><td align="center" width="50%"><a href="docs/screenshots/15_calendar.jpg"><img src="docs/screenshots/15_calendar.jpg" alt="التقويم / Calendar" /></a><br /><b>التقويم الإسلامي</b><br /><sub>Islamic calendar</sub></td><td align="center" width="50%"><a href="docs/screenshots/16_quiz.jpg"><img src="docs/screenshots/16_quiz.jpg" alt="المسابقات / Quiz" /></a><br /><b>المسابقات</b><br /><sub>Quiz</sub></td></tr>
+</table>
 
-**Mubtahileen & Ibtihalat**<br>المبتهلين والابتهالات
-
-[![Ibtihalat / الابتهالات](docs/screenshots/09_mubtahileen.jpg)](docs/screenshots/09_mubtahileen.jpg)
-
-**Full biography (yellow / INFO)**<br>السيرة الذاتية الكاملة (الأصفر أو INFO)
-
-[![Biography / السيرة الذاتية](docs/screenshots/11_biography.jpg)](docs/screenshots/11_biography.jpg)
+<p align="center"><a href="docs/screenshots/17_update.jpg"><img src="docs/screenshots/17_update.jpg" width="70%" alt="التحديث أونلاين / Online update" /></a><br /><b>التحديث أونلاين</b> · Online update</p>
 
 </details>
 
-### The library — Lessons, adhkar and radios
-#### المكتبة — الدروس والأذكار والإذاعات
+<a name="sections"></a>
 
-Tafsir, hadith, sunnah, seerah, the prophets, aqeedah and fiqh in folders; the morning and evening adhkar with their full text; 173 Quran radios.
+<p align="center"><img src="assets/heading-sections.png" width="100%" alt="أقسام الموسوعة / The fifteen sections" /></p>
 
-التفسير والحديث والسنة والسيرة وقصص الأنبياء والعقيدة والفقه في فولدرات، وأذكار الصباح والمساء بنصها الكامل، و173 إذاعة قرآنية.
-
-| Audio Library<br>المكتبة الصوتية | Adhkar & Ruqyah<br>الأذكار والرقية |
-|:---:|:---:|
-| [![Library / المكتبة الصوتية](docs/screenshots/12_library.jpg)](docs/screenshots/12_library.jpg) | [![Adhkar / الأذكار والرقية](docs/screenshots/13_adhkar.jpg)](docs/screenshots/13_adhkar.jpg) |
-
-<details>
-<summary><b>More — Radios, calendar, quiz & updates / المزيد — الإذاعات والتقويم والمسابقات والتحديث</b></summary>
-
-| Quran Radios<br>إذاعات القرآن | Islamic Calendar<br>التقويم الإسلامي |
-|:---:|:---:|
-| [![Radios / الإذاعات](docs/screenshots/14_radio.jpg)](docs/screenshots/14_radio.jpg) | [![Calendar / التقويم](docs/screenshots/15_calendar.jpg)](docs/screenshots/15_calendar.jpg) |
-| **Quiz**<br>المسابقات | **Online Update**<br>التحديث أونلاين |
-| [![Quiz / المسابقات](docs/screenshots/16_quiz.jpg)](docs/screenshots/16_quiz.jpg) | [![Online update / التحديث أونلاين](docs/screenshots/17_update.jpg)](docs/screenshots/17_update.jpg) |
-
-</details>
-
----
+<p align="center"><img src="assets/sections-map.jpg" width="100%" alt="الأقسام الـ 15: القرآن الكريم، الشيخ الشعراوي، التفسير، الحديث، السنة، السيرة، قصص الأنبياء، العقيدة والفقه، الأذكار، الأسماء الحسنى، الإذاعات، المكتبة، الأطفال، التقويم، المسابقات" /></p>
 
 <a name="features"></a>
 
-## A complete Islamic platform
-### منصة إسلامية متكاملة
+<p align="center"><img src="assets/heading-features.png" width="100%" alt="المميزات / Features" /></p>
 
-[![Ultra Quran feature cards / كروت المميزات](assets/premium-features-quran.svg)](assets/premium-features-quran.svg)
-
-<details>
-<summary><b>Full feature descriptions<br>تفاصيل المميزات كاملة</b></summary>
-
-**Quran Recitations**
-
-**تلاوات القرآن**
-
-260 reciters with 256 bundled portraits, several riwayas and sources per reciter, and 2392 verified videos for 101 sheikhs.
-
-260 قارئ ومعاهم 256 صورة جاهزة جوه البلجن، وأكتر من رواية ومصدر للقارئ، و2392 فيديو موثّق لـ 101 شيخ.
-
-**Illuminated Mushaf**
-
-**المصحف المزخرف**
-
-604 pages stored permanently on the hard drive (no USB needed), the Royal Emerald frame and the Al-Muyassar tafsir for every page.
-
-604 صفحة محفوظة على الهارد من غير فلاشة، وإطار الزمرد الملكي، والتفسير الميسّر لكل صفحة.
-
-**Scholar Encyclopedias**
-
-**موسوعات العلماء**
-
-Sheikh Al-Sha'rawi in two folders (audio and video), Sheikh Abdul Hamid Kishk (254 sermons and verified video sermons) and 14 masters of Ibtihalat with 5900+ tracks.
-
-الشيخ الشعراوي في فولدرين (صوتيات وفيديو)، والشيخ عبد الحميد كشك (254 خطبة وخطب مرئية موثّقة)، و14 من كبار المبتهلين بأكتر من 5900 تسجيل.
-
-**Structured Lessons**
-
-**دروس مرتبة**
-
-2500+ audio lessons: tafsir, hadith, shama'il, seerah, the prophets, aqeedah and fiqh, each series in its own folder.
-
-أكتر من 2500 درس صوتي: التفسير والحديث والشمائل والسيرة وقصص الأنبياء والعقيدة والفقه، وكل سلسلة في فولدر لوحدها.
-
-**Adhkar, Ruqyah & Names of Allah**
-
-**الأذكار والرقية والأسماء الحسنى**
-
-Morning and evening adhkar from Hisn Al-Muslim with their full text, the Ruqyah, the interactive tasbeeh and the 99 Names with their meanings.
-
-أذكار الصباح والمساء من حصن المسلم بنصها الكامل، والرقية الشرعية، والمسبحة، وأسماء الله الحسنى الـ 99 ومعانيها.
-
-**Radios**
-
-**الإذاعات**
-
-173 live Quran and Islamic radios.
-
-173 إذاعة قرآنية وإسلامية مباشرة.
-
-**Resume & Downloads**
-
-**استكمال وتحميل**
-
-Every recitation, sermon, lesson or video resumes where you stopped; download a surah, a whole reciter folder or a video to the hard drive for offline listening.
-
-أي تلاوة أو خطبة أو درس أو فيديو بيكمّل من مكان ما وقفت، وتقدر تحمّل سورة أو فولدر قارئ كامل أو فيديو على الهارد وتسمعه من غير نت.
-
-**Every Screen**
-
-**كل الشاشات**
-
-720, 1280, 1920, 2560 (WQHD) and 3840 (4K) layouts, front-panel display support, and a fast start on every image.
-
-مقاسات 720 و1280 و1920 و2560 (WQHD) و3840 (4K)، ودعم شاشة الرسيفر الأمامية، وفتح سريع على كل الصور.
-
-**Online Updates**
-
-**التحديث أونلاين**
-
-The red button on the home screen checks this repository, verifies the package's SHA-256 and installs the right package for your image.
-
-الزرار الأحمر في الرئيسية بيدوّر على تحديث في المستودع ده، ويتأكد من بصمة SHA-256، ويسطّب الحزمة المناسبة لصورة الجهاز.
-
-</details>
+<p align="center"><img src="assets/features.jpg" width="100%" alt="تلاوات القرآن، المصحف المزخرف، موسوعات العلماء، دروس مرتبة، الأذكار والرقية، إذاعات مباشرة، كمّل وحمّل، كل الشاشات" /></p>
 
 <details>
-<summary><b>Remote control / أزرار الريموت</b></summary>
+<summary><b>تفاصيل المميزات كاملة / Full feature details</b></summary>
 
-| Key<br>الزرار | Action<br>الوظيفة |
+<br />
+
+| العربية | English |
 |:---|:---|
-| Arrows<br>الأسهم | Navigate<br>التنقل |
-| OK | Open / play<br>فتح أو تشغيل |
-| Red · Green · Yellow · Blue<br>الأحمر · الأخضر · الأصفر · الأزرق | As shown in the bar at the bottom of each screen<br>حسب الشريط اللي تحت في كل شاشة |
-| Yellow / INFO<br>الأصفر أو INFO | Full biography<br>السيرة الذاتية الكاملة |
-| 1 / 3 · 4 / 6 · 7 / 9 | Back / forward 10 s · 1 min · 5 min<br>ترجيع وتقديم 10 ثواني · دقيقة · 5 دقايق |
-| 5 · 2 / 8 | Pause · previous / next<br>إيقاف مؤقت · السابق والتالي |
+| <p dir="rtl"><b>تلاوات القرآن</b><br>٢٦٠ قارئ، كبار المصريين الأول، ومعاهم ٢٥٦ صورة حقيقية جوه البلجن، وأكتر من رواية ومصدر للقارئ، و٢٣٩٢ فيديو موثّق لـ ١٠١ شيخ.</p> | **Quran recitations**<br>260 reciters, the great Egyptian reciters first, 256 bundled portraits, several riwayas and sources per reciter, and 2392 verified videos for 101 sheikhs. |
+| <p dir="rtl"><b>المصحف المزخرف</b><br>٦٠٤ صفحة محفوظة على الهارد من غير فلاشة، في إطار الزمرد الملكي، ومع كل صفحة التفسير الميسّر.</p> | **Illuminated Mushaf**<br>604 pages stored permanently on the hard drive, in the Royal Emerald frame, with the Al-Muyassar tafsir for every page. |
+| <p dir="rtl"><b>موسوعات العلماء</b><br>الشعراوي في فولدرين: ١٧٢٧ تسجيل صوتي و١١١١ حلقة تفسير مرئي مقسّمة بالسور. والشيخ كشك ٢٥٤ خطبة، و١٤ من كبار المبتهلين بأكتر من ٥٩٠٠ تسجيل.</p> | **Scholar encyclopedias**<br>Al-Sha'rawi in two folders: 1727 audio recordings and 1111 tafsir episodes by surah. Sheikh Kishk's 254 sermons, and 14 Ibtihalat masters with 5900+ tracks. |
+| <p dir="rtl"><b>دروس مرتبة</b><br>أكتر من ٢٥٠٠ درس: التفسير والحديث والشمائل والسيرة وقصص الأنبياء والعقيدة والفقه، كل سلسلة في فولدر لوحدها.</p> | **Structured lessons**<br>2500+ lessons in tafsir, hadith, shama'il, seerah, the prophets, aqeedah and fiqh, each series in its own folder. |
+| <p dir="rtl"><b>الأذكار والأسماء الحسنى</b><br>أذكار الصباح والمساء من حصن المسلم بنصها الكامل، والرقية الشرعية، والمسبحة، والأسماء الحسنى الـ ٩٩ ومعانيها.</p> | **Adhkar and the 99 Names**<br>Morning and evening adhkar from Hisn Al-Muslim in full, the Ruqyah, a tasbeeh and the 99 Names with their meanings. |
+| <p dir="rtl"><b>كمّل وحمّل</b><br>أي تلاوة أو خطبة أو درس أو فيديو بيكمّل من مكان ما وقفت. وتقدر تحمّل سورة أو فولدر قارئ كامل أو فيديو على الهارد.</p> | **Resume and download**<br>Every recitation, sermon, lesson or video resumes where you stopped. Download a surah, a whole reciter or a video to your hard drive. |
+| <p dir="rtl"><b>كل الشاشات</b><br>720 و1280 و1920 و2560 و3840، وشاشة الرسيفر الأمامية بتعرض اللي شغال.</p> | **Every screen**<br>720, 1280, 1920, 2560 and 3840 layouts, and the front panel shows what is playing. |
+| <p dir="rtl"><b>التحديث أونلاين</b><br>الزرار الأحمر في الرئيسية بيدوّر على إصدار جديد هنا، ويتأكد من بصمة الحزمة قبل ما يسطّبها.</p> | **Online updates**<br>The red button on the home screen checks this repository and verifies the package before installing it. |
 
 </details>
 
----
+<details>
+<summary><b>أزرار الريموت / Remote control</b></summary>
+
+<br />
+
+| الزرار · Key | الوظيفة · Action |
+|:---:|:---|
+| الأسهم · Arrows | التنقل · Navigate |
+| OK | فتح أو تشغيل · Open or play |
+| الأحمر · الأخضر · الأصفر · الأزرق | حسب الشريط اللي تحت في كل شاشة · As shown at the bottom of each screen |
+| الأصفر أو INFO | السيرة الذاتية الكاملة · Full biography |
+| 1 / 3 · 4 / 6 · 7 / 9 | ترجيع وتقديم ١٠ ثواني · دقيقة · ٥ دقايق · Back / forward 10 s, 1 min, 5 min |
+| 5 · 2 / 8 | إيقاف مؤقت · السابق والتالي · Pause, previous / next |
+
+</details>
 
 <a name="compatibility"></a>
 
-## Compatibility
-### التوافق والمتطلبات
+<p align="center"><img src="assets/heading-compatibility.png" width="100%" alt="التوافق والمتطلبات / Compatibility" /></p>
 
-| Requirement<br>المتطلب | Details<br>التفاصيل |
+| المتطلب · Requirement | التفاصيل · Details |
 |:---|:---|
-| Platform<br>المنصة | Enigma2: OpenATV · OpenBH · OpenPLi · DreamOS |
-| Python<br>بايثون | Open: 3.x · DreamOS: 2.7 |
-| Package manager<br>مدير الحزم | Open: `opkg` / IPK · DreamOS: `dpkg` / DEB |
-| Screen<br>الشاشة | 720 · 1280 · 1920 · 2560 · 3840 |
-| Storage<br>التخزين | About 32 MB in flash; a hard drive or USB is recommended for the Mushaf, portraits and downloads<br>حوالي 32 ميجا على الفلاش، ويُفضّل هارد أو فلاشة للمصحف والصور والتحميلات |
-| Recommended<br>يُفضّل | `python3-pil` (Pillow) · `ffmpeg` |
-| Access<br>الوصول | Root via Telnet / SSH<br>حساب root عبر Telnet أو SSH |
+| المنصة · Platform | OpenATV · OpenBH · OpenPLi · DreamOS |
+| بايثون · Python | Open: 3.x · DreamOS: 2.7 |
+| الحزمة · Package | Open: `opkg` / IPK · DreamOS: `dpkg` / DEB |
+| الشاشة · Screen | 720 · 1280 · 1920 · 2560 · 3840 |
+| المساحة · Storage | <span dir="rtl">حوالي ٣٢ ميجا على الفلاش، ويُفضّل هارد أو فلاشة للمصحف والصور والتحميلات</span><br>About 32 MB in flash; a hard drive or USB stick is recommended |
+| يُفضّل · Recommended | `python3-pil` (Pillow) · `ffmpeg` |
 
-These are the published package requirements, not confirmation that every receiver and image has been tested.
+<p dir="rtl">دي متطلبات الحزمة المنشورة، ومش معناها إن كل جهاز وكل صورة اتجربوا عمليًا.</p>
 
-دي متطلبات الحزمة المنشورة، وليست تأكيدًا إن كل جهاز وصورة تشغيل تم اختبارهم عمليًا.
-
----
+These are the published package requirements, not a promise that every receiver and image has been tested.
 
 <a name="install"></a>
 
-## Official installation
-### التثبيت الرسمي
+<p align="center"><img src="assets/heading-install.png" width="100%" alt="التثبيت / Installation" /></p>
 
-Open Telnet or SSH on a compatible receiver as **root**, then run:
-
-افتح Telnet أو SSH على رسيفر متوافق بحساب **root**، ثم نفّذ:
+<p align="center"><img src="assets/install-steps.jpg" width="100%" alt="١ افتح الرسيفر بحساب root  ٢ الصق أمر التثبيت  ٣ أعد تشغيل الواجهة وافتح البلجن" /></p>
 
 ```sh
 wget -qO- https://raw.githubusercontent.com/K3bOra/UltraQuran/main/install.sh | /bin/sh
 ```
 
-The same command automatically selects the IPK for OpenATV / OpenBH / OpenPLi or the DEB for DreamOS.
+<p dir="rtl">نفس الأمر بيختار IPK لـ OpenATV وOpenBH وOpenPLi، أو DEB للدريم. وبيقرا أحدث إصدار رسمي، ويتأكد من حجم الحزمة وبصمة SHA-256 واسمها ورقمها قبل ما يسطّبها.</p>
 
-نفس الأمر يختار تلقائيًا IPK لـ OpenATV / OpenBH / OpenPLi أو DEB للدريم.
+The same command picks the IPK for OpenATV, OpenBH and OpenPLi or the DEB for DreamOS, reads the latest official release and checks the package size, SHA-256, name and version before installing.
 
-The installer reads the latest official release and checks the package size, SHA-256, name, version and architecture before installing with `opkg` or `dpkg`. Then restart the Enigma2 GUI and open **Plugins → Ultra Quran**.
+> [!TIP]
+> <span dir="rtl">البلجن متسطب عندك؟ دوس <b>الزرار الأحمر</b> في الرئيسية وهيحدّث نفسه.</span><br>
+> Already installed? Press the **red button** on the home screen to update.
 
-المُثبّت يقرأ أحدث إصدار رسمي، ويتحقق من حجم الحزمة وبصمة SHA-256 واسمها ورقمها ومعماريتها قبل التثبيت بـ `opkg` أو `dpkg`. بعدها أعد تشغيل واجهة Enigma2 وافتح **البلجنات ← Ultra Quran**.
-
-[Review the installer](install.sh) · [Download the latest packages](https://github.com/K3bOra/UltraQuran/releases/latest)
-
-[راجع سكربت التثبيت](install.sh) · [حمّل أحدث الحزم](https://github.com/K3bOra/UltraQuran/releases/latest)
-
-> Already installed? Press the **red button** on the plugin's home screen to update online.
->
-> البلجن متسطب عندك؟ دوس **الزرار الأحمر** في الرئيسية للتحديث أونلاين.
-
----
+[Review the installer](install.sh) · [Download the packages](https://github.com/K3bOra/UltraQuran/releases/latest)
 
 <a name="faq"></a>
 
-## Troubleshooting & FAQ
-### حل المشاكل والأسئلة الشائعة
+<p align="center"><img src="assets/heading-faq.png" width="100%" alt="أسئلة شائعة / Questions & troubleshooting" /></p>
 
 <details>
-<summary><b>Installation failed — what should I check?<br>التثبيت فشل — أراجع إيه؟</b></summary>
+<summary><b>التثبيت فشل، أراجع إيه؟ · Installation failed</b></summary>
 
-Check that you are using **root**, the internet connection works and there is about 70 MB free in `/tmp` and 32 MB in flash. Keep the full error output when reporting a problem.
+<p dir="rtl">تأكد إنك داخل بحساب <b>root</b>، والإنترنت شغال، وفيه حوالي ٧٠ ميجا فاضية في <code dir="ltr">/tmp</code> و٣٢ ميجا على الفلاش. واحتفظ برسالة الخطأ كاملة لو هتبلغ عن المشكلة.</p>
 
-تأكد إنك داخل بحساب **root**، والإنترنت شغال، وفيه حوالي 70 ميجا فاضية في `/tmp` و32 ميجا على الفلاش. احتفظ برسالة الخطأ كاملة لو هتبلغ عن المشكلة.
+Make sure you are **root**, the connection works, and there is about 70 MB free in `/tmp` and 32 MB in flash. Keep the full error output if you report the problem.
 
 </details>
 
 <details>
-<summary><b>A recitation or video does not play.<br>تلاوة أو فيديو مش بيشتغل.</b></summary>
+<summary><b>تلاوة أو فيديو مش بيشتغل · A recitation or video won't play</b></summary>
 
-Content is streamed from public sources and a source can be busy or offline. Try another riwaya or source of the same reciter. You can pick the first player yourself by writing `exteplayer3`, `dreamos` or `gstreamer` in `/etc/enigma2/ultra-quran-player.txt`.
+<p dir="rtl">المحتوى بيشتغل من مصادر عامة، وممكن مصدر يكون واقع أو عليه ضغط، فجرّب رواية أو مصدر تاني لنفس القارئ. وتقدر تختار المشغّل الأول بنفسك: اكتب <code dir="ltr">exteplayer3</code> أو <code dir="ltr">dreamos</code> أو <code dir="ltr">gstreamer</code> في ملف <code dir="ltr">/etc/enigma2/ultra-quran-player.txt</code>.</p>
 
-المحتوى بيشتغل من مصادر عامة، وممكن مصدر يكون واقع أو عليه ضغط. جرّب رواية أو مصدر تاني لنفس القارئ. وتقدر تختار المشغّل الأول بنفسك لما تكتب `exteplayer3` أو `dreamos` أو `gstreamer` في ملف `/etc/enigma2/ultra-quran-player.txt`.
-
-</details>
-
-<details>
-<summary><b>Where are the Mushaf, portraits and downloads saved?<br>المصحف والصور والتحميلات بتتحفظ فين؟</b></summary>
-
-In an `UltraQuran` folder on the hard drive or USB (`/media/…/UltraQuran`). Without one, a small cache is kept on the receiver.
-
-في فولدر `UltraQuran` على الهارد أو الفلاشة (`/media/…/UltraQuran`). من غيرهم بيتحفظ كاش صغير على الرسيفر.
+Content is streamed from public sources, so a source can be busy or offline; try another riwaya or source of the same reciter. To choose the first player yourself, write `exteplayer3`, `dreamos` or `gstreamer` in `/etc/enigma2/ultra-quran-player.txt`.
 
 </details>
 
 <details>
-<summary><b>Will an update remove my favorites or resume points?<br>هل التحديث هيمسح المفضلة أو أماكن الاستكمال؟</b></summary>
+<summary><b>المصحف والصور والتحميلات بتتحفظ فين؟ · Where are files saved?</b></summary>
 
-No. Resume points (`/etc/enigma2/ultra-quran-resume.json`), downloads and biographies are kept across updates.
+<p dir="rtl">في فولدر <code dir="ltr">UltraQuran</code> على الهارد أو الفلاشة (<code dir="ltr">/media/…/UltraQuran</code>). ومن غيرهم بيتحفظ كاش صغير على الرسيفر.</p>
 
-لأ. أماكن الاستكمال (`/etc/enigma2/ultra-quran-resume.json`) والتحميلات والسِّيَر بتفضل زي ما هي بعد التحديث.
+In an `UltraQuran` folder on the hard drive or USB stick (`/media/…/UltraQuran`). Without one, a small cache is kept on the receiver.
 
 </details>
 
 <details>
-<summary><b>How do I report a problem?<br>أبلغ عن مشكلة إزاي؟</b></summary>
+<summary><b>التحديث هيمسح أماكن الاستكمال؟ · Will an update reset my progress?</b></summary>
 
-[Open an issue](https://github.com/K3bOra/UltraQuran/issues) with the receiver model, image, Python version, plugin version, steps to reproduce and the end of `/tmp/ultra-quran.log`.
+<p dir="rtl">لأ. أماكن الاستكمال (<code dir="ltr">/etc/enigma2/ultra-quran-resume.json</code>) والتحميلات والسِّيَر بتفضل زي ما هي.</p>
 
-[افتح بلاغ مشكلة](https://github.com/K3bOra/UltraQuran/issues)، واكتب موديل الرسيفر واسم الصورة وإصدار بايثون والبلجن وخطوات ظهور المشكلة وآخر سطور ملف `/tmp/ultra-quran.log`.
+No. Resume points (`/etc/enigma2/ultra-quran-resume.json`), downloads and biographies are kept.
 
 </details>
 
----
+<details>
+<summary><b>أبلغ عن مشكلة إزاي؟ · How do I report a problem?</b></summary>
 
-<a name="ultra-family"></a>
+<p dir="rtl"><a href="https://github.com/K3bOra/UltraQuran/issues">افتح بلاغ مشكلة</a>، واكتب موديل الرسيفر واسم الصورة وإصدار بايثون والبلجن، والخطوات اللي بتطلّع المشكلة، وآخر سطور ملف <code dir="ltr">/tmp/ultra-quran.log</code>.</p>
 
-## The Ultra family
-### عيلة Ultra
+[Open an issue](https://github.com/K3bOra/UltraQuran/issues) with the receiver model, image, Python and plugin versions, the steps that cause the problem and the end of `/tmp/ultra-quran.log`.
 
-Three plugins. One family. The Quran and the scholars with Ultra Quran, your media with Ultra Stalker, and your commentary and timing with Ultra Audio.
+</details>
 
-تلات بلجنات من عيلة واحدة: القرآن والعلماء مع الترا قرآن، ومحتواك مع الترا ستالكر، والصوتية والتوقيت مع الترا أوديو.
+<a name="family"></a>
+
+<p align="center"><img src="assets/heading-family.png" width="100%" alt="عيلة Ultra / The Ultra family" /></p>
 
 <p align="center">
-<a href="https://github.com/K3bOra/UltraQuran"><img src="assets/ultra-family-quran.svg" width="100%" alt="Ultra Quran — Quran, Mushaf, scholars and library / القرآن والمصحف والعلماء والمكتبة" /></a>
+<a href="https://github.com/K3bOra/UltraQuran"><img src="assets/family-quran.png" width="32%" alt="Ultra Quran — الترا قرآن" /></a>
+<a href="https://github.com/K3bOra/UltraStalker"><img src="assets/family-stalker.png" width="32%" alt="Ultra Stalker — الترا ستالكر" /></a>
+<a href="https://github.com/K3bOra/UltraAudio"><img src="assets/family-audio.png" width="32%" alt="Ultra Audio — الترا أوديو" /></a>
 </p>
 
-<p align="center">
-<a href="https://github.com/K3bOra/UltraStalker"><img src="assets/ultra-family-stalker.svg" width="100%" alt="Ultra Stalker — Live TV, movies, series and local media / البث المباشر والأفلام والمسلسلات والمحتوى المحلي" /></a>
-</p>
-
-<p align="center">
-<a href="https://github.com/K3bOra/UltraAudio"><img src="assets/ultra-family-audio.svg" width="100%" alt="Ultra Audio — Internet audio, timing and mobile control / صوتيات الإنترنت والتزامن والتحكم بالموبايل" /></a>
-</p>
-
-Each plugin has its own installation command and official updates.
-
-لكل بلجن أمر تثبيت وتحديثات رسمية خاصة به.
-
----
-
-<a name="resources"></a>
-
-## Updates & resources
-### التحديثات والروابط المهمة
-
-The installer reads the manifest attached to the latest official release; the plugin's online update reads the copy in this repository, which is refreshed after every verified release.
-
-المُثبّت بيقرا ملف بيانات أحدث إصدار رسمي، والتحديث أونلاين جوه البلجن بيقرا النسخة اللي في المستودع، واللي بتتحدّث بعد كل إصدار متأكد منه.
-
-- [Official releases](https://github.com/K3bOra/UltraQuran/releases)<br>[الإصدارات الرسمية](https://github.com/K3bOra/UltraQuran/releases)
-- [Latest release manifest](https://github.com/K3bOra/UltraQuran/releases/latest/download/update.json)<br>[ملف بيانات أحدث إصدار](https://github.com/K3bOra/UltraQuran/releases/latest/download/update.json)
-- [Version history](CHANGELOG.md)<br>[سجل الإصدارات](CHANGELOG.md)
-- [Publishing guide](RELEASING.md)<br>[دليل نشر الإصدارات](RELEASING.md)
-
----
+<p dir="rtl" align="center">تلات بلجنات من عيلة واحدة، ولكل واحد أمر تثبيت وتحديثات رسمية خاصة بيه.</p>
+<p align="center">Three plugins, one family. Each has its own install command and official updates.</p>
 
 <a name="credits"></a>
 
-## Sources & credits
-### المصادر والحقوق
+<p align="center"><img src="assets/heading-credits.png" width="100%" alt="المصادر والحقوق / Sources & credits" /></p>
 
-- Recitations, lessons, radios and videos are streamed from their public sources (such as mp3quran, QuranicAudio, islamic.network and the Internet Archive) and remain the property of their owners.<br>التلاوات والدروس والإذاعات والفيديوهات بتشتغل من مصادرها العامة (زي mp3quran وQuranicAudio وislamic.network وأرشيف الإنترنت) وحقوقها لأصحابها.
-- Sheikh biographies: Arabic Wikipedia contributors, CC BY-SA 4.0; dates from Wikidata (CC0).<br>سِيَر المشايخ: من ويكيبيديا العربية بترخيص CC BY-SA 4.0، والتواريخ من ويكي بيانات.
-- Interface font: Cairo, SIL Open Font License 1.1.<br>خط الواجهة: Cairo بترخيص SIL Open Font License 1.1.
-- Audio engine shared with [Ultra Audio](https://github.com/K3bOra/UltraAudio) (MIT).<br>محرك الصوت مشترك مع [الترا أوديو](https://github.com/K3bOra/UltraAudio).
+<ul dir="rtl">
+<li>التلاوات والدروس والإذاعات والفيديوهات بتشتغل من مصادرها العامة (زي mp3quran وQuranicAudio وislamic.network وأرشيف الإنترنت) وحقوقها لأصحابها.</li>
+<li>سِيَر المشايخ من ويكيبيديا العربية بترخيص CC BY-SA 4.0، والتواريخ من ويكي بيانات.</li>
+<li>خط الواجهة Cairo بترخيص SIL Open Font License.</li>
+<li>محرك الصوت مشترك مع <a href="https://github.com/K3bOra/UltraAudio">الترا أوديو</a>.</li>
+<li>المشروع منشور بترخيص <a href="LICENSE">MIT</a>، والمواد الخارجية ليها تراخيصها الخاصة.</li>
+</ul>
 
----
+- Recitations, lessons, radios and videos stream from their public sources (such as mp3quran, QuranicAudio, islamic.network and the Internet Archive) and belong to their owners.
+- Sheikh biographies: Arabic Wikipedia contributors, CC BY-SA 4.0; dates from Wikidata.
+- Interface font: Cairo, SIL Open Font License.
+- Audio engine shared with [Ultra Audio](https://github.com/K3bOra/UltraAudio).
+- Released under the [MIT License](LICENSE); third-party material keeps its own license.
 
-## License
-### الترخيص
+[Releases](https://github.com/K3bOra/UltraQuran/releases) · [Latest update.json](https://github.com/K3bOra/UltraQuran/releases/latest/download/update.json) · [Version history](CHANGELOG.md) · [Publishing guide](RELEASING.md)
 
-Released under the [MIT License](LICENSE). Third-party material keeps its own license, listed in [LICENSE](LICENSE).
+<br />
 
-المشروع منشور بترخيص [MIT](LICENSE)، والمواد الخارجية ليها تراخيصها الخاصة والمذكورة في نفس الملف.
-
----
-
-<div align="center">
-
-**ULTRA QURAN** · Complete Islamic platform for Enigma2
-
-**الترا قرآن** · الموسوعة الإسلامية لأجهزة Enigma2
-
-Developed and maintained by **Ahmed L-HadarY**
-
-تطوير وصيانة **Ahmed L-HadarY**
-
-[GitHub Repository](https://github.com/K3bOra/UltraQuran)<br>
-[المستودع الرسمي على GitHub](https://github.com/K3bOra/UltraQuran)
-
-</div>
+<p align="center"><img src="assets/colophon.jpg" width="100%" alt="الترا قرآن — تطوير وصيانة Ahmed L-HadarY" /></p>

@@ -1,9 +1,13 @@
 {
-  "version": "0.9.3",
+  "version": "1.0.0",
   "notes": [
-    "Video player bar: the bars beside the poster moved down, so their bottom edge now lines up with the bottom of the poster at the screen edge, with a tighter gap between the upper panels and the two lower bars."
+    "The first official release of Ultra Quran on GitHub.",
+    "One install command for OpenATV, OpenBH, OpenPLi and DreamOS, with size and SHA-256 checks.",
+    "Online updates from the red button on the home screen, with verified packages."
   ],
   "notes_ar": [
-    "شريط مشغّل الفيديو: البارات اللي جنب البوستر نزلت لتحت وبقت آخرها على نفس مستوى آخر البوستر عند حافة الشاشة، والمسافة بين القطع اللي فوق والبارين اللي تحت بقت أقل."
+    "أول إصدار رسمي للترا قرآن على جيت هب.",
+    "أمر تثبيت واحد لـ OpenATV وOpenBH وOpenPLi والدريم، وبيتأكد من حجم الحزمة وبصمتها.",
+    "تحديث أونلاين من الزرار الأحمر في الرئيسية بحزم متأكد منها."
   ]
 }
