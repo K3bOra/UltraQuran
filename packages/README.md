@@ -1,9 +1,9 @@
 # Current Ultra Quran packages
 
-Keep exactly one IPK and one DreamOS DEB here, with their original package names:
+Keep exactly one IPK and one DreamOS DEB here, with these names (the same in every release):
 
-- `enigma2-plugin-extensions-ultraquran_<version>_all.ipk` — OpenATV / OpenBH / OpenPLi
-- `enigma2-plugin-extensions-ultraquran_<version>_all.deb` — DreamOS
+- `UltraQuran_Open.ipk` — OpenATV / OpenBH / OpenPLi
+- `UltraQuran_DreamOS.deb` — DreamOS
 
 Both must carry the same `Version`, matching `VERSION` in the plugin's `__init__.py` and `release-notes.json`.
 

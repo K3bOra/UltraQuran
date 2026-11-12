@@ -182,7 +182,7 @@ def get_manifest(channel):
     if not isinstance(version, STRING_TYPE) or not fullmatch(r'\d+\.\d+\.\d+', version):
         raise ValueError('Invalid official release version')
     key = 'deb' if channel == 'dreamos' else 'ipk'
-    filename = '%s_%s_all.%s' % (PACKAGE, version, key)
+    filename = 'UltraQuran_DreamOS.deb' if key == 'deb' else 'UltraQuran_Open.ipk'
     expected_url = 'https://github.com/%s/releases/download/v%s/%s' % (REPO, version, filename)
     if meta.get(key) != expected_url:
         raise ValueError('Release URL does not match the official platform package')

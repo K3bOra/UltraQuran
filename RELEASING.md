@@ -20,8 +20,7 @@ Settings ← General ← Danger Zone ← Change visibility، لأن:
 
 ## كل إصدار
 
-1. حط النسختين في `packages/` بأسمائهم الأصلية، واشيل القديم:
-   `enigma2-plugin-extensions-ultraquran_<الإصدار>_all.ipk` و`…_all.deb`.
+1. حط النسختين في `packages/` باسم `UltraQuran_Open.ipk` و`UltraQuran_DreamOS.deb` (نفس الاسم في كل إصدار)، مكان القديمين.
 2. حدّث `release-notes.json` بنفس رقم الإصدار، بالإنجليزي في `notes` وبالعربي في `notes_ar`.
    الملاحظات العربية هي اللي بتظهر جوه البلجن في رسالة التحديث.
 3. زوّد الإصدار في أول `CHANGELOG.md`.
@@ -55,9 +54,9 @@ Settings ← General ← Danger Zone ← Change visibility، لأن:
 {
   "version": "1.0.0",
   "name": "Ultra Quran 1.0.0",
-  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.0.0/enigma2-plugin-extensions-ultraquran_1.0.0_all.ipk",
+  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.0.0/UltraQuran_Open.ipk",
   "ipk_sha256": "…", "ipk_size": 0,
-  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.0.0/enigma2-plugin-extensions-ultraquran_1.0.0_all.deb",
+  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.0.0/UltraQuran_DreamOS.deb",
   "deb_sha256": "…", "deb_size": 0,
   "notes": ["…"],
   "notes_ar": ["…"]

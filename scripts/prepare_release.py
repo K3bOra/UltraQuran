@@ -25,8 +25,11 @@ LIMIT = 96 * 1024 * 1024
 FIXED_ASSETS = ('update.json', 'install.sh', 'RELEASE_NOTES.md', 'SHA256SUMS')
 
 
+ASSET_NAMES = {'ipk': 'UltraQuran_Open.ipk', 'deb': 'UltraQuran_DreamOS.deb'}
+
+
 def asset_name(version, kind):
-    return '%s_%s_all.%s' % (PACKAGE, version, kind)
+    return ASSET_NAMES[kind]
 
 
 def release_assets(version):
@@ -142,9 +145,9 @@ def manifest(ipk, deb, notes):
 
 
 def release_body(version, notes):
-    title = 'Ultra Quran %s - Enigma2 & DreamOS' % version
+    title = 'Ultra Quran Enigma2 & DreamOS'
     body = (
-        '# ' + title + '\n\n'
+        '# ' + title + ' · V' + version + '\n\n'
         '**IPK ' + version + ' — OpenATV / OpenBH / OpenPLi (Python 3)**\n`' + asset_name(version, 'ipk') + '`\n\n'
         '**DEB ' + version + ' — DreamOS (Python 2.7)**\n`' + asset_name(version, 'deb') + '`\n\n'
         '## What’s new\n\n' + '\n'.join('- ' + x for x in notes['notes']) + '\n\n'
