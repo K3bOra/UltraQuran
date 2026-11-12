@@ -71,7 +71,7 @@ async function render(page, template, out, query = {}, scale = 2) {
     for (const [template, out, query] of ART.filter((a) => !process.argv[3] || a[1].includes(process.argv[3]))) await render(page, template, path.join(ASSETS, out), query);
   } else if (mode === 'shots') {
     // frame every raw screenshot; missing ones get a "coming soon" plate whose hash is recorded
-    const page = await browser.newPage({ deviceScaleFactor: 1 });
+    const page = await browser.newPage({ deviceScaleFactor: 1.5 });
     const list = fs.readFileSync(path.join(SHOTS, 'README.md'), 'utf8');
     const rows = [...list.matchAll(/\| `(\d\d_[a-z_]+\.jpg)` \| ([^<|]+)<br>([^|]+?) \|/g)];
     const raw = path.join(HERE, 'shots-raw');
