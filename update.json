@@ -1,28 +1,18 @@
 {
-  "version": "1.0.0",
-  "name": "Ultra Quran 1.0.0",
-  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.0.0/UltraQuran_Open.ipk",
-  "ipk_sha256": "153f361e3e70254fe4930a4650d44128a3f5155a5c885dacf28ad5ea463102e2",
-  "ipk_size": 30720260,
-  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.0.0/UltraQuran_DreamOS.deb",
-  "deb_sha256": "153f361e3e70254fe4930a4650d44128a3f5155a5c885dacf28ad5ea463102e2",
-  "deb_size": 30720260,
+  "version": "1.1.0",
+  "name": "Ultra Quran 1.1.0",
+  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.1.0/UltraQuran_Open.ipk",
+  "ipk_sha256": "7ca2083080f32799b72138309750003f407b68b4c179006905c80a2d47132194",
+  "ipk_size": 30719718,
+  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.1.0/UltraQuran_DreamOS.deb",
+  "deb_sha256": "7ca2083080f32799b72138309750003f407b68b4c179006905c80a2d47132194",
+  "deb_size": 30719718,
   "notes": [
-    "The first official release of Ultra Quran on GitHub: one install command for OpenATV, OpenBH, OpenPLi and DreamOS that also installs Pillow and ffmpeg and restarts Enigma2, plus verified online updates from the red button.",
-    "A new online update window (red button) in the style of Ultra Audio: the full release notes, a download bar, and green Update / red Back keys.",
-    "New photos for six sheikhs, including Al-Husary, Mohamed Refaat, Al-Tablawi and Al-Banna.",
-    "Ayah of the day: short ayat on one large line, longer ones on two balanced lines, always complete.",
-    "Mohamed Refaat now has 8 folders, and the legends (Abdul Basit, Al-Minshawi, Al-Husary, Mustafa Ismail, Al-Banna, Al-Tablawi, Naeena) gained thousands of rare recordings and live concerts.",
-    "51 new QuranicAudio folders, every link re-checked, and complete biographies for 86 sheikhs.",
-    "Video player bar: the bars beside the poster now end level with the poster at the screen edge."
+    "The plugin version is now shown at the left end of the bottom bar on every screen.",
+    "129 garbled titles fixed: Sheikh Nasr El-Din Tobar's 83 rare ibtihalat (already corrupted on the Internet Archive) are now numbered 01-83 with the Hijri year where known; Turkish file names for Tobar, El-Feshni and El-Bahtimi are written in Arabic; YouTube codes glued to El-Sayed Saeed's recitations and words stuck together for Abdul Basit, Khaled Al-Jalil and others are cleaned up."
   ],
   "notes_ar": [
-    "أول إصدار رسمي للترا قرآن على جيت هب: أمر تثبيت واحد لـ OpenATV وOpenBH وOpenPLi والدريم، بيسطّب Pillow وffmpeg ويعيد تشغيل الواجهة لوحده، وتحديث أونلاين من الزرار الأحمر بحزم متأكد منها.",
-    "نافذة تحديث جديدة (الزرار الأحمر) بنفس تصميم الترا أوديو: ملاحظات الإصدار كاملة، وشريط تحميل، والأخضر «تحديث» والأحمر «رجوع».",
-    "صور جديدة لـ6 مشايخ، منهم الحصري ومحمد رفعت والطبلاوي ومحمود علي البنا.",
-    "آية اليوم: الآية القصيرة في سطر واحد بخط كبير، والأطول على سطرين متوازنين، وكلها بتظهر كاملة.",
-    "الشيخ محمد رفعت بقى عنده 8 فولدرات، وأساطير التلاوة (عبد الباسط والمنشاوي والحصري ومصطفى إسماعيل والبنا والطبلاوي ونعينع) اتزود لهم آلاف التسجيلات النادرة والحفلات.",
-    "51 فولدر جديد من QuranicAudio، وكل الروابط اتراجعت، وسِيَر كاملة لـ86 شيخ.",
-    "شريط مشغّل الفيديو: البارات اللي جنب البوستر بقت آخرها على نفس مستوى البوستر عند حافة الشاشة."
+    "رقم الإصدار بقى ظاهر على الشمال في آخر الشريط اللي تحت في كل الشاشات.",
+    "إصلاح 129 اسم متلخبط: ابتهالات الشيخ نصر الدين طوبار النادرة (83 ابتهال) بقت مرقّمة من 01 لـ 83 ومعاها السنة الهجرية لو معروفة، والأسامي التركي عند طوبار والفشني والبهتيمي اتكتبت بالعربي، واتشالت أكواد يوتيوب من تلاوات السيد سعيد، واتصلحت كلمات لازقة في عبد الباسط وخالد الجليل وغيرهم."
   ]
 }
