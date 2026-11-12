@@ -1,3 +1,2 @@
-Amiri (c) The Amiri Project Authors; Cairo (c) The Cairo Project Authors.
-Both are licensed under the SIL Open Font License, Version 1.1: https://openfontlicense.org
-Files taken from the Fontsource npm packages @fontsource/amiri and @fontsource/cairo.
+Cairo-SemiBold.ttf is the same file the Ultra Quran plugin ships (fonts/Cairo-SemiBold.ttf).
+Cairo (c) The Cairo Project Authors, licensed under the SIL Open Font License 1.1 (see OFL-Cairo.txt).

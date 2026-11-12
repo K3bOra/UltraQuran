@@ -2,7 +2,7 @@
 
 Source of every image in `assets/` and the frames around `docs/screenshots/`.
 The style follows the plugin's Royal Emerald skin: an illuminated Mushaf border, ruby surah-header cartouches,
-Amiri for Arabic display text and Cairo (the plugin's own font) for labels. The section medallions in `icons/`
+and all text in the plugin's own font, Cairo SemiBold, in the plugin's gold and ivory. The section medallions in `icons/`
 are cut from the plugin's home-screen artwork.
 
 ```sh
@@ -21,5 +21,5 @@ Missing captures become "coming soon" plates; their hashes go to `docs/screensho
 
 To show the real home screen inside the hero TV, replace `tools/page/hero-screen.jpg` and rebuild.
 
-Fonts: Amiri and Cairo, SIL Open Font License 1.1 (from Fontsource). Templates: `templates/*.html`,
+Font: Cairo SemiBold, the same file the plugin ships (SIL Open Font License 1.1). Templates: `templates/*.html`,
 shared ornaments: `ornament.js`, colours and fonts: `base.css`.
