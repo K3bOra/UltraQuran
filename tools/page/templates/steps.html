@@ -13,8 +13,8 @@ code{font:600 20px Cairo;color:#f6e2a6;background:rgba(0,0,0,.35);border:1px sol
 <div class="stars"></div><div class="vignette" style="opacity:.6"></div><div id="art"></div><div class="row" id="row"></div>
 <script>
 const S=[["١","افتح الرسيفر","ادخل بـ Telnet أو SSH بحساب <code>root</code>","Open Telnet or SSH as root"],
-["٢","الصق أمر التثبيت","بيختار حزمة جهازك ويتأكد منها","It picks and verifies the right package"],
-["٣","ابدأ الاستماع","أعد تشغيل الواجهة وافتح البلجن","Restart the GUI, open Plugins"]];
+["٢","الصق أمر التثبيت","بيتأكد من الحزمة ويسطّب الإضافات","Verifies the package, installs add-ons"],
+["٣","ابدأ الاستماع","الواجهة بتعيد التشغيل لوحدها","Enigma2 restarts by itself"]];
 const ros=`<svg viewBox="-48 -48 96 96" width="96" height="96">${O.defs()}${O.rosette(0,0,44,true)}<circle r="25" fill="url(#ruby)" stroke="url(#gilt)" stroke-width="2.4"/></svg>`;
 document.getElementById('row').innerHTML=S.map(([n,h,a,e])=>`<div class="s"><div class="num">${ros}<span>${n}</span></div><div class="h gilt">${h}</div><div class="a">${a}</div><div class="e">${e}</div></div>`).join('');
 const W=1600,H=370; const c1=80+(W-160)/3, c2=80+2*(W-160)/3;

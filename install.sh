@@ -273,18 +273,97 @@ def numeric_version(text):
     return tuple(int(x) for x in found.groups())
 
 
+PILLOW_PACKAGES = {
+    'ipk': ('python3-pillow', 'python3-pil'),
+    'dreamos': ('python-imaging', 'python-pil', 'python-pillow', 'python3-pil', 'python3-pillow'),
+}
+DEVNULL = open(os.devnull, 'r+b')
+
+
+def run_quiet(command):
+    try:
+        return subprocess.call(command, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+    except OSError:
+        return 127
+
+
+def has_command(name):
+    return any(os.access(os.path.join(folder, name), os.X_OK)
+               for folder in os.environ.get('PATH', '/usr/bin:/bin:/usr/sbin:/sbin').split(os.pathsep))
+
+
+def enigma2_python():
+    """The interpreter Enigma2 itself runs (Python 3 on Open images, usually 2.7 on DreamOS)."""
+    try:
+        for pid in subprocess.check_output(['pidof', 'enigma2']).decode('ascii').split():
+            with open('/proc/%s/maps' % pid, 'rb') as handle:
+                found = re.search(br'libpython([23])\.', handle.read())
+            if found:
+                wanted = ('python3',) if found.group(1) == b'3' else ('python2.7', 'python2', 'python')
+                for name in wanted:
+                    if has_command(name):
+                        return name
+    except (OSError, subprocess.CalledProcessError):
+        pass
+    return sys.executable
+
+
+def install_one(channel, package):
+    command = (['apt-get', 'install', '-y', package] if channel == 'dreamos'
+               else ['opkg', 'install', package])
+    return run_quiet(command) == 0
+
+
+def ensure_components(channel):
+    """Pillow (portraits, Mushaf, artwork) and ffmpeg (the plugin's audio engine), from the image's own feeds."""
+    if channel == 'dreamos' and run_quiet(['apt-get', 'update']):
+        say('[WARN] DreamOS package lists could not be refreshed; using the lists on the receiver.')
+    python = enigma2_python()
+    missing = []
+    if run_quiet([python, '-c', 'import PIL.Image']) == 0:
+        say('[OK] Pillow (portraits, Mushaf and artwork) is available.')
+    elif any(install_one(channel, p) for p in PILLOW_PACKAGES[channel]) and \
+            run_quiet([python, '-c', 'import PIL.Image']) == 0:
+        say('[OK] Pillow installed.')
+    else:
+        missing.append('Pillow (%s) for reciter portraits and the Mushaf' % ' / '.join(PILLOW_PACKAGES[channel][:2]))
+    if has_command('ffmpeg'):
+        say('[OK] ffmpeg (audio engine) is available.')
+    elif install_one(channel, 'ffmpeg') and has_command('ffmpeg'):
+        say('[OK] ffmpeg installed.')
+    else:
+        missing.append('ffmpeg for the built-in audio engine')
+    for item in missing:
+        say('[WARN] Not found in this image feed: %s. Ultra Quran still works; install it later.' % item)
+
+
+def restart_enigma2():
+    """Restart the GUI 5 seconds after the installer exits (same method as Ultra Audio)."""
+    if run_quiet(['pidof', 'enigma2']) != 0:
+        say('[INFO] Enigma2 is not running; no GUI restart needed.')
+        return
+    script = ('sleep 5; '
+              'if command -v systemctl >/dev/null 2>&1 && systemctl is-active enigma2 >/dev/null 2>&1; then '
+              'systemctl restart enigma2 >/dev/null 2>&1 || killall -9 enigma2 >/dev/null 2>&1; '
+              'elif command -v killall >/dev/null 2>&1; then killall -9 enigma2 >/dev/null 2>&1; '
+              'else kill -9 $(pidof enigma2) >/dev/null 2>&1; fi')
+    subprocess.Popen(['/bin/sh', '-c', script], stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL,
+                     close_fds=True, preexec_fn=os.setsid)
+    say('[OK] Enigma2 GUI restarts in 5 seconds; then open Plugins > Ultra Quran.')
+
+
 def main(argv):
     if not argv or argv[0] not in ('dreamos', 'ipk'):
         raise ValueError('Missing target platform')
     channel, args = argv[0], argv[1:]
-    if args not in ([], ['--verify-only']):
-        raise ValueError('Supported option: --verify-only')
+    if [a for a in args if a not in ('--verify-only', '--no-restart')] or len(set(args)) != len(args):
+        raise ValueError('Supported options: --verify-only, --no-restart')
     say('\n=================================================')
     say('Ultra Quran | %s' % ('DreamOS (DEB)' if channel == 'dreamos' else 'Open Enigma2 (IPK)'))
     say('=================================================')
-    say('[1/4] Reading the official GitHub release...')
+    say('[1/5] Reading the official GitHub release...')
     meta, key, filename = get_manifest(channel)
-    say('[2/4] Downloading and verifying %s (%.1f MB)' % (filename, meta[key + '_size'] / 1048576))
+    say('[2/5] Downloading and verifying %s (%.1f MB)' % (filename, meta[key + '_size'] / 1048576))
     fd, path = tempfile.mkstemp(prefix='ultraquran_verified_', suffix='.' + key, dir='/tmp')
     try:
         with os.fdopen(fd, 'wb') as handle:
@@ -293,7 +372,7 @@ def main(argv):
             raise ValueError('Size/SHA-256 verification failed; no installation performed')
         verify_file(path, meta)
         say('[OK] Verified SHA-256, size, package name, architecture and version: ' + meta['version'])
-        if args == ['--verify-only']:
+        if '--verify-only' in args:
             say('[VERIFIED] No installation performed.')
             return
         if os.geteuid() != 0:
@@ -303,20 +382,30 @@ def main(argv):
             raise ValueError('Newer official package is already installed; downgrade refused')
         if installed == meta['version']:
             say('[OK] Latest official version is already installed.')
+            say('[5/5] Checking the components Ultra Quran uses...')
+            ensure_components(channel)
             return
         if channel == 'dreamos':
-            say('[3/4] DreamOS: installing with dpkg...')
+            say('[3/5] DreamOS: installing with dpkg...')
             command = ['dpkg', '--refuse-downgrade', '-i', path]
         else:
-            say('[3/4] Refreshing Open Enigma2 package lists...')
+            say('[3/5] Refreshing Open Enigma2 package lists...')
             if subprocess.call(['opkg', 'update']):
                 say('[WARN] Some feeds failed to refresh; using available package lists.')
             command = ['opkg', 'install', path]
-        say('[4/4] Installing official package. Favorites, resume points and downloads are preserved...')
+        say('[4/5] Installing official package. Favorites, resume points and downloads are preserved...')
         if subprocess.call(command):
             fail('Package manager failed; inspect the output above')
         say('[OK] Ultra Quran %s installed.' % meta['version'])
-        say('     Restart the Enigma2 GUI, then open Plugins > Ultra Quran.')
+        say('[5/5] Checking the components Ultra Quran uses...')
+        ensure_components(channel)
+        say('=================================================')
+        say('         Ultra Quran %s  |  SETUP SUCCESSFUL' % meta['version'])
+        say('=================================================')
+        if '--no-restart' in args:
+            say('[INFO] --no-restart: restart the Enigma2 GUI yourself, then open Plugins > Ultra Quran.')
+        else:
+            restart_enigma2()
     finally:
         try:
             os.unlink(path)

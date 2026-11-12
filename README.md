@@ -44,9 +44,21 @@ Royal Emerald design: emerald glass, calm gold and a gilded Mushaf frame set wit
 
 </div>
 
-<p dir="rtl">أول إصدار رسمي على جيت هب: أمر تثبيت واحد لكل الأجهزة، وتحديث أونلاين من الزرار الأحمر بحزم متأكد من بصمتها.</p>
+<ul dir="rtl">
+<li>أول إصدار رسمي للترا قرآن على جيت هب: أمر تثبيت واحد لـ OpenATV وOpenBH وOpenPLi والدريم، بيسطّب Pillow وffmpeg ويعيد تشغيل الواجهة لوحده، وتحديث أونلاين من الزرار الأحمر بحزم متأكد منها.</li>
+<li>صور جديدة لـ6 مشايخ، منهم الحصري ومحمد رفعت والطبلاوي ومحمود علي البنا.</li>
+<li>آية اليوم: الآية القصيرة في سطر واحد بخط كبير، والأطول على سطرين متوازنين، وكلها بتظهر كاملة.</li>
+<li>الشيخ محمد رفعت بقى عنده 8 فولدرات، وأساطير التلاوة (عبد الباسط والمنشاوي والحصري ومصطفى إسماعيل والبنا والطبلاوي ونعينع) اتزود لهم آلاف التسجيلات النادرة والحفلات.</li>
+<li>51 فولدر جديد من QuranicAudio، وكل الروابط اتراجعت، وسِيَر كاملة لـ86 شيخ.</li>
+<li>شريط مشغّل الفيديو: البارات اللي جنب البوستر بقت آخرها على نفس مستوى البوستر عند حافة الشاشة.</li>
+</ul>
 
-The first official release on GitHub: one install command for every receiver, and online updates from the red button with verified packages.
+- The first official release of Ultra Quran on GitHub: one install command for OpenATV, OpenBH, OpenPLi and DreamOS that also installs Pillow and ffmpeg and restarts Enigma2, plus verified online updates from the red button.
+- New photos for six sheikhs, including Al-Husary, Mohamed Refaat, Al-Tablawi and Al-Banna.
+- Ayah of the day: short ayat on one large line, longer ones on two balanced lines, always complete.
+- Mohamed Refaat now has 8 folders, and the legends (Abdul Basit, Al-Minshawi, Al-Husary, Mustafa Ismail, Al-Banna, Al-Tablawi, Naeena) gained thousands of rare recordings and live concerts.
+- 51 new QuranicAudio folders, every link re-checked, and complete biographies for 86 sheikhs.
+- Video player bar: the bars beside the poster now end level with the poster at the screen edge.
 
 [Release notes and downloads](https://github.com/K3bOra/UltraQuran/releases/latest) · [Version history](CHANGELOG.md)
 
@@ -110,7 +122,7 @@ The first official release on GitHub: one install command for every receiver, an
 |:---|:---|
 | <p dir="rtl"><b>تلاوات القرآن</b><br>٢٦٠ قارئ، كبار المصريين الأول، ومعاهم ٢٥٦ صورة حقيقية جوه البلجن، وأكتر من رواية ومصدر للقارئ، و٢٣٩٢ فيديو موثّق لـ ١٠١ شيخ.</p> | **Quran recitations**<br>260 reciters, the great Egyptian reciters first, 256 bundled portraits, several riwayas and sources per reciter, and 2392 verified videos for 101 sheikhs. |
 | <p dir="rtl"><b>المصحف المزخرف</b><br>٦٠٤ صفحة محفوظة على الهارد من غير فلاشة، في إطار الزمرد الملكي، ومع كل صفحة التفسير الميسّر.</p> | **Illuminated Mushaf**<br>604 pages stored permanently on the hard drive, in the Royal Emerald frame, with the Al-Muyassar tafsir for every page. |
-| <p dir="rtl"><b>موسوعات العلماء</b><br>الشعراوي في فولدرين: ١٧٢٧ تسجيل صوتي و١١١١ حلقة تفسير مرئي مقسّمة بالسور. والشيخ كشك ٢٥٤ خطبة، و١٤ من كبار المبتهلين بأكتر من ٥٩٠٠ تسجيل.</p> | **Scholar encyclopedias**<br>Al-Sha'rawi in two folders: 1727 audio recordings and 1111 tafsir episodes by surah. Sheikh Kishk's 254 sermons, and 14 Ibtihalat masters with 5900+ tracks. |
+| <p dir="rtl"><b>موسوعات العلماء</b><br>الشعراوي في فولدرين: ١٦٦٥ تسجيل صوتي و١١١١ حلقة تفسير مرئي مقسّمة بالسور. والشيخ كشك ٣٨٣ خطبة صوتية و١٠ مصوّرة، و١٤ من كبار المبتهلين بـ ٥٣٧٦ تسجيل.</p> | **Scholar encyclopedias**<br>Al-Sha'rawi in two folders: 1665 audio recordings and 1111 tafsir episodes by surah. Sheikh Kishk's 383 audio and 10 video sermons, and 14 Ibtihalat masters with 5376 tracks. |
 | <p dir="rtl"><b>دروس مرتبة</b><br>أكتر من ٢٥٠٠ درس: التفسير والحديث والشمائل والسيرة وقصص الأنبياء والعقيدة والفقه، كل سلسلة في فولدر لوحدها.</p> | **Structured lessons**<br>2500+ lessons in tafsir, hadith, shama'il, seerah, the prophets, aqeedah and fiqh, each series in its own folder. |
 | <p dir="rtl"><b>الأذكار والأسماء الحسنى</b><br>أذكار الصباح والمساء من حصن المسلم بنصها الكامل، والرقية الشرعية، والمسبحة، والأسماء الحسنى الـ ٩٩ ومعانيها.</p> | **Adhkar and the 99 Names**<br>Morning and evening adhkar from Hisn Al-Muslim in full, the Ruqyah, a tasbeeh and the 99 Names with their meanings. |
 | <p dir="rtl"><b>كمّل وحمّل</b><br>أي تلاوة أو خطبة أو درس أو فيديو بيكمّل من مكان ما وقفت. وتقدر تحمّل سورة أو فولدر قارئ كامل أو فيديو على الهارد.</p> | **Resume and download**<br>Every recitation, sermon, lesson or video resumes where you stopped. Download a surah, a whole reciter or a video to your hard drive. |
@@ -146,7 +158,7 @@ The first official release on GitHub: one install command for every receiver, an
 | الحزمة · Package | Open: `opkg` / IPK · DreamOS: `dpkg` / DEB |
 | الشاشة · Screen | 720 · 1280 · 1920 · 2560 · 3840 |
 | المساحة · Storage | <span dir="rtl">حوالي ٣٢ ميجا على الفلاش، ويُفضّل هارد أو فلاشة للمصحف والصور والتحميلات</span><br>About 32 MB in flash; a hard drive or USB stick is recommended |
-| يُفضّل · Recommended | `python3-pil` (Pillow) · `ffmpeg` |
+| الإضافات · Components | <span dir="rtl">Pillow وffmpeg بيتسطّبوا لوحدهم من مستودعات الصورة</span><br>Pillow and ffmpeg are installed automatically from the image feeds |
 
 <p dir="rtl">دي متطلبات الحزمة المنشورة، ومش معناها إن كل جهاز وكل صورة اتجربوا عمليًا.</p>
 
@@ -162,9 +174,15 @@ These are the published package requirements, not a promise that every receiver 
 wget -qO- https://raw.githubusercontent.com/K3bOra/UltraQuran/main/install.sh | /bin/sh
 ```
 
-<p dir="rtl">نفس الأمر بيختار IPK لـ OpenATV وOpenBH وOpenPLi، أو DEB للدريم. وبيقرا أحدث إصدار رسمي، ويتأكد من حجم الحزمة وبصمة SHA-256 واسمها ورقمها قبل ما يسطّبها.</p>
+<p dir="rtl">نفس الأمر بيختار IPK لـ OpenATV وOpenBH وOpenPLi، أو DEB للدريم. وبيقرا أحدث إصدار رسمي، ويتأكد من حجم الحزمة وبصمة SHA-256 واسمها ورقمها قبل ما يسطّبها. وبعد التثبيت بيسطّب الإضافات اللي البلجن محتاجها لو مش موجودة (Pillow للصور والمصحف، وffmpeg لمحرك الصوت)، ويعيد تشغيل الواجهة لوحده بعد 5 ثواني.</p>
 
-The same command picks the IPK for OpenATV, OpenBH and OpenPLi or the DEB for DreamOS, reads the latest official release and checks the package size, SHA-256, name and version before installing.
+The same command picks the IPK for OpenATV, OpenBH and OpenPLi or the DEB for DreamOS, reads the latest official release and checks the package size, SHA-256, name and version before installing. It then installs the components the plugin uses when they are missing (Pillow for portraits and the Mushaf, ffmpeg for the audio engine) and restarts the Enigma2 GUI after 5 seconds.
+
+<p dir="rtl">لو مش عايز إعادة تشغيل تلقائية زوّد <code dir="ltr">--no-restart</code>:</p>
+
+```sh
+wget -qO- https://raw.githubusercontent.com/K3bOra/UltraQuran/main/install.sh | /bin/sh -s -- --no-restart
+```
 
 > [!TIP]
 > <span dir="rtl">البلجن متسطب عندك؟ دوس <b>الزرار الأحمر</b> في الرئيسية وهيحدّث نفسه.</span><br>
