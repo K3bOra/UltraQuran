@@ -5,14 +5,14 @@ The current version and download data are in [update.json](https://github.com/K3
 
 الإصدار الحالي وبيانات التحميل موجودين في [update.json](https://github.com/K3bOra/UltraQuran/releases/latest/download/update.json).
 
-## V1.0.1
-### الجديد في V1.0.1
+## V1.1.0
+### الجديد في V1.1.0
 
 - The plugin version is now shown at the left end of the bottom bar on every screen.<br>رقم الإصدار بقى ظاهر على الشمال في آخر الشريط اللي تحت في كل الشاشات.
-- Fixed the garbled titles of Sheikh Nasr El-Din Tobar's 83 rare ibtihalat (the names were already corrupted on the Internet Archive); they are now numbered 01 to 83, with the Hijri year where it was known.<br>إصلاح أسماء ابتهالات الشيخ نصر الدين طوبار النادرة (83 ابتهال) اللي كانت بتظهر بحروف متلخبطة من أرشيف الإنترنت نفسه؛ بقت مرقّمة من 01 لـ 83، ومعاها السنة الهجرية لو كانت معروفة.
+- 129 garbled titles fixed: Sheikh Nasr El-Din Tobar's 83 rare ibtihalat (already corrupted on the Internet Archive) are now numbered 01-83 with the Hijri year where known; Turkish file names for Tobar, El-Feshni and El-Bahtimi are written in Arabic; YouTube codes glued to El-Sayed Saeed's recitations and words stuck together for Abdul Basit, Khaled Al-Jalil and others are cleaned up.<br>إصلاح 129 اسم متلخبط: ابتهالات الشيخ نصر الدين طوبار النادرة (83 ابتهال) بقت مرقّمة من 01 لـ 83 ومعاها السنة الهجرية لو معروفة، والأسامي التركي عند طوبار والفشني والبهتيمي اتكتبت بالعربي، واتشالت أكواد يوتيوب من تلاوات السيد سعيد، واتصلحت كلمات لازقة في عبد الباسط وخالد الجليل وغيرهم.
 
-[Release and downloads](https://github.com/K3bOra/UltraQuran/releases/tag/v1.0.1)<br>
-[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraQuran/releases/tag/v1.0.1)
+[Release and downloads](https://github.com/K3bOra/UltraQuran/releases/tag/v1.1.0)<br>
+[تفاصيل الإصدار والتحميل](https://github.com/K3bOra/UltraQuran/releases/tag/v1.1.0)
 
 ## V1.0.0
 ### الإصدار الأول V1.0.0
