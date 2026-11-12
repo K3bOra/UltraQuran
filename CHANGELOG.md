@@ -9,6 +9,7 @@ The current version and download data are in [update.json](https://github.com/K3
 ### الإصدار الأول V1.0.0
 
 - The first official release of Ultra Quran on GitHub: one install command for OpenATV, OpenBH, OpenPLi and DreamOS that also installs Pillow and ffmpeg and restarts Enigma2, plus verified online updates from the red button.<br>أول إصدار رسمي للترا قرآن على جيت هب: أمر تثبيت واحد لـ OpenATV وOpenBH وOpenPLi والدريم، بيسطّب Pillow وffmpeg ويعيد تشغيل الواجهة لوحده، وتحديث أونلاين من الزرار الأحمر بحزم متأكد منها.
+- A new online update window (red button) in the style of Ultra Audio: the full release notes, a download bar, and green Update / red Back keys.<br>نافذة تحديث جديدة (الزرار الأحمر) بنفس تصميم الترا أوديو: ملاحظات الإصدار كاملة، وشريط تحميل، والأخضر «تحديث» والأحمر «رجوع».
 - New photos for six sheikhs, including Al-Husary, Mohamed Refaat, Al-Tablawi and Al-Banna.<br>صور جديدة لـ6 مشايخ، منهم الحصري ومحمد رفعت والطبلاوي ومحمود علي البنا.
 - Ayah of the day: short ayat on one large line, longer ones on two balanced lines, always complete.<br>آية اليوم: الآية القصيرة في سطر واحد بخط كبير، والأطول على سطرين متوازنين، وكلها بتظهر كاملة.
 - Mohamed Refaat now has 8 folders, and the legends (Abdul Basit, Al-Minshawi, Al-Husary, Mustafa Ismail, Al-Banna, Al-Tablawi, Naeena) gained thousands of rare recordings and live concerts.<br>الشيخ محمد رفعت بقى عنده 8 فولدرات، وأساطير التلاوة (عبد الباسط والمنشاوي والحصري ومصطفى إسماعيل والبنا والطبلاوي ونعينع) اتزود لهم آلاف التسجيلات النادرة والحفلات.

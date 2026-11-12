@@ -46,6 +46,7 @@ Royal Emerald design: emerald glass, calm gold and a gilded Mushaf frame set wit
 
 <ul dir="rtl">
 <li>أول إصدار رسمي للترا قرآن على جيت هب: أمر تثبيت واحد لـ OpenATV وOpenBH وOpenPLi والدريم، بيسطّب Pillow وffmpeg ويعيد تشغيل الواجهة لوحده، وتحديث أونلاين من الزرار الأحمر بحزم متأكد منها.</li>
+<li>نافذة تحديث جديدة (الزرار الأحمر) بنفس تصميم الترا أوديو: ملاحظات الإصدار كاملة، وشريط تحميل، والأخضر «تحديث» والأحمر «رجوع».</li>
 <li>صور جديدة لـ6 مشايخ، منهم الحصري ومحمد رفعت والطبلاوي ومحمود علي البنا.</li>
 <li>آية اليوم: الآية القصيرة في سطر واحد بخط كبير، والأطول على سطرين متوازنين، وكلها بتظهر كاملة.</li>
 <li>الشيخ محمد رفعت بقى عنده 8 فولدرات، وأساطير التلاوة (عبد الباسط والمنشاوي والحصري ومصطفى إسماعيل والبنا والطبلاوي ونعينع) اتزود لهم آلاف التسجيلات النادرة والحفلات.</li>
@@ -54,6 +55,7 @@ Royal Emerald design: emerald glass, calm gold and a gilded Mushaf frame set wit
 </ul>
 
 - The first official release of Ultra Quran on GitHub: one install command for OpenATV, OpenBH, OpenPLi and DreamOS that also installs Pillow and ffmpeg and restarts Enigma2, plus verified online updates from the red button.
+- A new online update window (red button) in the style of Ultra Audio: the full release notes, a download bar, and green Update / red Back keys.
 - New photos for six sheikhs, including Al-Husary, Mohamed Refaat, Al-Tablawi and Al-Banna.
 - Ayah of the day: short ayat on one large line, longer ones on two balanced lines, always complete.
 - Mohamed Refaat now has 8 folders, and the legends (Abdul Basit, Al-Minshawi, Al-Husary, Mustafa Ismail, Al-Banna, Al-Tablawi, Naeena) gained thousands of rare recordings and live concerts.
