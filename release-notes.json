@@ -1,0 +1,9 @@
+{
+  "version": "0.9.3",
+  "notes": [
+    "Video player bar: the bars beside the poster moved down, so their bottom edge now lines up with the bottom of the poster at the screen edge, with a tighter gap between the upper panels and the two lower bars."
+  ],
+  "notes_ar": [
+    "شريط مشغّل الفيديو: البارات اللي جنب البوستر نزلت لتحت وبقت آخرها على نفس مستوى آخر البوستر عند حافة الشاشة، والمسافة بين القطع اللي فوق والبارين اللي تحت بقت أقل."
+  ]
+}

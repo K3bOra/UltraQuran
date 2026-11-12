@@ -1,0 +1,71 @@
+name: Publish verified Ultra Quran release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultraquran-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate both packages and the GitHub page
+        run: |
+          python3 -B scripts/prepare_release.py
+          python3 -B scripts/check_page.py
+          sh -n install.sh
+      - name: Upload draft, download and verify, then publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_tag=$(python3 -c 'import json; print(json.load(open("dist/release-info.json"))["tag"])')
+          if gh release view "$release_tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'This version already exists. Increment the package version; published assets are never overwritten.'
+            exit 1
+          fi
+          release_title=$(python3 -c 'import json; print(json.load(open("dist/release-info.json"))["title"])')
+          gh release create "$release_tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --title "$release_title" --notes-file dist/notes.md dist/*.ipk dist/*.deb dist/update.json dist/RELEASE_NOTES.md dist/SHA256SUMS dist/install.sh
+          gh release download "$release_tag" --repo "$GITHUB_REPOSITORY" --pattern '*.ipk' --pattern '*.deb' --pattern update.json --pattern RELEASE_NOTES.md --pattern install.sh --pattern SHA256SUMS --dir verified
+          python3 -B scripts/prepare_release.py --verify-published verified
+          gh release edit "$release_tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+      - name: Verify public downloads and the installer
+        run: |
+          python3 -B scripts/prepare_release.py --verify-public
+          python3 -B scripts/verify_installer.py
+      - name: Refresh update.json read by installed plugins
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYCODE'
+          import base64, json, os, subprocess
+          from pathlib import Path
+          repo = os.environ['GITHUB_REPOSITORY']
+          name = 'update.json'
+          endpoint = 'repos/%s/contents/%s' % (repo, name)
+          previous = subprocess.run(['gh', 'api', endpoint], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          if previous.returncode:
+              # Only a genuinely missing file may be created; fail on auth/network errors.
+              if b'(HTTP 404)' not in previous.stderr:
+                  raise RuntimeError(previous.stderr.decode('utf-8', 'replace'))
+              prior = {}
+          else:
+              prior = json.loads(previous.stdout)
+          body = {'message': 'Refresh verified ' + name, 'branch': 'main',
+                  'content': base64.b64encode(Path('dist', name).read_bytes()).decode('ascii')}
+          if prior.get('sha'):
+              body['sha'] = prior['sha']
+          request = Path('dist/update-request.json')
+          request.write_text(json.dumps(body))
+          subprocess.run(['gh', 'api', '--method', 'PUT', endpoint, '--input', str(request)], check=True)
+          PYCODE
