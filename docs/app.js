@@ -191,7 +191,7 @@ function updatePlayerUI(full) {
   $("#miniPP").innerHTML = ic(playing ? "pause" : "play");
   $("#miniPP").setAttribute("aria-label", playing ? "إيقاف مؤقت" : "تشغيل");
   if ($("#sheet").classList.contains("open")) renderSheet(full);
-  $$(".row[data-u], .rad[data-u]").forEach((r) => r.classList.toggle("now", r.dataset.u === t.u));
+  $$(".row[data-u], .rad[data-u], .scard[data-u]").forEach((r) => r.classList.toggle("now", r.dataset.u === t.u));
   if ("mediaSession" in navigator) navigator.mediaSession.playbackState = playing ? "playing" : "paused";
 }
 function updateProgress() {
@@ -666,6 +666,19 @@ function recTracks(d, rec, img) {
   });
 }
 
+function trackCard(t, L, i, num) {
+  const dur = t.dur ? (typeof t.dur === "number" ? fmtTime(t.dur) : t.dur) : "";
+  const info = t.live ? "" : (t.info && t.info !== t.t ? t.info : "");
+  return `<li data-n="${esc(t.t)}"><div class="scard" data-u="${esc(t.u)}">
+    <button class="scard-main" data-play="${L}:${i}" aria-label="تشغيل ${esc(t.t)}">
+      <span class="scard-num">${t.live ? icSm("radio", 18) : n2a(num)}</span>
+      <span class="scard-t">${esc(t.t)}</span>
+      ${info ? `<span class="scard-s">${esc(info)}</span>` : ""}
+      <span class="scard-foot">${t.live ? `<span class="live-badge">مباشر</span>` : dur ? `<span class="scard-dur">${esc(dur)}</span>` : "<span></span>"}<span class="scard-play">${icSm("play", 16)}</span></span>
+    </button>
+    <span class="scard-tools">${t.bodyHref ? `<a href="${t.bodyHref}" aria-label="اقرأ النص">${icSm("text", 16)}</a>` : ""}<button data-fav="${L}:${i}" class="${isFav(t.u) ? "on" : ""}" aria-label="المفضلة">${icSm("heart", 16)}</button></span>
+  </div></li>`;
+}
 function trackList(tracks, rec, word) {
   const L = reg(tracks);
   const searchable = tracks.length > 12;
@@ -681,10 +694,7 @@ function trackList(tracks, rec, word) {
   return `<div class="btn-row"><button class="btn" data-play="${L}:0">${ic("play")}تشغيل الكل</button>
     ${tracks.length > 1 ? `<button class="btn ghost" data-act="shuffle" data-list="${L}">عشوائي</button>` : ""}</div>
     ${searchable ? `<label class="search">${ic("search")}<input id="tq" type="search" placeholder="ابحث في القائمة" autocomplete="off"></label>` : ""}
-    <ul class="list" id="tracks">${tracks.map((t, i) => `<li data-n="${esc(t.t)}"><div class="row" data-u="${esc(t.u)}">
-      <button class="num" data-play="${L}:${i}" aria-label="تشغيل ${esc(t.t)}">${t.custom || !t.ch ? n2a(i + 1) : n2a(t.ch)}</button>
-      <button class="grow" data-play="${L}:${i}" style="text-align:start"><span class="t">${esc(t.t)}</span><span class="s">${esc(t.info || "")}${t.dur ? ` · ${typeof t.dur === "number" ? fmtTime(t.dur) : esc(t.dur)}` : ""}</span></button>
-      <span class="end"><button data-fav="${L}:${i}" class="${isFav(t.u) ? "on" : ""}" aria-label="المفضلة">${ic("heart")}</button></span></div></li>`).join("")}</ul>`;
+    <ul class="scard-grid" id="tracks">${tracks.map((t, i) => trackCard(t, L, i, t.custom || !t.ch ? i + 1 : t.ch)).join("")}</ul>`;
 }
 
 function recordingView(d, rec) {
@@ -910,11 +920,7 @@ function trackListLib(tracks) {
   }
   return `<div class="btn-row">${tracks.length > 1 ? `<button class="btn" data-play="${L}:0">${ic("play")}تشغيل الكل</button><button class="btn ghost" data-act="shuffle" data-list="${L}">عشوائي</button>` : `<button class="btn" data-play="${L}:0">${ic("play")}استمع</button>`}</div>
     ${tracks.length > 12 ? `<label class="search">${ic("search")}<input id="tq" type="search" placeholder="ابحث في القائمة" autocomplete="off"></label>` : ""}
-    <ul class="list" id="tracks">${tracks.map((t, i) => `<li data-n="${esc(t.t)}"><div class="row" data-u="${esc(t.u)}">
-      <button class="num" data-play="${L}:${i}" aria-label="تشغيل ${esc(t.t)}">${t.live ? icSm("radio") : n2a(i + 1)}</button>
-      <button class="grow" data-play="${L}:${i}" style="text-align:start"><span class="t">${esc(t.t)}</span><span class="s">${t.live ? `<span class="live-badge">مباشر</span>` : esc([t.info !== t.t ? t.info : "", t.dur].filter(Boolean).join(" · "))}</span></button>
-      <span class="end">${t.bodyHref ? `<a href="${t.bodyHref}" aria-label="اقرأ النص" style="width:38px;height:38px;display:grid;place-items:center">${ic("text")}</a>` : ""}
-      <button data-fav="${L}:${i}" class="${isFav(t.u) ? "on" : ""}" aria-label="المفضلة">${ic("heart")}</button></span></div></li>`).join("")}</ul>`;
+    <ul class="scard-grid" id="tracks">${tracks.map((t, i) => trackCard(t, L, i, i + 1)).join("")}</ul>`;
 }
 
 function leafView(node, base, root) {
