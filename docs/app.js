@@ -948,6 +948,7 @@ async function mushaf(parts) {
     <button class="chip" data-act="listenSurah" aria-pressed="false">${icSm("play", 15)} استمع · ${esc(mr[2])}</button>
     <button class="chip" data-act="pickMReciter" aria-pressed="false" aria-label="تغيير القارئ">${icSm("people", 15)}</button>
     <a class="chip" href="#/index" aria-pressed="false">${icSm("list", 15)} الفهرس</a>
+    <a class="chip" href="#/search?in=quran" aria-pressed="false">${icSm("search", 15)} بحث في الآيات</a>
     <button class="chip" data-act="bookmark" id="bmChip" aria-pressed="${S.bookmark === page}">${icSm("bookmark", 15)} علامة</button>
     <button class="chip" data-act="immersive" aria-pressed="false">${icSm("expand", 15)} ملء الشاشة</button>
     <button class="chip" data-act="riwaya" aria-pressed="${riw === "warsh"}">رواية ورش</button>
@@ -1569,22 +1570,63 @@ async function buildIndex() {
   LIBINDEX = out;
   return out;
 }
+let QURAN = null;
+const qnorm = (t) => String(t || "").replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g, "")
+  .replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/ؤ/g, "و").replace(/ئ/g, "ي").replace(/\s+/g, " ").trim();
+const AYAH_NAMES = [
+  ["ايه الكرسي", [[2, 255]]], ["خواتيم البقره", [[2, 285], [2, 286]]], ["اواخر البقره", [[2, 285], [2, 286]]],
+  ["ايه الدين", [[2, 282]]], ["ايه النور", [[24, 35]]], ["ايه السيف", [[9, 5]]],
+];
+async function ayahSearch(q, limit) {
+  QURAN ||= await getJSON("data/quran.json");
+  const v = qnorm(q);
+  if (v.length < 2) return { list: [], total: 0 };
+  const named = AYAH_NAMES.find(([n]) => n.startsWith(v.replace(/^اي[هة]?\s*/, "ايه ")) || v.includes(n));
+  if (named && v.length > 4) {
+    const hits = named[1].map(([su, a]) => QURAN.find((r) => r[0] === su && r[1] === a));
+    return { list: hits, total: hits.length };
+  }
+  let hits = QURAN.filter((r) => r[4].includes(v));
+  if (!hits.length) {
+    const words = v.split(" ").filter((w) => w.length > 1);
+    if (words.length > 1) hits = QURAN.filter((r) => words.every((w) => r[4].includes(w)));
+  }
+  return { list: hits.slice(0, limit), total: hits.length };
+}
+function ayahHTML(r) {
+  return `<a class="ayah" href="#/mushaf/${r[2]}"><span class="ayah-t">﴿${esc(r[3])}﴾</span>
+    <span class="ayah-m">سورة ${esc(META.chapters[r[0] - 1])} · الآية ${n2a(r[1])} <i>صفحة ${n2a(r[2])} ${icSm("chev", 14).replace('class="icon"', 'class="icon flip"')}</i></span></a>`;
+}
+
 async function search(parts, qs) {
-  setTop("بحث");
+  const onlyQuran = qs.get("in") === "quran";
+  setTop(onlyQuran ? "البحث في القرآن" : "بحث");
   const q0 = qs.get("q") || "";
+  const hint = onlyQuran ? "اكتب كلمة أو جزء من آية، زي «الصابرين» أو «ربنا آتنا»." : "اكتب اسم قارئ، سورة، شيخ، موضوع زي «الصبر»، أو كلمة من آية.";
   after(() => {
     const inp = $("#q");
     inp.value = q0;
     inp.focus();
     let t = 0;
-    inp.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => run(inp.value), 220); });
+    inp.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => run(inp.value), 260); });
     if (q0) run(q0);
   });
   async function run(q) {
-    history.replaceState(history.state, "", `#/search?q=${encodeURIComponent(q)}`);
+    history.replaceState(history.state, "", `#/search?${onlyQuran ? "in=quran&" : ""}q=${encodeURIComponent(q)}`);
     const v = norm(q), box = $("#res");
-    if (v.length < 2) { box.innerHTML = `<p class="note">اكتب اسم قارئ، سورة، شيخ، أو موضوع زي «الصبر» أو «غزوة بدر».</p>`; return; }
+    if (qnorm(q).length < 2) { box.innerHTML = `<p class="note">${hint}</p>`; return; }
     box.innerHTML = `<p class="note">جاري البحث…</p>`;
+    let ay;
+    try { ay = await ayahSearch(q, onlyQuran ? 300 : 3); } catch { ay = { list: [], total: 0 }; }
+    if ($("#q").value !== q) return;
+    const ayHTML = ay.total ? `<div class="sec-h"><h2>في آيات القرآن</h2><span class="count">${n2a(ay.total)}</span></div>
+      <div class="ayahs">${ay.list.map(ayahHTML).join("")}</div>
+      ${!onlyQuran && ay.total > ay.list.length ? `<div class="btn-row"><a class="btn ghost" href="#/search?in=quran&q=${encodeURIComponent(q)}">كل الآيات · ${n2a(ay.total)}</a></div>` : ""}
+      ${onlyQuran && ay.total > ay.list.length ? `<p class="note">ظاهر أول ${n2a(ay.list.length)} آية. زوّد كلمة عشان تضيّق البحث.</p>` : ""}` : "";
+    if (onlyQuran) {
+      box.innerHTML = ayHTML || `<div class="empty"><b>مفيش آيات فيها «${esc(q)}»</b>جرّب كلمة واحدة، أو اكتبها من غير تشكيل.</div>`;
+      return;
+    }
     const rs = await getJSON("data/radios.json");
     const idx = await buildIndex();
     const people = RECITERS.filter((r) => norm(r[1]).includes(v)).slice(0, 24);
@@ -1597,10 +1639,11 @@ async function search(parts, qs) {
     const LL = reg(lT);
     let j = 0;
     if ($("#q").value !== q) return;
-    box.innerHTML = (people.length + surahs.length + radios.length + libs.length) === 0
+    box.innerHTML = (people.length + surahs.length + radios.length + libs.length + ay.total) === 0
       ? `<div class="empty"><b>مفيش نتايج لـ «${esc(q)}»</b>جرّب كلمة أقصر أو اسم من غير «الشيخ».</div>`
       : `${people.length ? `<div class="sec-h"><h2>القراء والمشايخ</h2></div><div class="gallery">${people.map((r) => `<a class="person" href="#/r/${r[0]}">${avatar(r[0], r[1])}<b>${esc(r[1])}</b></a>`).join("")}</div>` : ""}
         ${surahs.length ? `<div class="sec-h"><h2>السور في المصحف</h2></div><ul class="list">${surahs.map(([n, i]) => `<li><a class="row" href="#/mushaf/${META.spages[i]}"><span class="num">${n2a(i + 1)}</span><span class="grow"><span class="t">سورة ${esc(n)}</span><span class="s">صفحة ${n2a(META.spages[i])}</span></span></a></li>`).join("")}</ul>` : ""}
+        ${ayHTML}
         ${radios.length ? `<div class="sec-h"><h2>الإذاعات</h2></div><ul class="list">${rT.map((t, i) => `<li><button class="row" data-play="${RL}:${i}" data-u="${esc(t.u)}"><span class="num">${ic("radio").replace('class="icon"', 'class="icon" style="width:18px;height:18px"')}</span><span class="grow"><span class="t">${esc(t.t)}</span><span class="s">بث مباشر</span></span></button></li>`).join("")}</ul>` : ""}
         ${libs.length ? `<div class="sec-h"><h2>الدروس والمواد</h2></div><ul class="list">${libs.map((x) => {
           if (x.audio) { const k = j++; return `<li><button class="row" data-play="${LL}:${k}" data-u="${esc(x.audio)}"><span class="num">${ic(x.v ? "video" : "play").replace('class="icon"', 'class="icon" style="width:16px;height:16px"')}</span><span class="grow"><span class="t">${esc(x.t)}</span><span class="s">${esc(x.s)}</span></span></button></li>`; }
@@ -1608,7 +1651,10 @@ async function search(parts, qs) {
         }).join("")}</ul>` : ""}`;
     updatePlayerUI(false);
   }
-  return `<label class="search">${ic("search")}<input id="q" type="search" placeholder="ابحث في كل الأقسام" autocomplete="off" enterkeyhint="search"></label><div id="res"><p class="note">اكتب اسم قارئ، سورة، شيخ، أو موضوع زي «الصبر» أو «غزوة بدر».</p></div>`;
+  return `<div class="chips" role="group" aria-label="نطاق البحث">
+      <a class="chip" href="#/search${q0 ? `?q=${encodeURIComponent(q0)}` : ""}" aria-pressed="${!onlyQuran}">كل الأقسام</a>
+      <a class="chip" href="#/search?in=quran${q0 ? `&q=${encodeURIComponent(q0)}` : ""}" aria-pressed="${onlyQuran}">آيات القرآن</a></div>
+    <label class="search">${ic("search")}<input id="q" type="search" placeholder="${onlyQuran ? "ابحث بكلمة من الآية" : "ابحث في كل الأقسام"}" autocomplete="off" enterkeyhint="search"></label><div id="res"><p class="note">${hint}</p></div>`;
 }
 
 /* ======================================================================

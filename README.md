@@ -11,10 +11,15 @@
 
 <a href="#install"><img src="assets/button-install.png" width="300" alt="ثبّت الترا قرآن / Install Ultra Quran" /></a>
 <a href="https://github.com/K3bOra/UltraQuran/releases"><img src="assets/button-releases.png" width="300" alt="الإصدارات الرسمية / Official releases" /></a>
+<a href="https://k3bora.github.io/UltraQuran/"><img src="assets/button-web.png" width="300" alt="افتح النسخة الويب / Open the web app" /></a>
 
 <p dir="rtl"><b>تلاوات ٢٦٠ قارئ، ومصحف مزخرف بالتفسير، وموسوعات العلماء، والمكتبة الإسلامية كاملة… على شاشة التلفزيون.</b></p>
 
 Recitations by 260 reciters, an illuminated Mushaf with tafsir, the great scholars and a complete Islamic library — on your TV.
+
+<p dir="rtl">📱 <b>ومن غير ريسيفر كمان:</b> <a href="https://k3bora.github.io/UltraQuran/">النسخة الويب</a> بتفتح من أي موبايل وأي نت، فيها كل محتوى البلجن، ومعاها مواقيت الصلاة والأذان والقبلة، وتتثبت على الموبايل كتطبيق.</p>
+
+📱 **No receiver needed:** the [web app](https://k3bora.github.io/UltraQuran/) opens on any phone, anywhere, with the full plugin library plus prayer times, adhan and Qibla, and installs on your phone like an app.
 
 <p dir="rtl"><a href="#whats-new">الجديد</a> · <a href="#tour">الصور</a> · <a href="#sections">الأقسام</a> · <a href="#features">المميزات</a> · <a href="#install">التثبيت</a> · <a href="#faq">الأسئلة</a></p>
 

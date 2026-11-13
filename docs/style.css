@@ -645,7 +645,7 @@ html { overflow-x: clip; }
   display: flex; flex-direction: column; align-items: center; line-height: 1.25; white-space: nowrap;
   padding: 3px 14px 4px; border-radius: 999px; background: #d9b36c12; box-shadow: inset 0 0 0 1px #d9b36c33; }
 .top .credit small { font-size: 10.5px; color: var(--mist); letter-spacing: .2px; }
-.top .credit b { font: 600 14px/1.3 var(--ui);
+.top .credit b { padding-bottom: 3px; margin-bottom: -3px; font: 600 14px/1.3 var(--ui);
   background: linear-gradient(90deg, #f8dca0, var(--gold) 45%, #b8955a); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .top .credit::before, .top .credit::after { content: ""; position: absolute; top: 50%; width: 5px; height: 5px; background: var(--gold); transform: translateY(-50%) rotate(45deg); opacity: .7; }
 .top .credit::before { right: -2px; }
@@ -656,3 +656,11 @@ html { overflow-x: clip; }
   .top .credit small { font-size: 9.5px; }
   .top .credit b { font-size: 12.5px; }
 }
+
+/* --- ayah search results --- */
+.ayahs { display: flex; flex-direction: column; gap: 10px; }
+.ayah { display: block; padding: 14px 16px 12px; border-radius: 18px; background: var(--paper); color: #2a2418; box-shadow: 0 0 0 1px var(--line); }
+.ayah:active { transform: scale(.99); }
+.ayah-t { display: block; font: 400 21px/2 var(--quran); text-align: justify; }
+.ayah-m { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; padding-top: 8px; border-top: 1px solid #b8955240; font: 600 13px var(--ui); color: #0b3b30; }
+.ayah-m i { font-style: normal; display: inline-flex; align-items: center; gap: 2px; color: #9a7a32; }
