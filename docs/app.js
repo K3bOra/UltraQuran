@@ -317,10 +317,10 @@ function closeVideo(fromPop) {
    ROUTER
    ====================================================================== */
 const TILES = [
-  { t: "الشيخ الشعراوي", m: "خواطر التفسير صوتاً وصورة", ic: "mic", go: "#/lib/1" },
+  { t: "الشيخ الشعراوي", m: "خواطر التفسير صوتاً وصورة", ic: "mic", go: "#/lib/1", p: 999 },
   { t: "المصحف والتفسير", m: "604 صفحة بروايتي حفص وورش", ic: "book", go: "#/mushaf" },
-  { t: "الشيخ كشك", m: "383 خطبة في 10 أقسام", ic: "mic", go: "#/r/950" },
-  { t: "المبتهلون", m: "14 من أعلام الابتهال", ic: "star", go: "#/quran/m" },
+  { t: "الشيخ كشك", m: "383 خطبة في 10 أقسام", ic: "mic", go: "#/r/950", p: 950 },
+  { t: "المبتهلون", m: "14 من أعلام الابتهال", ic: "star", go: "#/quran/m", p: 951 },
   { t: "التفسير وعلومه", m: "الطبري وابن كثير · 1155 درساً", ic: "tafsir", go: "#/lib/2" },
   { t: "الحديث الشريف", m: "شروح صوتية كاملة · 681 مادة", ic: "quote", go: "#/lib/3" },
   { t: "السنة والشمائل", m: "الشمائل والطب النبوي", ic: "lantern", go: "#/lib/4" },
@@ -334,6 +334,7 @@ const TILES = [
   { t: "عالم الأطفال", m: "المصحف المعلم وجزء عمّ", ic: "kid", go: "#/lib/12" },
   { t: "التقويم الإسلامي", m: "التاريخ الهجري والمواسم", ic: "moon", go: "#/lib/13" },
   { t: "المسابقات", m: "70 سؤالاً بالنتيجة", ic: "q", go: "#/quiz" },
+  { t: "البحث في القرآن", m: "ابحث بكلمة من أي آية", ic: "search", go: "#/search?in=quran" },
 ];
 
 function setTop(title, opts = {}) {
@@ -349,11 +350,18 @@ function setTop(title, opts = {}) {
   document.title = opts.home ? "ألترا قرآن" : `${title} · ألترا قرآن`;
 }
 function setTab(root) {
-  $$("#tabs a").forEach((a) => {
-    const r = a.getAttribute("href").slice(2).split("/")[0];
-    a.toggleAttribute("aria-current", r === root);
-    if (r === root) a.setAttribute("aria-current", "page");
-  });
+  const h = location.hash || "#/";
+  root = { r: "quran", index: "mushaf" }[root] || root;
+  const links = $$("#tabs a:not(.rail-brand)");
+  // the most specific link that matches the current address wins
+  let best = null;
+  for (const a of links) {
+    const href = a.getAttribute("href");
+    const hit = href === "#/" ? (h === "#/" || h === "#" || h === "") : (h === href || h.startsWith(href + "/") || h.startsWith(href + "?"));
+    const fallback = href.slice(2).split("/")[0] === root && !href.includes("/", 2);
+    if ((hit || fallback) && (!best || href.length > best.getAttribute("href").length)) best = a;
+  }
+  links.forEach((a) => { if (a === best) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
 }
 
 let renderToken = 0;
@@ -407,20 +415,28 @@ async function home() {
       <span class="grow"><span class="cap">${t.live ? "ارجع للإذاعة" : "كمّل الاستماع"}${S.last.time > 5 && !t.live ? ` من ${fmtTime(S.last.time)}` : ""}</span>
       <span class="t" style="display:block">${esc(t.t)}</span><span class="s" style="display:block">${esc(t.s || "")}</span></span></button>`;
   }
+  const faces = [241, 51, 112, 118, 125, 121].filter((id) => portrait(id));
+  const tile = (x) => `<a class="tile ${x.p ? "has-p" : ""}" href="${x.go}">${x.p && portrait(x.p) ? `<span class="tile-bg" style="background-image:url('${portrait(x.p)}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`;
+  const cards = [resume,
+    S.readAt ? `<a class="pstrip read" href="#/mushaf/${S.page}"><span class="pstrip-ic">${icSm("book", 24)}</span><span class="grow"><small>تابع القراءة في المصحف</small><b>سورة ${esc(META.chapters[surahOfPage(S.page)])} · صفحة ${n2a(S.page)}</b></span>${S.bookmark && S.bookmark !== S.page ? `<span class="bmgo" data-go="#/mushaf/${S.bookmark}">${icSm("bookmark", 16)} ${n2a(S.bookmark)}</span>` : ""}</a>` : "",
+    installCard(false)].filter(Boolean);
   return `
-  <section class="hero">
-    <div class="date">${esc(greg)}${hijri ? ` · <b>${esc(hijri)}</b>` : ""}</div>
-    <blockquote>﴿${esc(ayah[0])}﴾</blockquote>
-    <cite>سورة ${esc(ayah[1])} · الآية ${n2a(ayah[2])}</cite>
-  </section>
-  ${homePrayerCard()}
-  ${resume}
-  ${S.readAt ? `<a class="pstrip read" href="#/mushaf/${S.page}"><span class="pstrip-ic">${icSm("book", 24)}</span><span class="grow"><small>تابع القراءة في المصحف</small><b>سورة ${esc(META.chapters[surahOfPage(S.page)])} · صفحة ${n2a(S.page)}</b></span>${S.bookmark && S.bookmark !== S.page ? `<span class="bmgo" data-go="#/mushaf/${S.bookmark}">${icSm("bookmark", 16)} ${n2a(S.bookmark)}</span>` : ""}</a>` : ""}
-  ${installCard(false)}
+  <div class="home-top">
+    <section class="hero">
+      <div class="date">${esc(greg)}${hijri ? ` · <b>${esc(hijri)}</b>` : ""}</div>
+      <blockquote>﴿${esc(ayah[0])}﴾</blockquote>
+      <cite>سورة ${esc(ayah[1])} · الآية ${n2a(ayah[2])}</cite>
+    </section>
+    ${homePrayerPanel()}
+  </div>
+  ${cards.length ? `<div class="home-cards n${cards.length}">${cards.join("")}</div>` : ""}
   <div class="sec-h"><h2>الأقسام</h2></div>
   <div class="tiles">
-    <a class="tile wide" href="#/quran"><span class="ic">${ic("book")}</span><span><b>القرآن الكريم</b><small>المصاحف المرتلة لـ 260 قارئاً وتسجيلات نادرة لأعلام التلاوة</small></span></a>
-    ${TILES.map((x) => `<a class="tile" href="${x.go}"><span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`).join("")}
+    <a class="tile feature" href="#/quran">
+      <span class="feature-faces">${faces.map((id) => `<img src="${portrait(id)}" alt="" loading="lazy">`).join("")}</span>
+      <span class="ic">${ic("book")}</span><b>القرآن الكريم</b><small>المصاحف المرتلة لـ 260 قارئاً بكل الروايات، وتسجيلات نادرة لأعلام التلاوة</small>
+      <span class="feature-go">تصفح القراء ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></a>
+    ${TILES.map(tile).join("")}
   </div>`;
 }
 
@@ -972,21 +988,23 @@ function setupBook(page) {
   if (!book) return;
   BOOK = { el: book, page, loaded: new Set() };
   const leafOf = (p) => book.children[p - 1];
+  const leafW = () => book.children[0].getBoundingClientRect().width || book.clientWidth || 1;
+  const twoUp = () => leafW() < book.clientWidth * 0.75;
   const goTo = (p, smooth) => {
-    const leaf = leafOf(p);
-    if (!leaf) return;
-    book.scrollTo({ left: leaf.offsetLeft - book.offsetLeft - (book.clientWidth - leaf.clientWidth) / 2, behavior: smooth ? "smooth" : "instant" });
+    p = Math.min(604, Math.max(1, p));
+    if (twoUp() && p % 2 === 0) p -= 1;   // open book: the odd page sits on the right
+    book.scrollTo({ left: -(p - 1) * leafW(), behavior: smooth ? "smooth" : "instant" });
   };
   BOOK.goTo = goTo;
+  BOOK.step = () => (twoUp() ? 2 : 1);
   goTo(page, false);
-  const ensure = (p) => { for (const q of [p, p + 1, p - 1, p + 2]) if (q >= 1 && q <= 604) fillLeaf(leafOf(q), q); };
+  const ensure = (p) => { for (const q of [p, p + 1, p - 1, p + 2, p + 3]) if (q >= 1 && q <= 604) fillLeaf(leafOf(q), q); };
   ensure(page);
   if (S.tafsir) drawTafsir(page);
   let t = 0;
   const settle = () => {
     if (!document.body.contains(book)) return;
-    const w = book.clientWidth || 1;
-    const p = Math.min(604, Math.max(1, Math.round(Math.abs(book.scrollLeft) / w) + 1));
+    const p = Math.min(604, Math.max(1, Math.round(Math.abs(book.scrollLeft) / leafW()) + 1));
     ensure(p);
     if (p === BOOK.page) return;
     BOOK.page = p;
@@ -1224,7 +1242,7 @@ function adhanTick() {
   const stamp = ymdIn(c.tz || Intl.DateTimeFormat().resolvedOptions().timeZone).join("-");
   c.fired ||= {};
   for (const [k] of PRAYERS) {
-    if (k === "sunrise" || !c.on[k]) continue;
+    if (k === "sunrise" || !c.on[k] || c.auto) continue;
     const at = t[k].getTime();
     const id = stamp + k;
     if (now >= at && now - at < 4 * 60e3 && !c.fired[id]) {
@@ -1262,18 +1280,40 @@ function refreshHomePrayer() {
   const n = nextPrayer();
   if (!n) return;
   $("#hcount").textContent = countdown(n.t - Date.now());
-  if ($("#hnext").dataset.k !== n.k) { $("#hnext").dataset.k = n.k; $("#hnext").textContent = PNAME[n.k]; $("#htime").textContent = fmtClock(n.t); }
+  if ($("#hnext").dataset.k !== n.k) route();
 }
-function homePrayerCard() {
+function autoCity() {
+  const c = prayerCfg();
+  if (c.lat != null) return;
+  let tz = "";
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch {}
+  const x = CITIES.find((y) => y[3] === tz);
+  if (!x) return;
+  Object.assign(c, { name: x[0], lat: x[1], lng: x[2], tz: x[3], method: x[4], auto: true });
+  save(true);
+}
+function homePrayerPanel() {
+  autoCity();
   const c = prayerCfg();
   if (c.lat == null) {
-    return `<a class="pstrip setup" href="#/prayer"><span class="pstrip-ic">${icSm("dome", 24)}</span>
-      <span class="grow"><b>مواقيت الصلاة والأذان</b><small>حدد مدينتك والأذان يشتغل بصوت الشيخ محمد رفعت أو مؤذنك المفضل</small></span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>`;
+    return `<a class="ppanel setup" href="#/prayer"><span class="pstrip-ic">${icSm("dome", 26)}</span>
+      <b>مواقيت الصلاة والأذان</b><small>حدد مدينتك والأذان يشتغل بصوت الشيخ محمد رفعت أو مؤذنك المفضل</small><span class="btn" style="margin-top:8px">حدد مدينتك</span></a>`;
   }
   const n = nextPrayer();
-  return `<a class="pstrip" href="#/prayer"><span class="pstrip-ic">${icSm("dome", 24)}</span>
-    <span class="grow"><small>الصلاة القادمة · ${esc(c.name || "")}</small><b><span id="hnext" data-k="${n.k}">${PNAME[n.k]}</span> · <span id="htime">${fmtClock(n.t)}</span></b></span>
-    <span class="pstrip-count" id="hcount">${countdown(n.t - Date.now())}</span></a>`;
+  const t = n.today;
+  const cells = PRAYERS.map(([k, name]) => {
+    const isNext = k === n.k && !n.tomorrow;
+    const past = t[k] < Date.now() && !isNext;
+    return `<span class="pp-cell ${isNext ? "next" : ""} ${past ? "past" : ""} ${k === "sunrise" ? "sun" : ""}"><small>${name}</small><b>${fmtClock(t[k]).replace(/\s*[صم]$/, "")}</b><i>${fmtClock(t[k]).match(/[صم]$/)?.[0] === "ص" ? "ص" : "م"}</i></span>`;
+  }).join("");
+  return `<section class="ppanel">
+    <a class="pp-head" href="#/prayer">
+      <span class="grow"><small>${n.tomorrow ? "غداً" : "الصلاة القادمة"} · ${esc(c.name || "")}${c.auto ? " (تلقائي)" : ""}</small>
+        <b><span id="hnext" data-k="${n.k}">${PNAME[n.k]}</span><span class="pp-at" id="htime">${fmtClock(n.t)}</span></b></span>
+      <span class="pp-count" id="hcount">${countdown(n.t - Date.now())}</span></a>
+    <div class="pp-times">${cells}</div>
+    <div class="pp-foot"><a href="#/prayer">${icSm("bell", 15)} الأذان والإعدادات</a><a href="#/prayer/qibla">${icSm("pin", 15)} القبلة ${n2a(Math.round(qiblaBearing(c.lat, c.lng)))}°</a></div>
+  </section>`;
 }
 
 async function prayer(parts) {
@@ -1305,6 +1345,7 @@ async function prayer(parts) {
         <span class="pat">الأذان ${fmtClock(n.t)}</span></div>
       <div class="ploc">${icSm("pin", 16)} ${esc(c.name || "موقعي")}${hijri ? ` · ${esc(hijri)}` : ""}</div>
     </section>
+    ${c.auto ? `<div class="setting confirm"><span class="grow"><b>${esc(c.name)} · اتحددت تلقائي</b><small>أكّد مدينتك أو اختار غيرها من الإعدادات تحت، عشان الأذان يشتغل في وقته</small></span><button class="btn" style="height:38px;padding:0 16px" data-act="confirmCity">تأكيد</button></div>` : ""}
     <ul class="plist">${rows}</ul>
     <a class="mcard qcard" href="#/prayer/qibla"><span class="avatar">${icSm("pin", 28)}</span><span class="grow"><small>اتجاه القبلة</small><b>${n2a(Math.round(qiblaBearing(c.lat, c.lng)))}° من الشمال</b><span>بوصلة حية على الموبايل</span></span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>
     <div class="sec-h"><h2>المؤذن</h2></div>
@@ -1339,10 +1380,10 @@ function prayerSetup(first) {
     $("#pcity").addEventListener("change", (e) => {
       const x = CITIES[+e.target.value];
       if (!x) return;
-      Object.assign(c, { name: x[0], lat: x[1], lng: x[2], tz: x[3], method: x[4] });
+      Object.assign(c, { name: x[0], lat: x[1], lng: x[2], tz: x[3], method: x[4], auto: false });
       save(true); toast(`تم: ${x[0]}`); route();
     });
-    $("#pmethod").addEventListener("change", (e) => { c.method = e.target.value; save(true); route(); });
+    $("#pmethod").addEventListener("change", (e) => { c.method = e.target.value; c.auto = false; save(true); route(); });
     $("#pasr").addEventListener("change", (e) => { c.asr = +e.target.value; save(true); route(); });
   });
   return html;
@@ -1355,7 +1396,7 @@ function locateMe() {
     const c = prayerCfg();
     c.lat = +pos.coords.latitude.toFixed(4); c.lng = +pos.coords.longitude.toFixed(4);
     c.tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    c.name = "موقعي الحالي";
+    c.name = "موقعي الحالي"; c.auto = false;
     // pick the method of the nearest listed city
     let best = null, bd = 1e9;
     for (const x of CITIES) { const dd = (x[1] - c.lat) ** 2 + (x[2] - c.lng) ** 2; if (dd < bd) { bd = dd; best = x; } }
@@ -1739,8 +1780,8 @@ document.addEventListener("click", async (e) => {
     case "mode": S.mode = S.mode === "img" ? "text" : "img"; save(); sessionStorage.setItem("keep-scroll", "1"); route(); break;
     case "tafsirT": S.tafsir = !S.tafsir; save(); el.setAttribute("aria-pressed", S.tafsir); $("#tafsir").hidden = !S.tafsir; if (S.tafsir) drawTafsir(S.page); break;
     case "saveMushaf": saveMushaf(); break;
-    case "pgPrev": goPage((BOOK?.page || S.page) - 1); break;
-    case "pgNext": goPage((BOOK?.page || S.page) + 1); break;
+    case "pgPrev": goPage((BOOK?.page || S.page) - (BOOK?.step?.() || 1)); break;
+    case "pgNext": goPage((BOOK?.page || S.page) + (BOOK?.step?.() || 1)); break;
     case "listenSurah": listenSurah(); break;
     case "pickMReciter": pickMReciter(); break;
     case "setMReciter": S.mReciter = +el.dataset.id; save(true); $("#modal").classList.remove("open"); sessionStorage.setItem("keep-scroll", "1"); route(); setTimeout(listenSurah, 300); break;
@@ -1752,6 +1793,7 @@ document.addEventListener("click", async (e) => {
     case "pbell": { const c = prayerCfg(); const k = el.dataset.k; c.on[k] = !c.on[k]; save(true); toast(c.on[k] ? `أذان ${PNAME[k]} مفعّل` : `أذان ${PNAME[k]} متوقف`); sessionStorage.setItem("keep-scroll", "1"); route(); break; }
     case "testAdhan": playAdhan("dhuhr", true); break;
     case "gps": locateMe(); break;
+    case "confirmCity": { const c = prayerCfg(); c.auto = false; save(true); toast(`تم ✓ الأذان هيشتغل على مواقيت ${c.name}`); route(); break; }
     case "ics": buildICS(); break;
     case "notify": {
       const c = prayerCfg();
@@ -1789,8 +1831,8 @@ document.addEventListener("keydown", (e) => {
   if (e.target.matches("input, textarea")) return;
   if (e.key === " " && cur()) { e.preventDefault(); toggle(); }
   if (location.hash.startsWith("#/mushaf")) {
-    if (e.key === "ArrowLeft") goPage(S.page + 1);
-    if (e.key === "ArrowRight") goPage(S.page - 1);
+    if (e.key === "ArrowLeft") goPage(S.page + (BOOK?.step?.() || 1));
+    if (e.key === "ArrowRight") goPage(S.page - (BOOK?.step?.() || 1));
   }
   if (e.key === "Escape") { closeSheet(); closeVideo(); }
 });
