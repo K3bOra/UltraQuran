@@ -456,7 +456,7 @@ async function home() {
   }
   const tile = (x) => `<a class="tile ${x.p ? "has-p" : ""}" href="${x.go}">${x.p && portrait(x.p) ? `<span class="tile-bg" style="background-image:url('${portrait(x.p)}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`;
   const faces = RECITERS.filter((r) => r[5] && (r[2] === "q" || r[2] === "k")).slice(0, 72).map((r) => r[0]);
-  return `
+  return `<div class="home">
   <div class="home-top">
     <section class="hero">
       <div class="date">${esc(greg)}${hijri ? ` · <b>${esc(hijri)}</b>` : ""}</div>
@@ -473,7 +473,7 @@ async function home() {
       <span class="ic">${ic("book")}</span><b>القرآن الكريم</b><small>المصاحف المرتلة لـ 260 قارئاً بكل الروايات، وتسجيلات نادرة لأعلام التلاوة</small>
       <span class="feature-go">تصفح القراء ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></a>
     ${TILES.map(tile).join("")}
-  </div>`;
+  </div></div>`;
 }
 
 /* ---------------- RECITERS ---------------- */
