@@ -254,6 +254,13 @@ function renderSheet(full) {
 function openSheet() {
   if (!cur()) return;
   const sh = $("#sheet");
+  if (innerWidth >= 1024) {
+    // desktop: the full player grows out of the mini player, same width, joined to its top edge
+    const r = $("#mini").getBoundingClientRect();
+    sh.style.setProperty("--joinB", `${Math.round(innerHeight - r.top - 1)}px`);
+    sh.style.setProperty("--joinW", `${Math.round(r.width)}px`);
+    sh.style.setProperty("--joinL", `${Math.round(r.left + r.width / 2)}px`);
+  }
   sh.classList.add("open"); sh.setAttribute("aria-hidden", "false");
   renderSheet(true);
   history.pushState({ sheet: 1 }, "");
