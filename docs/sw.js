@@ -1,9 +1,9 @@
 /* Ultra Quran service worker: app shell offline, data refreshed in the background,
    Mushaf pages and fonts cached after first view. Audio is not intercepted
    (offline audio is read from the "uq-audio" cache by the page itself). */
-const VERSION = "uq-shell-12";
+const VERSION = "uq-shell-13";
 const SHELL = [
-  "./", "index.html", "style.css?v=12", "app.js?v=12", "prayer-calc.js?v=12", "style.css", "app.js", "manifest.webmanifest",
+  "./", "index.html", "style.css?v=13", "app.js?v=13", "prayer-calc.js?v=13", "style.css", "app.js", "manifest.webmanifest",
   "img/lattice.svg", "img/bg.webp", "img/bg-m.webp", "fonts/Cairo-SemiBold.ttf", "img/star.svg", "icons/icon-192.png", "icons/icon-512.png",
   "prayer-calc.js", "data/meta.json", "data/reciters.json", "data/radios.json", "data/adhan.json",
 ];
