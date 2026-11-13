@@ -962,3 +962,14 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .feature-wall { gap: 12px; }
   .feature-wall img { width: 70px !important; height: 70px !important; max-height: 70px; }
 }
+
+/* --- side rail as a floating rounded panel --- */
+@media (min-width: 1024px) {
+  body { padding-right: calc(var(--rail) + 14px); }
+  .tabs { top: 14px; bottom: 14px; right: 14px; left: auto; height: auto; border-radius: 30px; overflow: hidden auto;
+    box-shadow: inset 0 0 0 1px #d9b36c66, 0 18px 50px #00000059 !important; }
+  .tabs::after { display: none; }
+  .rail-credit { border-radius: 20px !important; }
+  .tabs a:not(.rail-brand) { border-radius: 18px; }
+  .mini { inset-inline: calc(var(--rail) + 38px) 24px; }
+}
