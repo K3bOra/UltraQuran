@@ -1044,3 +1044,17 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
     .pq.next::after { display: none; }
   }
 }
+
+/* --- brand & designer name in Uthmani calligraphy --- */
+.top .brand h1, .rail-brand b, .top .credit b, .rail-credit b {
+  font-family: "Amiri Quran", "Amiri", serif !important; font-weight: 400 !important; letter-spacing: 0;
+  background: linear-gradient(180deg, #fff1c9 0%, #f0cf86 45%, #c99a4e 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding: 6px 2px 10px; margin: -6px 0 -10px; line-height: 1.5; filter: drop-shadow(0 2px 3px #0006);
+}
+.top .brand h1 { font-size: 30px; overflow: visible; }
+.top .credit b { font-size: 18px; }
+.top .credit small, .rail-credit small { font-family: var(--ui); }
+@media (min-width: 1024px) {
+  .rail-brand b { font-size: 33px; }
+  .rail-credit b { font-size: 23px; }
+}
