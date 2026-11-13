@@ -1316,6 +1316,8 @@ function refreshHomePrayer() {
   const n = nextPrayer();
   if (!n) return;
   $("#hcount").textContent = countdown(n.t - Date.now());
+  const ring = $("#hring");
+  if (ring) ring.style.strokeDashoffset = String(100 - Math.max(0, Math.min(100, ((Date.now() - n.prev.t) / (n.t - n.prev.t)) * 100)));
   if ($("#hnext").dataset.k !== n.k) route();
 }
 function autoCity() {
@@ -1328,6 +1330,7 @@ function autoCity() {
   Object.assign(c, { name: x[0], lat: x[1], lng: x[2], tz: x[3], method: x[4], auto: true });
   save(true);
 }
+const P_ICON = { fajr: "p-dawn", sunrise: "p-sunrise", dhuhr: "p-noon", asr: "p-asr", maghrib: "p-sunset", isha: "p-night" };
 function homePrayerPanel() {
   autoCity();
   const c = prayerCfg();
@@ -1337,18 +1340,38 @@ function homePrayerPanel() {
   }
   const n = nextPrayer();
   const t = n.today;
+  const span = n.t - n.prev.t, done = Date.now() - n.prev.t;
+  const pct = Math.max(0, Math.min(100, (done / span) * 100));
+  const ampm = (d) => (fmtClock(d).match(/[صم]$/) || [""])[0];
+  const clock = (d) => fmtClock(d).replace(/\s*[صم]$/, "");
   const cells = PRAYERS.map(([k, name]) => {
     const isNext = k === n.k && !n.tomorrow;
     const past = t[k] < Date.now() && !isNext;
-    return `<span class="pp-cell ${isNext ? "next" : ""} ${past ? "past" : ""} ${k === "sunrise" ? "sun" : ""}"><small>${name}</small><b>${fmtClock(t[k]).replace(/\s*[صم]$/, "")}</b><i>${fmtClock(t[k]).match(/[صم]$/)?.[0] === "ص" ? "ص" : "م"}</i></span>`;
+    return `<span class="pq ${isNext ? "next" : ""} ${past ? "past" : ""} ${k === "sunrise" ? "sun" : ""}">
+      <svg class="pq-ic" aria-hidden="true"><use href="#i-${P_ICON[k]}"/></svg>
+      <span class="pq-n">${name}</span><span class="pq-t">${clock(t[k])}<i>${ampm(t[k])}</i></span></span>`;
   }).join("");
-  return `<section class="ppanel">
-    <a class="pp-head" href="#/prayer">
-      <span class="grow"><small>${n.tomorrow ? "غداً" : "الصلاة القادمة"} · ${esc(c.name || "")}${c.auto ? " (تلقائي)" : ""}</small>
-        <b><span id="hnext" data-k="${n.k}">${PNAME[n.k]}</span><span class="pp-at" id="htime">${fmtClock(n.t)}</span></b></span>
-      <span class="pp-count" id="hcount">${countdown(n.t - Date.now())}</span></a>
-    <div class="pp-times">${cells}</div>
-    <div class="pp-foot"><a href="#/prayer">${icSm("bell", 15)} الأذان والإعدادات</a><a href="#/prayer/qibla">${icSm("pin", 15)} القبلة ${n2a(Math.round(qiblaBearing(c.lat, c.lng)))}°</a></div>
+  let hijri = "";
+  try { hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "long", timeZone: c.tz || undefined }).format(new Date()); } catch {}
+  return `<section class="ppanel lux">
+    <span class="pl-corner tl"></span><span class="pl-corner tr"></span><span class="pl-corner bl"></span><span class="pl-corner br"></span>
+    <a class="pl-head" href="#/prayer">
+      <span class="pl-ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="52"/><circle class="arc" id="hring" cx="60" cy="60" r="52" pathLength="100" style="stroke-dashoffset:${100 - pct}"/></svg>
+        <svg class="pl-ring-ic" aria-hidden="true"><use href="#i-${P_ICON[n.k]}"/></svg>
+      </span>
+      <span class="pl-info">
+        <small>${n.tomorrow ? "غداً" : "الصلاة القادمة"}</small>
+        <b><span id="hnext" data-k="${n.k}">${PNAME[n.k]}</span></b>
+        <span class="pl-count" id="hcount">${countdown(n.t - Date.now())}</span>
+        <span class="pl-at">الأذان ${fmtClock(n.t)}</span>
+      </span>
+    </a>
+    <div class="pq-row">${cells}</div>
+    <div class="pl-foot">
+      <a href="#/prayer">${icSm("pin", 14)} ${esc(c.name || "")}${c.auto ? " · أكّد مدينتك" : ""}${hijri ? ` · ${esc(hijri)}` : ""}</a>
+      <a href="#/prayer/qibla">${icSm("dome", 14)} القبلة ${n2a(Math.round(qiblaBearing(c.lat, c.lng)))}°</a>
+    </div>
   </section>`;
 }
 
