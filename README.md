@@ -21,6 +21,10 @@ Recitations by 260 reciters, an illuminated Mushaf with tafsir, the great schola
 
 📱 **No receiver needed:** the [web app](https://k3bora.github.io/UltraQuran/) opens on any phone, anywhere, with the full plugin library plus prayer times, adhan and Qibla, and installs on your phone like an app.
 
+<p dir="rtl">🤖 <b>تطبيق أندرويد:</b> <a href="https://k3bora.github.io/UltraQuran/app/UltraQuran.apk">حمّل UltraQuran.apk</a> — نفس الموقع، والأذان بصوت الشيخ في ميعاده حتى والتطبيق مقفول والشاشة مقفولة.</p>
+
+🤖 **Android app:** [download UltraQuran.apk](https://k3bora.github.io/UltraQuran/app/UltraQuran.apk) — the same app, plus the adhan in the sheikh's voice on time even with the app closed and the screen locked.
+
 <p dir="rtl"><a href="#whats-new">الجديد</a> · <a href="#tour">الصور</a> · <a href="#sections">الأقسام</a> · <a href="#features">المميزات</a> · <a href="#install">التثبيت</a> · <a href="#faq">الأسئلة</a></p>
 
 [What's new](#whats-new) · [Tour](#tour) · [Sections](#sections) · [Features](#features) · [Install](#install) · [FAQ](#faq)

@@ -1,0 +1,35 @@
+plugins { id "com.android.application" }
+
+def ks = System.getenv("UQ_KEYSTORE")
+
+android {
+    namespace "com.k3bora.ultraquran"
+    compileSdk 35
+    defaultConfig {
+        applicationId "com.k3bora.ultraquran"
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+    }
+    signingConfigs {
+        release {
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv("UQ_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("UQ_KEY_ALIAS") ?: "ultraquran"
+                keyPassword System.getenv("UQ_KEY_PASSWORD") ?: System.getenv("UQ_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (ks) signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

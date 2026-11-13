@@ -9,6 +9,23 @@ const ic = (n) => `<svg class="icon" aria-hidden="true"><use href="#i-${n}"/></s
 const AR = new Intl.NumberFormat("ar-EG-u-nu-latn");
 const n2a = (n) => AR.format(n);
 
+/* ---------------- Android app bridge ---------------- */
+const NATIVE = window.UltraQuranNative || null;
+const IS_ANDROID = /android/i.test(navigator.userAgent);
+const APK_URL = "app/UltraQuran.apk";
+if (NATIVE) document.documentElement.classList.add("in-app");
+let nativeSig = "";
+function nativePlayback(t, playing) {
+  if (!NATIVE) return;
+  const sig = t ? `${t.u}|${playing}` : "none";
+  if (sig === nativeSig) return;
+  nativeSig = sig;
+  try { t ? NATIVE.playbackState(t.t || "", t.s || "", !!playing, true) : NATIVE.playbackState("", "", false, false); } catch {}
+}
+window.__nativeCmd = (c) => {
+  if (c === "toggle") toggle(); else if (c === "next") next(); else if (c === "prev") prev(); else if (c === "stop") closePlayer();
+};
+
 /* ---------------- storage ---------------- */
 const KEY = "uq.v1";
 const S = Object.assign(
@@ -179,6 +196,7 @@ function artHTML(t) {
 function updatePlayerUI(full) {
   const t = cur();
   const mini = $("#mini");
+  nativePlayback(t && !t.adhan ? t : null, !A.paused);
   if (!t) { mini.classList.remove("show"); document.body.style.setProperty("--mini", "0px"); return; }
   mini.classList.add("show");
   document.body.style.setProperty("--mini", "70px");
@@ -412,6 +430,7 @@ async function route() {
     if (!sessionStorage.getItem("keep-scroll")) window.scrollTo(0, 0);
     sessionStorage.removeItem("keep-scroll");
     updatePlayerUI(false);
+    syncNative();
   } catch (e) {
     if (tok !== renderToken) return;
     console.error(e);
@@ -459,7 +478,10 @@ async function home() {
     cont.push(card({ k: "fav", href: "#/saved", btn: "chev", cap: "المفضلة", t: `${n2a(S.fav.length)} ${S.fav.length === 1 ? "مادة" : "مواد"}`,
       s: S.fav[0].t, art: S.fav[0].img ? `<img src="${esc(S.fav[0].img)}" alt="">` : icSm("heart", 22) }));
   }
-  if (!isStandalone() && !S.installHidden) {
+  if (!NATIVE && IS_ANDROID && !S.installHidden) {
+    cont.push(card({ k: "install", href: APK_URL, btn: "dl", cap: "تطبيق أندرويد", t: "حمّل التطبيق", s: "الأذان حتى والتطبيق مقفول",
+      art: `<img src="icons/icon-192.png" alt="">`, extra: `<span class="cont-x" data-act="installHide" role="button" aria-label="إخفاء">${icSm("x", 13)}</span>` }));
+  } else if (!NATIVE && !isStandalone() && !S.installHidden) {
     cont.push(card({ k: "install", act: "install", btn: "dl", cap: "على موبايلك", t: "ثبّت التطبيق", s: "أيقونة على الشاشة الرئيسية",
       art: `<img src="icons/icon-192.png" alt="">`, extra: `<span class="cont-x" data-act="installHide" role="button" aria-label="إخفاء">${icSm("x", 13)}</span>` }));
   }
@@ -1320,8 +1342,33 @@ async function playAdhan(key, test) {
   const track = { t: `أذان ${PNAME[key] || ""}`.trim(), s: m.n, d: test ? "تجربة الأذان" : `حان الآن موعد صلاة ${PNAME[key]}`, u: m.u, img: portrait(m.pid), adhan: true };
   playList([track], 0);
 }
+let lastPlanSig = "";
+async function syncNative() {
+  if (!NATIVE || !META) return;
+  const c = prayerCfg();
+  try {
+    if (c.lat == null || c.auto) { if (lastPlanSig !== "none") { lastPlanSig = "none"; NATIVE.clearPrayers(); } return; }
+    const list = await adhanList();
+    const def = list.find((x) => x[2] === DEFAULT_MUEZZIN.t) || list[0];
+    const normal = (c.muezzin && c.muezzin.u) || def[3];
+    const fajr = (c.fajrMuezzin && c.fajrMuezzin.u) || normal;
+    const today = ymdIn(c.tz || Intl.DateTimeFormat().resolvedOptions().timeZone).join("-");
+    const sig = JSON.stringify([c.lat, c.lng, c.method, c.asr, c.on, normal, fajr, today]);
+    if (sig === lastPlanSig) return;
+    const items = [];
+    for (let d = 0; d < 30; d++) {
+      const t = dayTimes(d);
+      for (const [k, name] of PRAYERS) {
+        if (k === "sunrise" || !c.on[k]) continue;
+        items.push({ t: t[k].getTime(), k, name, url: k === "fajr" ? fajr : normal });
+      }
+    }
+    lastPlanSig = sig;
+    NATIVE.schedulePrayers(JSON.stringify({ city: c.name || "", items }));
+  } catch {}
+}
 function adhanTick() {
-  if (!META) return;
+  if (!META || NATIVE) return;
   const c = prayerCfg();
   if (c.lat == null) return;
   const t = dayTimes(0);
@@ -1465,11 +1512,16 @@ async function prayer(parts) {
     <div class="btn-row"><button class="btn ghost" data-act="testAdhan">${ic("play")}جرّب الأذان</button></div>
 
     <div class="sec-h"><h2>التنبيهات</h2></div>
+    ${NATIVE ? `<div class="setting app-ok"><span class="grow"><b>${c.auto ? "أكّد مدينتك عشان الأذان يشتغل" : "الأذان شغال حتى والتطبيق مقفول ✓"}</b><small>التطبيق بيشغّل الأذان بصوت الشيخ في ميعاده والشاشة مقفولة، وبيحفظ صوت الأذان على الموبايل عشان يشتغل من غير نت</small></span></div>
+      ${(() => { try { return NATIVE.batteryFree() ? "" : `<div class="setting"><span class="grow"><b>اسمح للتطبيق يشتغل في الخلفية</b><small>بعض الموبايلات بتقفل التطبيقات لتوفير البطارية، وده ممكن يأخر الأذان</small></span><button class="btn" style="height:38px;padding:0 14px" data-act="battery">السماح</button></div>`; } catch { return ""; } })()}
+      <div class="setting"><span class="grow"><b>إشعارات التطبيق</b><small>لو الإشعارات مقفولة، الأذان مش هيبان على الشاشة</small></span><button class="btn ghost" style="height:38px;padding:0 14px" data-act="appNotify">الإعدادات</button></div>
+      <div style="display:none">` : ""}
     <div class="setting"><span class="grow"><b>إشعار وقت الصلاة</b><small>إشعار على الموبايل مع الأذان</small></span>
       <button class="switch" data-act="notify" aria-pressed="${!!c.notify && typeof Notification !== "undefined" && Notification.permission === "granted"}" aria-label="إشعار وقت الصلاة"><i></i></button></div>
     <div class="setting"><span class="grow"><b>تنبيه أكيد حتى والتطبيق مقفول</b><small>يضيف مواعيد الصلاة لتقويم الموبايل لمدة 30 يوم، والتقويم بينبهك في كل صلاة</small></span>
       <button class="btn" style="height:38px;padding:0 14px" data-act="ics">إضافة</button></div>
-    <p class="note">الأذان بصوت الشيخ بيشتغل تلقائي طول ما التطبيق مفتوح أو شغال في الخلفية. المتصفحات مش بتسمح لأي موقع إنه يشغّل صوت لوحده وهو مقفول خالص، فلو هتقفله فعّل «تنبيه أكيد» عشان التقويم ينبهك.</p>
+    <p class="note">الأذان بصوت الشيخ بيشتغل تلقائي طول ما التطبيق مفتوح أو شغال في الخلفية. المتصفحات مش بتسمح لأي موقع إنه يشغّل صوت لوحده وهو مقفول خالص، فلو هتقفله فعّل «تنبيه أكيد» عشان التقويم ينبهك.${IS_ANDROID && !NATIVE ? ` أو <a href="${APK_URL}" style="color:var(--gold)">حمّل تطبيق أندرويد</a> والأذان هيشتغل حتى وهو مقفول.` : ""}</p>
+    ${NATIVE ? "</div>" : ""}
 
     <div class="sec-h"><h2>الإعدادات</h2></div>
     ${prayerSetup(false)}</div></div>`;
@@ -1582,6 +1634,10 @@ const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; $$(".install-card").forEach((x) => x.hidden = false); });
 window.addEventListener("appinstalled", () => { installEvt = null; toast("اتثبت ✓ هتلاقي ألترا قرآن على الشاشة الرئيسية"); $$(".install-card").forEach((x) => x.remove()); });
 function installCard(force) {
+  if (NATIVE) return "";
+  if (IS_ANDROID) return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png" alt=""></span>
+    <span class="grow"><b>تطبيق ألترا قرآن لأندرويد</b><small>كل محتوى الموقع، والأذان بصوت الشيخ في ميعاده حتى والتطبيق مقفول</small></span>
+    <span class="install-btns"><a class="btn" style="height:38px;padding:0 16px" href="${APK_URL}" download>تحميل</a></span></div>`;
   if (isStandalone() || (!force && S.installHidden)) return "";
   return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png" alt=""></span>
     <span class="grow"><b>ثبّت ألترا قرآن كتطبيق</b><small>أيقونة على الشاشة الرئيسية، يفتح ملء الشاشة، والأذان والإشعارات يشتغلوا أحسن</small></span>
@@ -1813,6 +1869,7 @@ async function search(parts, qs) {
    EVENTS
    ====================================================================== */
 document.addEventListener("click", async (e) => {
+  if (e.target.closest(".cont-x")) e.preventDefault();
   const el = e.target.closest("[data-play],[data-fav],[data-act],[data-go],[data-qi],[data-unfav],[data-unsave],[data-bead],a[data-keep]");
   if (!el) return;
   if (el.matches("a[data-keep]")) { sessionStorage.setItem("keep-scroll", "1"); return; }
@@ -1905,7 +1962,13 @@ document.addEventListener("click", async (e) => {
     case "fs": { S.fs = Math.min(1.6, Math.max(0.8, +((S.fs || 1) + 0.1 * +el.dataset.d).toFixed(2))); save(); $("#deck")?.style.setProperty("--rfs", S.fs); break; }
     case "beadReset": { const b = el.parentElement.querySelector("[data-bead]"); b.dataset.c = 0; $(".cnt", b).textContent = "0"; b.classList.remove("done"); $(".rounds", b).textContent = `الهدف ${n2a(+b.dataset.bead)}`; if (b.dataset.key && S.tasbih) { delete S.tasbih[b.dataset.key]; save(true); } toast("العداد رجع صفر"); break; }
     case "pbell": { const c = prayerCfg(); const k = el.dataset.k; c.on[k] = !c.on[k]; save(true); toast(c.on[k] ? `أذان ${PNAME[k]} مفعّل` : `أذان ${PNAME[k]} متوقف`); sessionStorage.setItem("keep-scroll", "1"); route(); break; }
-    case "testAdhan": playAdhan("dhuhr", true); break;
+    case "testAdhan": {
+      if (NATIVE) { const m = await resolveMuezzin("dhuhr"); NATIVE.testAdhan("تجربة", m.u, 8); toast("الأذان هيشتغل بعد 8 ثواني. اقفل الشاشة وجرّب", 5000); }
+      else playAdhan("dhuhr", true);
+      break;
+    }
+    case "battery": if (NATIVE) NATIVE.openBatterySettings(); break;
+    case "appNotify": if (NATIVE) NATIVE.openNotificationSettings(); break;
     case "gps": locateMe(); break;
     case "confirmCity": { const c = prayerCfg(); c.auto = false; save(true); toast(`تم ✓ الأذان هيشتغل على مواقيت ${c.name}`); route(); break; }
     case "ics": buildICS(); break;

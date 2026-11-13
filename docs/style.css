@@ -1474,3 +1474,7 @@ body { overflow-x: clip !important; }
   .vrow { cursor: grab; }
   .vrow.dragging { cursor: grabbing; user-select: none; }
 }
+
+.setting.app-ok { border: 1px solid #6fd3ae66; background: linear-gradient(150deg, #1f6a5c, #0c2e2b); }
+.setting.app-ok b { color: #b9f0d9; }
+.in-app .visits { display: none !important; }
