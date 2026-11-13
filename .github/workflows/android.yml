@@ -5,6 +5,9 @@ on:
   push:
     paths: ["android/**", ".github/workflows/android.yml"]
 
+permissions:
+  contents: write
+
 jobs:
   apk:
     runs-on: ubuntu-24.04
@@ -35,3 +38,12 @@ jobs:
         with:
           name: UltraQuran-apk
           path: android/app/build/outputs/apk/release/app-release.apk
+      - name: Publish the APK on the website (same download link every time)
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk docs/app/UltraQuran.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/app/UltraQuran.apk
+          if git diff --cached --quiet; then echo "APK unchanged"; exit 0; fi
+          git commit -m "Publish Android APK built by ${GITHUB_WORKFLOW} #${GITHUB_RUN_NUMBER}"
+          git push
