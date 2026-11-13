@@ -352,8 +352,8 @@ const TILES = [
 function setTop(title, opts = {}) {
   const top = $("#top");
   if (opts.home) {
-    top.innerHTML = `<span class="brand"><svg aria-hidden="true"><use href="#i-star"/></svg><h1>ألترا قرآن</h1></span>
-      <span class="credit"><small>تصميم وتطوير</small><b>أحمد الحضري</b></span>
+    top.innerHTML = `<span class="brand"><svg aria-hidden="true"><use href="#i-star"/></svg><h1 data-t="ألترا قرآن">ألترا قرآن</h1></span>
+      <span class="credit"><small>تصميم وتطوير</small><b data-t="أحمد الحضري">أحمد الحضري</b></span>
       <button class="btn-icon" data-go="#/search" aria-label="بحث">${ic("search")}</button>`;
   } else {
     top.innerHTML = `<button class="btn-icon" data-act="back" aria-label="رجوع">${ic("back")}</button><h1>${esc(title)}</h1>

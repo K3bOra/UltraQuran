@@ -1073,3 +1073,17 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .rail-brand b { font-size: 34px; }
   .rail-credit b { font-size: 26px; -webkit-text-stroke-width: .7px; }
 }
+
+/* crisp signature: solid base with a real embossed shadow, gold gradient laid on top as a second text layer (no filters) */
+.top .brand h1, .rail-brand b, .top .credit b, .rail-credit b {
+  filter: none !important; position: relative;
+  background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important;
+  color: #c99a4e !important; -webkit-text-fill-color: #c99a4e; -webkit-text-stroke: .4px #c99a4e !important;
+  text-shadow: 0 1.5px 0 #2a1c06, 0 3px 8px #0009;
+  text-rendering: geometricPrecision; -webkit-font-smoothing: antialiased;
+}
+.top .brand h1::after, .rail-brand b::after, .top .credit b::after, .rail-credit b::after {
+  content: attr(data-t); position: absolute; inset: 0; padding: inherit; pointer-events: none; text-shadow: none;
+  background: linear-gradient(180deg, #fff6da 0%, #f5d892 38%, #dcae5c 72%, #c08f45 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; -webkit-text-stroke: .4px #f3d38c;
+}
