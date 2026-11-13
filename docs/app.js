@@ -753,7 +753,7 @@ async function radio() {
   <div class="rad cairo" id="cairo" data-u="${esc(CAIRO_RADIO.u)}">
     <button class="cairo-main" data-play="${CL}:0" aria-label="تشغيل ${esc(CAIRO_RADIO.t)}">
       <span class="rad-art"><img src="${CAIRO_RADIO.img}" alt=""><span class="rad-on"></span></span>
-      <span class="cairo-txt"><small>الإذاعة الأولى · مصر</small><b>${esc(CAIRO_RADIO.t)}</b><span class="live-badge">بث مباشر على مدار الساعة</span></span>
+      <span class="cairo-txt"><small>الإذاعة الأولى · مصر <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span></small><b>${esc(CAIRO_RADIO.t)}</b><span class="live-badge">بث مباشر على مدار الساعة</span></span>
       <span class="cairo-play">${icSm("play", 26)}</span></button>
     <button class="rad-fav ${isFav(CAIRO_RADIO.u) ? "on" : ""}" data-fav="${CL}:0" aria-label="المفضلة">${ic("heart")}</button></div>
   <ul class="radio-grid" id="radios">${tracks.map((t, i) => `<li data-name="${esc(t.t)}"><div class="rad" data-u="${esc(t.u)}">
@@ -1880,7 +1880,7 @@ document.addEventListener("click", async (e) => {
     case "mode": S.mode = S.mode === "img" ? "text" : "img"; save(); sessionStorage.setItem("keep-scroll", "1"); route(); break;
     case "tafsirT": S.tafsir = !S.tafsir; save(); el.setAttribute("aria-pressed", S.tafsir); $("#tafsir").hidden = !S.tafsir; if (S.tafsir) drawTafsir(S.page); break;
     case "saveMushaf": saveMushaf(); break;
-    case "playCairo": playCairo(); break;
+    case "playCairo": e.preventDefault(); playCairo(); break;
     case "pgPrev": goPage((BOOK?.page || S.page) - (BOOK?.step?.() || 1)); break;
     case "pgNext": goPage((BOOK?.page || S.page) + (BOOK?.step?.() || 1)); break;
     case "listenSurah": listenSurah(); break;
