@@ -408,18 +408,42 @@ async function home() {
   const greg = new Intl.DateTimeFormat("ar-EG-u-nu-latn", { weekday: "long", day: "numeric", month: "long" }).format(today);
   const day = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 864e5);
   const ayah = META.ayat[day % META.ayat.length];
-  let resume = "";
+  // compact "pick up where you left off" cards
+  const cont = [];
+  const card = (o) => `<${o.href ? `a href="${o.href}"` : "button"} class="cont k-${o.k}" ${o.act ? `data-act="${o.act}"` : ""}>
+      <span class="cont-top"><span class="cont-art">${o.art}</span><span class="cont-btn">${icSm(o.btn || "play", 16)}</span></span>
+      <span class="cont-cap">${esc(o.cap)}</span><b class="cont-t">${esc(o.t)}</b><span class="cont-s">${esc(o.s || "")}</span>
+      ${o.pct != null ? `<span class="cont-bar"><i style="width:${Math.max(3, Math.min(100, o.pct))}%"></i></span>` : ""}${o.extra || ""}
+    </${o.href ? "a" : "button"}>`;
   if (S.last?.q?.length) {
     const t = S.last.q[S.last.i];
-    if (t) resume = `<button class="resume" data-act="resume"><span class="playdot">${ic("play")}</span>
-      <span class="grow"><span class="cap">${t.live ? "ارجع للإذاعة" : "كمّل الاستماع"}${S.last.time > 5 && !t.live ? ` من ${fmtTime(S.last.time)}` : ""}</span>
-      <span class="t" style="display:block">${esc(t.t)}</span><span class="s" style="display:block">${esc(t.s || "")}</span></span></button>`;
+    if (t && !t.adhan) {
+      const dur = typeof t.dur === "number" ? t.dur : 0;
+      cont.push(card({ k: t.live ? "radio" : "listen", act: "resume", cap: t.live ? "ارجع للإذاعة" : "كمّل الاستماع",
+        t: t.t, s: t.live ? "بث مباشر" : `${t.s || ""}${S.last.time > 5 ? ` · ${fmtTime(S.last.time)}` : ""}`,
+        art: t.img ? `<img src="${esc(t.img)}" alt="">` : icSm(t.live ? "radio" : "mic", 22),
+        pct: !t.live && dur ? (S.last.time / dur) * 100 : null }));
+    }
   }
-  const faces = RECITERS.filter((r) => r[5] && (r[2] === "q" || r[2] === "k")).slice(0, 72).map((r) => r[0]);
+  if (S.readAt) {
+    cont.push(card({ k: "read", href: `#/mushaf/${S.page}`, btn: "book", cap: "تابع القراءة",
+      t: `سورة ${META.chapters[surahOfPage(S.page)]}`, s: `صفحة ${n2a(S.page)} · الجزء ${n2a(juzOfPage(S.page))}`,
+      art: `<span class="cont-num">${n2a(S.page)}</span>`, pct: (S.page / 604) * 100 }));
+  }
+  if (S.bookmark && S.bookmark !== S.page) {
+    cont.push(card({ k: "mark", href: `#/mushaf/${S.bookmark}`, btn: "bookmark", cap: "العلامة",
+      t: `سورة ${META.chapters[surahOfPage(S.bookmark)]}`, s: `صفحة ${n2a(S.bookmark)}`, art: icSm("bookmark", 22) }));
+  }
+  if (S.fav?.length) {
+    cont.push(card({ k: "fav", href: "#/saved", btn: "chev", cap: "المفضلة", t: `${n2a(S.fav.length)} ${S.fav.length === 1 ? "مادة" : "مواد"}`,
+      s: S.fav[0].t, art: S.fav[0].img ? `<img src="${esc(S.fav[0].img)}" alt="">` : icSm("heart", 22) }));
+  }
+  if (!isStandalone() && !S.installHidden) {
+    cont.push(card({ k: "install", act: "install", btn: "dl", cap: "على موبايلك", t: "ثبّت التطبيق", s: "أيقونة على الشاشة الرئيسية",
+      art: `<img src="icons/icon-192.png" alt="">`, extra: `<span class="cont-x" data-act="installHide" role="button" aria-label="إخفاء">${icSm("x", 13)}</span>` }));
+  }
   const tile = (x) => `<a class="tile ${x.p ? "has-p" : ""}" href="${x.go}">${x.p && portrait(x.p) ? `<span class="tile-bg" style="background-image:url('${portrait(x.p)}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`;
-  const cards = [resume,
-    S.readAt ? `<a class="pstrip read" href="#/mushaf/${S.page}"><span class="pstrip-ic">${icSm("book", 24)}</span><span class="grow"><small>تابع القراءة في المصحف</small><b>سورة ${esc(META.chapters[surahOfPage(S.page)])} · صفحة ${n2a(S.page)}</b></span>${S.bookmark && S.bookmark !== S.page ? `<span class="bmgo" data-go="#/mushaf/${S.bookmark}">${icSm("bookmark", 16)} ${n2a(S.bookmark)}</span>` : ""}</a>` : "",
-    installCard(false)].filter(Boolean);
+  const faces = RECITERS.filter((r) => r[5] && (r[2] === "q" || r[2] === "k")).slice(0, 72).map((r) => r[0]);
   return `
   <div class="home-top">
     <section class="hero">
@@ -429,7 +453,7 @@ async function home() {
     </section>
     ${homePrayerPanel()}
   </div>
-  ${cards.length ? `<div class="home-cards n${cards.length}">${cards.join("")}</div>` : ""}
+  ${cont.length ? `<div class="cont-row">${cont.join("")}</div>` : ""}
   <div class="sec-h"><h2>الأقسام</h2></div>
   <div class="tiles">
     <a class="tile feature" href="#/quran">
@@ -1814,7 +1838,7 @@ document.addEventListener("click", async (e) => {
       save(true); toast(`تم اختيار أذان ${a[1]}`); history.back(); break;
     }
     case "install": doInstall(); break;
-    case "installHide": S.installHidden = true; save(true); el.closest(".install-card").remove(); toast("تقدر تثبته بعدين من «محفوظاتي»"); break;
+    case "installHide": S.installHidden = true; save(true); (el.closest(".install-card") || el.closest(".cont"))?.remove(); toast("تقدر تثبته بعدين من «محفوظاتي»"); break;
     case "closeModal": $("#modal").classList.remove("open"); break;
   }
 });
