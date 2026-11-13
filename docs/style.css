@@ -1058,3 +1058,18 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .rail-brand b { font-size: 33px; }
   .rail-credit b { font-size: 23px; }
 }
+
+/* --- brand & designer name as a bold Ruqaa signature --- */
+.top .brand h1, .rail-brand b, .top .credit b, .rail-credit b {
+  font-family: "Aref Ruqaa", "Amiri", serif !important; font-weight: 700 !important;
+  -webkit-text-stroke: .9px #e2b866; paint-order: stroke fill;
+  background: linear-gradient(180deg, #fff3d0 0%, #f3d38c 40%, #d1a253 75%, #b8893f 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #3d2a0c) drop-shadow(0 4px 8px #0008);
+  padding: 4px 4px 12px; margin: -4px 0 -12px; line-height: 1.55;
+}
+.top .brand h1 { font-size: 31px; }
+.top .credit b { font-size: 20px; -webkit-text-stroke-width: .6px; }
+@media (min-width: 1024px) {
+  .rail-brand b { font-size: 34px; }
+  .rail-credit b { font-size: 26px; -webkit-text-stroke-width: .7px; }
+}
