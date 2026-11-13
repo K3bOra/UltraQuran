@@ -1186,3 +1186,34 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .rmain .fgrid > *, .rmain .rgrid > * { flex: 1 1 250px; min-width: 0; }
   .rmain .rgrid > [hidden] { display: none; }
 }
+
+/* =====================================================================
+   v24: phones get the same polish as desktop
+   ===================================================================== */
+/* card rows always fill (odd last card / single card stretch) */
+.fgrid, .rgrid { display: flex !important; flex-wrap: wrap; gap: 10px; }
+.fgrid > *, .rgrid > * { flex: 1 1 150px; min-width: 0; }
+.fgrid > [hidden], .rgrid > [hidden] { display: none; }
+@media (min-width: 1024px) { .fgrid > *, .rgrid > * { flex-basis: 250px; } .fgrid, .rgrid { gap: 14px; } }
+
+@media (max-width: 1023px) {
+  /* profile & section heroes become framed cards */
+  .rside .phero, .rside .shero { margin: 14px 0 0; border-radius: 26px; border: 1px solid #d9b36c40; padding: 26px 16px 20px; }
+  .rside .phero .avatar { width: 116px; }
+  .rmain > :first-child { margin-top: 16px; }
+  .rmain .sticky-chips { margin-inline: -16px; padding-inline: 16px; }
+  .rmain .sec-h { margin: 24px 0 12px; }
+  .rmain .sec-h h2 { font-size: 21px; }
+  .rcard, .fcard { min-height: 138px; border-radius: 20px; }
+  .rcard h3, .fcard b { font-size: 15px; }
+  /* prayer page */
+  .ppage .pnext { margin: 14px 0 0; border-radius: 26px; padding: 22px 16px 18px; }
+  .ppage .pnext-in { margin-top: calc(-1 * min(40vw, 170px) + 24px); }
+  .ppage .plist { margin-top: 12px; }
+  .ppage .prow { min-height: 56px; }
+  /* bottom biography as a framed card */
+  .rmain .bottom-bio.bio { border: 1px solid #d9b36c33; border-radius: 22px; padding: 16px 18px; background: linear-gradient(160deg, #134640cc, #0c2e2bcc); }
+  /* section & radio heroes a little tighter */
+  .shero { padding: 26px 16px 22px; }
+  .shero .medal { width: 76px; height: 76px; }
+}

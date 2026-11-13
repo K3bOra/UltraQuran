@@ -710,12 +710,28 @@ function reciterVideos(d) {
 }
 
 /* ---------------- RADIO ---------------- */
+let SHEIKH_INDEX = null;
+const nameKey = (t) => qnorm(String(t || "")).replace(/^(اذاعه|الشيخه|الشيخ|القارئ|القاري|شيخ)\s+/, "").replace(/\s*-.*$/, "").replace(/[^\u0621-\u064A\s]/g, " ").replace(/\s+/g, " ").trim();
+function sheikhIdFor(name) {
+  if (!SHEIKH_INDEX) {
+    SHEIKH_INDEX = RECITERS.filter((r) => r[5]).map((r) => {
+      const k = nameKey(r[1]);
+      const toks = k.split(" ").filter((w) => w !== "بن" && w !== "ابن");
+      return { id: r[0], flat: k.replace(/ /g, ""), first: toks[0], last: toks[toks.length - 1], n: toks.length };
+    });
+  }
+  const full = qnorm(String(name || "")).replace(/[^\u0621-\u064A]/g, "");
+  const k = nameKey(name), flat = k.replace(/ /g, "");
+  const toks = k.split(" ").filter((w) => w !== "بن" && w !== "ابن");
+  let hit = SHEIKH_INDEX.find((x) => x.flat === flat);
+  if (!hit && toks.length >= 2) hit = SHEIKH_INDEX.find((x) => x.n >= 2 && x.first === toks[0] && x.last === toks[toks.length - 1]);
+  if (!hit) hit = SHEIKH_INDEX.find((x) => x.flat.length >= 8 && full.includes(x.flat));
+  return hit ? hit.id : null;
+}
 async function radio() {
   setTop("إذاعات القرآن");
   const rs = await getJSON("data/radios.json");
-  const byName = {};
-  RECITERS.forEach((x) => { byName[norm(x[1])] = x[0]; });
-  const tracks = rs.map((r) => ({ t: r[0], s: "إذاعة القرآن الكريم", d: "بث مباشر على مدار الساعة", u: r[1], live: true, img: portrait(byName[norm(r[0])]) }));
+  const tracks = rs.map((r) => ({ t: r[0], s: "إذاعة القرآن الكريم", d: "بث مباشر على مدار الساعة", u: r[1], live: true, img: portrait(sheikhIdFor(r[0])) }));
   const L = reg(tracks);
   after(() => {
     const inp = $("#q");
