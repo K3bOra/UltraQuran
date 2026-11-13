@@ -243,7 +243,7 @@ function renderSheet(full) {
   }</ul></div>` : "";
   sh.innerHTML = `
     <div class="grab"><button data-act="closeSheet" aria-label="إغلاق المشغّل">${ic("down")}</button>
-      ${t.live ? `<span class="live-badge">بث مباشر</span>` : `<span></span>`}
+      ${t.live ? `<span class="live-badge">بث مباشر</span>` : isSurahTrack(t) ? `<button class="read-along" data-act="readAlong" aria-label="افتح المصحف واقرأ مع القارئ">${icSm("book", 17)}<span>اقرأ مع الشيخ</span></button>` : `<span></span>`}
       <span style="display:flex"><button data-act="share" aria-label="مشاركة">${ic("share")}</button><button data-act="stopPlayer" aria-label="إيقاف وإغلاق المشغّل">${ic("x")}</button></span></div>
     <div class="cover">${artHTML(t)}</div>
     <h2>${esc(t.t)}</h2>
@@ -416,7 +416,7 @@ let renderToken = 0;
 async function route() {
   if (history.state?.sheet || history.state?.video) return;
   closeSheet(true); closeVideo(true); stopCompass();
-  if (!location.hash.startsWith("#/mushaf")) { document.body.classList.remove("immersive"); BOOK = null; }
+  if (!location.hash.startsWith("#/mushaf")) { document.body.classList.remove("immersive"); BOOK = null; if (FOLLOW.on) stopFollow(); }
   const hash = location.hash.replace(/^#\/?/, "");
   const [path, qs] = hash.split("?");
   const parts = path.split("/").filter(Boolean).map(decodeURIComponent);
@@ -487,10 +487,7 @@ async function home() {
     cont.push(card({ k: "fav", href: "#/saved", btn: "chev", cap: "المفضلة", t: `${n2a(S.fav.length)} ${S.fav.length === 1 ? "مادة" : "مواد"}`,
       s: S.fav[0].t, art: S.fav[0].img ? `<img src="${esc(S.fav[0].img)}" alt="">` : icSm("heart", 22) }));
   }
-  if (!NATIVE && IS_ANDROID && !S.installHidden) {
-    cont.push(card({ k: "install", href: APK_URL, btn: "dl", cap: "تطبيق أندرويد", t: "حمّل التطبيق", s: "الأذان حتى والتطبيق مقفول",
-      art: `<img src="icons/icon-192.png" alt="">`, extra: `<span class="cont-x" data-act="installHide" role="button" aria-label="إخفاء">${icSm("x", 13)}</span>` }));
-  } else if (!NATIVE && !isStandalone() && !S.installHidden) {
+  if (!NATIVE && !IS_ANDROID && !isStandalone() && !S.installHidden) {
     cont.push(card({ k: "install", act: "install", btn: "dl", cap: "على موبايلك", t: "ثبّت التطبيق", s: "أيقونة على الشاشة الرئيسية",
       art: `<img src="icons/icon-192.png" alt="">`, extra: `<span class="cont-x" data-act="installHide" role="button" aria-label="إخفاء">${icSm("x", 13)}</span>` }));
   }
@@ -506,6 +503,7 @@ async function home() {
     ${homePrayerPanel()}
   </div>
   ${cont.length ? `<div class="cont-row">${cont.join("")}</div>` : ""}
+  ${appPromo()}
   <div class="sec-h"><h2>الأقسام</h2></div>
   <div class="tiles">
     <a class="tile feature" href="#/quran">
@@ -514,6 +512,30 @@ async function home() {
       <span class="feature-go">تصفح القراء ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></a>
     ${TILES.map(tile).join("")}
   </div><div class="home-foot">${visitsHTML()}</div></div>`;
+}
+
+function appPromo() {
+  if (NATIVE || S.promoHidden) return "";
+  const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const full = new URL(APK_URL, location.href).href;
+  const btn = IS_IOS
+    ? `<button class="promo-btn" data-act="sharePromo" data-u="${esc(full)}">${icSm("share", 17)} ابعته لصاحبك اللي معاه أندرويد</button>`
+    : `<a class="promo-btn" href="${APK_URL}" download>${icSm("dl", 18)} حمّل التطبيق</a>`;
+  return `<section class="promo" aria-label="تطبيق الترا قرآن للأندرويد">
+    <button class="promo-x" data-act="promoHide" aria-label="إخفاء">${icSm("x", 14)}</button>
+    <div class="promo-art"><img src="icons/icon-192.png" alt=""><span class="promo-tag">أندرويد</span></div>
+    <div class="promo-body">
+      <small>متاح دلوقتي لموبايلات أندرويد · مجاناً</small>
+      <h3>تطبيق الترا قرآن على موبايلك</h3>
+      <ul class="promo-feats">
+        <li>${icSm("bell", 15)} الأذان في ميعاده حتى والتطبيق مقفول</li>
+        <li>${icSm("play", 15)} الاستماع يكمل والشاشة مقفولة</li>
+        <li>${icSm("radio", 15)} تتحكم في التشغيل من الإشعارات</li>
+      </ul>
+      ${IS_IOS ? `<p class="promo-note">التطبيق للأندرويد بس، وعلى الآيفون تقدر تضيف الموقع للشاشة الرئيسية من زرار المشاركة.</p>` : ""}
+    </div>
+    <div class="promo-cta">${btn}<span class="promo-meta">ملف APK · حجمه صغير جداً</span></div>
+  </section>`;
 }
 
 /* ---------------- RECITERS ---------------- */
@@ -1184,6 +1206,71 @@ function toggleImmersive() {
   if (on && !S.immHint) { S.immHint = 1; save(); toast("دوس على الصفحة عشان تخرج من ملء الشاشة", 3000); }
   if (BOOK) setTimeout(() => BOOK.goTo(BOOK.page, false), 60);
 }
+/* ---------------- READ ALONG: the mushaf follows the reciter ----------------
+   Recordings carry no per-ayah timings, so the position in the surah is estimated from how far the
+   recitation has gone, weighted by each ayah's length. Pages turn on their own; if the reader turns a
+   page by hand, following pauses until they tap "رجوع للآية". */
+function isSurahTrack(t) { return !!(t && t.ch && !t.custom && !t.live && !t.adhan && t.ch >= 1 && t.ch <= 114); }
+const FOLLOW = { on: false, auto: 0, timer: 0, weights: null, ch: 0 };
+async function surahWeights(ch) {
+  QURAN ||= await getJSON("data/quran.json");
+  const rows = QURAN.filter((r) => r[0] === ch);
+  const lead = ch === 1 || ch === 9 ? 0 : 26;           // spoken basmala before the first ayah
+  let acc = lead; const marks = [];
+  for (const r of rows) { const w = r[4].replace(/\s+/g, "").length + 8; marks.push([acc, acc + w, r[2], r[1]]); acc += w; }
+  return { total: acc, marks, first: rows[0]?.[2] || META.spages[ch - 1] };
+}
+function followPage() {
+  const t = cur();
+  if (!isSurahTrack(t) || !FOLLOW.weights || FOLLOW.ch !== t.ch) return null;
+  const d = A.duration && isFinite(A.duration) ? A.duration : t.dur || 0;
+  if (!d) return FOLLOW.weights.first;
+  const x = Math.max(0, Math.min(1, A.currentTime / d)) * FOLLOW.weights.total;
+  const m = FOLLOW.weights.marks.find((k) => x < k[1]) || FOLLOW.weights.marks[FOLLOW.weights.marks.length - 1];
+  return m ? m[2] : FOLLOW.weights.first;
+}
+async function followTick() {
+  if (!FOLLOW.on || !location.hash.startsWith("#/mushaf")) return;
+  const t = cur();
+  if (!isSurahTrack(t)) return drawFollowBar();
+  if (FOLLOW.ch !== t.ch) { FOLLOW.ch = t.ch; FOLLOW.weights = await surahWeights(t.ch); FOLLOW.paused = false; }
+  const p = followPage();
+  drawFollowBar();
+  if (!p || FOLLOW.paused || !BOOK || !document.body.contains(BOOK.el)) return;
+  if (FOLLOW.auto && BOOK.page !== FOLLOW.auto && Math.abs(BOOK.page - FOLLOW.auto) > (BOOK.step?.() || 1) - 1) { FOLLOW.paused = true; return drawFollowBar(); }
+  const step = BOOK.step?.() || 1;
+  const shown = step === 2 && p % 2 === 0 ? p - 1 : p;
+  if (BOOK.page !== shown) BOOK.goTo(p, true);
+  FOLLOW.auto = shown;
+}
+function drawFollowBar() {
+  let bar = $("#followBar");
+  const onMushaf = location.hash.startsWith("#/mushaf");
+  if (!FOLLOW.on || !onMushaf) { bar?.remove(); return; }
+  if (!bar) { bar = document.createElement("div"); bar.id = "followBar"; bar.className = "follow-bar"; document.body.appendChild(bar); }
+  const t = cur();
+  const name = isSurahTrack(t) ? `سورة ${META.chapters[t.ch - 1]} · ${t.s || ""}` : "شغّل سورة عشان المصحف يمشي معاها";
+  bar.innerHTML = `<span class="fb-dot ${FOLLOW.paused ? "off" : ""}"></span><span class="fb-t"><b>${FOLLOW.paused ? "المتابعة واقفة" : "المصحف ماشي مع القارئ"}</b><small>${esc(name)}</small></span>
+    ${FOLLOW.paused ? `<button data-act="followResume">${icSm("book", 15)} رجوع للآية</button>` : ""}
+    <button class="fb-x" data-act="followStop" aria-label="إيقاف المتابعة">${icSm("x", 15)}</button>`;
+}
+async function readAlong() {
+  const t = cur();
+  if (!isSurahTrack(t)) return;
+  FOLLOW.on = true; FOLLOW.paused = false; FOLLOW.ch = t.ch; FOLLOW.auto = 0;
+  FOLLOW.weights = await surahWeights(t.ch);
+  const p = followPage() || FOLLOW.weights.first;
+  if (S.riwaya !== "hafs") { S.riwaya = "hafs"; save(); }
+  closeSheet();
+  setTimeout(() => {
+    location.hash = `#/mushaf/${p}`;
+    clearInterval(FOLLOW.timer); FOLLOW.timer = setInterval(followTick, 1500);
+    setTimeout(() => { FOLLOW.auto = BOOK?.page || p; followTick(); }, 700);
+    toast("المصحف هيقلّب لوحده مع القارئ، ولو قلّبت بإيدك المتابعة بتقف لحد ما تدوس «رجوع للآية»", 4500);
+  }, 60);
+}
+function stopFollow() { FOLLOW.on = false; clearInterval(FOLLOW.timer); FOLLOW.timer = 0; drawFollowBar(); }
+
 async function listenSurah() {
   const mr = MUSHAF_RECITERS.find((x) => x[0] === S.mReciter) || MUSHAF_RECITERS[0];
   const d = await getJSON(`data/r/${mr[0]}.json`);
@@ -1963,6 +2050,16 @@ document.addEventListener("click", async (e) => {
     case "pgPrev": goPage((BOOK?.page || S.page) - (BOOK?.step?.() || 1)); break;
     case "pgNext": goPage((BOOK?.page || S.page) + (BOOK?.step?.() || 1)); break;
     case "listenSurah": listenSurah(); break;
+    case "readAlong": readAlong(); break;
+    case "promoHide": S.promoHidden = 1; save(true); el.closest(".promo")?.remove(); toast("اتخفى البانر"); break;
+    case "sharePromo": {
+      const u = el.dataset.u, text = "تطبيق الترا قرآن للأندرويد: المصاحف المرتلة والإذاعات ومواعيد الصلاة والأذان";
+      if (navigator.share) navigator.share({ title: "الترا قرآن", text, url: u }).catch(() => {});
+      else { navigator.clipboard?.writeText(u); toast("اتنسخ رابط التحميل"); }
+      break;
+    }
+    case "followStop": stopFollow(); toast("وقفت متابعة المصحف"); break;
+    case "followResume": FOLLOW.paused = false; FOLLOW.auto = 0; followTick(); break;
     case "pickMReciter": pickMReciter(); break;
     case "setMReciter": S.mReciter = +el.dataset.id; save(true); $("#modal").classList.remove("open"); sessionStorage.setItem("keep-scroll", "1"); route(); setTimeout(listenSurah, 300); break;
     case "bookmark": { const p = BOOK?.page || S.page; S.bookmark = S.bookmark === p ? null : p; save(true); el.setAttribute("aria-pressed", String(S.bookmark === p)); toast(S.bookmark ? `اتحطت علامة على صفحة ${n2a(p)}` : "اتشالت العلامة"); break; }
