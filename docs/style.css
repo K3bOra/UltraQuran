@@ -1087,3 +1087,79 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   background: linear-gradient(180deg, #fff6da 0%, #f5d892 38%, #dcae5c 72%, #c08f45 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; -webkit-text-stroke: .4px #f3d38c;
 }
+
+/* =====================================================================
+   v22: profile column pages, radio cards, prayer page, counters, visitors
+   ===================================================================== */
+.side-bio { display: none; }
+.rmain > :first-child { margin-top: 18px; }
+@media (min-width: 1024px) {
+  .rpage { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 28px; align-items: start; margin-top: 20px; direction: ltr; }
+  .rpage > * { direction: rtl; }
+  .rside { position: sticky; top: 80px; grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 14px; max-height: calc(100dvh - 100px); overflow-y: auto; scrollbar-width: thin; }
+  .rmain { grid-column: 1; grid-row: 1; min-width: 0; }
+  .rmain > :first-child, .rmain > .chips:first-child + * { margin-top: 0; }
+  .rside .phero { margin: 0; padding: 34px 18px 24px; border-radius: 28px; border: 1px solid #d9b36c40; }
+  .rside .phero .avatar { width: 170px; }
+  .rside .phero h2 { font-size: 28px; }
+  .side-bio { display: block; margin: 0; padding: 18px 20px; border-radius: 22px; background: linear-gradient(160deg, #134640cc, #0c2e2bcc); border: 1px solid #d9b36c33; font-size: 15px; line-height: 1.9; }
+  .side-bio p { white-space: pre-line; }
+  .bottom-bio { display: none !important; }
+  .rmain .sec-h:first-child, .rmain .chips:first-child { margin-top: 0; }
+  .rmain .sticky-chips { top: 70px; margin: 0 0 4px; padding-inline: 0; }
+  .rmain .rgrid, .rmain .fgrid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+  .rmain .rcard, .rmain .fcard { min-height: 168px; }
+  .rmain #tracks { columns: 2; }
+  .rmain .poster-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rmain .vgrid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+}
+
+/* radio cards */
+.radio-grid { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 640px) { .radio-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .radio-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; } }
+.rad { position: relative; isolation: isolate; overflow: hidden; height: 100%; border-radius: 20px;
+  background: linear-gradient(160deg, #1a5a51, #0f3a36 70%); border: 1px solid #ffffff14; box-shadow: inset 0 1px 0 #ffffff12; }
+.rad::before { content: ""; position: absolute; z-index: -1; inset-inline-end: -40px; bottom: -44px; width: 130px; height: 130px; opacity: .12; background: url("img/lattice.svg") center/contain no-repeat; }
+.rad-main { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; padding: 18px 10px 14px; text-align: center; }
+.rad-art { position: relative; width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; color: var(--gold);
+  background: radial-gradient(circle at 50% 35%, #1d6b5c, #0c2e2b); box-shadow: 0 0 0 2px var(--gold), 0 0 0 6px #d9b36c1f, 0 8px 18px #0006; }
+.rad-art img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 18%; }
+.rad-on { position: absolute; bottom: 2px; inset-inline-start: 2px; width: 14px; height: 14px; border-radius: 50%; background: #ff7a5c; box-shadow: 0 0 0 3px #0f3a36; }
+.rad-t { font-weight: 600; font-size: 14.5px; line-height: 1.45; color: var(--paper); }
+.rad-fav { position: absolute; top: 8px; inset-inline-start: 8px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #f4ead2aa; background: #0824234d; }
+.rad-fav.on { color: var(--gold); }
+.rad-fav.on .icon { fill: currentColor; }
+.rad.now { background: linear-gradient(160deg, #6b5222, #2a2410 75%); border-color: #f0c87980; box-shadow: 0 0 22px #d9b36c33; }
+.rad.now .rad-on { animation: pulse 1.4s infinite; }
+@media (min-width: 1024px) { .rad-art { width: 92px; height: 92px; } .rad-t { font-size: 15.5px; } }
+
+/* prayer page */
+.prow-ic { width: 26px; height: 26px; flex: none; fill: none; stroke: #a9c2b6; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.prow.next .prow-ic { stroke: #f8dca0; }
+.pnext { border: 1px solid #d9b36c40; }
+.plist { border: 1px solid #d9b36c26; }
+@media (min-width: 1024px) {
+  .ppage { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 28px; align-items: start; margin-top: 20px; }
+  .ppage .pnext { margin: 0; border-radius: 28px; }
+  .ppage .plist { columns: 1 !important; margin-top: 16px; padding: 8px; }
+  .ppage .prow { min-height: 66px; padding: 12px 16px; }
+  .ppage .prow .pname, .ppage .prow .ptime { font-size: 19px; }
+  .ppage .pcol > .mcard:first-child { margin-top: 0; }
+  .ppage .pcol > .sec-h:first-of-type { margin-top: 26px; }
+}
+
+/* home footer with visitors */
+.home-foot { display: flex; justify-content: center; margin: 22px 0 6px; }
+.visits { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; font-size: 13px; color: var(--mist);
+  background: #0824238c; box-shadow: inset 0 0 0 1px #d9b36c33; }
+.visits strong { color: var(--gold); font-weight: 600; font-family: var(--ui); }
+.visits .icon { width: 14px; height: 14px; color: var(--gold); }
+.visits[hidden] { display: none; }
+.rail-credit .visits { margin-top: 8px; font-size: 12px; padding: 4px 12px; background: #08242399; }
+@media (min-width: 1024px) { .home-foot { grid-column: 1 / -1; } .home-foot .visits { display: none; } }
+@media (min-width: 1024px) {
+  .rside > * { flex-shrink: 0; }
+  .rmain .rgrid, .rmain .fgrid, .fgrid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .rgrid > :only-child, .fgrid > :only-child { min-height: 150px; }
+}

@@ -189,7 +189,7 @@ function updatePlayerUI(full) {
   $("#miniPP").innerHTML = ic(playing ? "pause" : "play");
   $("#miniPP").setAttribute("aria-label", playing ? "إيقاف مؤقت" : "تشغيل");
   if ($("#sheet").classList.contains("open")) renderSheet(full);
-  $$(".row[data-u]").forEach((r) => r.classList.toggle("now", r.dataset.u === t.u));
+  $$(".row[data-u], .rad[data-u]").forEach((r) => r.classList.toggle("now", r.dataset.u === t.u));
   if ("mediaSession" in navigator) navigator.mediaSession.playbackState = playing ? "playing" : "paused";
 }
 function updateProgress() {
@@ -473,7 +473,7 @@ async function home() {
       <span class="ic">${ic("book")}</span><b>القرآن الكريم</b><small>المصاحف المرتلة لـ 260 قارئاً بكل الروايات، وتسجيلات نادرة لأعلام التلاوة</small>
       <span class="feature-go">تصفح القراء ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></a>
     ${TILES.map(tile).join("")}
-  </div></div>`;
+  </div><div class="home-foot">${visitsHTML()}</div></div>`;
 }
 
 /* ---------------- RECITERS ---------------- */
@@ -554,6 +554,10 @@ function bioHTML(bio) {
     <button class="more" data-act="bio">اقرأ السيرة كاملة</button>
     ${bio.source ? `<div class="src">المصدر: ${esc(bio.source)}</div>` : ""}</div>`;
 }
+function pageWithSide(hero, bio, main) {
+  const side = bio && bio.summary ? `<div class="bio side-bio"><p>${esc(bio.summary)}</p>${bio.source ? `<div class="src">المصدر: ${esc(bio.source)}</div>` : ""}</div>` : "";
+  return `<div class="rpage"><aside class="rside">${hero}${side}</aside><div class="rmain">${main}${bioBlock(bio).replace('class="sec-h"', 'class="sec-h bottom-bio"').replace('class="bio clamp"', 'class="bio clamp bottom-bio"')}</div></div>`;
+}
 function bioBlock(bio) {
   if (!bio || !bio.summary) return "";
   return `<div class="sec-h"><h2>السيرة الذاتية</h2></div>${bioHTML(bio)}`;
@@ -585,7 +589,7 @@ async function reciter(parts) {
   const playable = (rec) => recTracks(d, rec, img);
   let body = "";
   if (d.recs.length === 1 && !d.videos.length) {
-    return heroHTML({ id, name: d.name, facts, stats }) + trackList(playable(d.recs[0]), d.recs[0], word) + bioBlock(d.bio);
+    return pageWithSide(heroHTML({ id, name: d.name, facts, stats }), d.bio, trackList(playable(d.recs[0]), d.recs[0], word));
   }
   const cardFor = (rec) => {
     const kind = d.group === "q" ? kindOf(rec) : "rare";
@@ -635,7 +639,7 @@ async function reciter(parts) {
       $$(".rgroup").forEach((g) => { g.hidden = !$$(".rcard", g).some((c) => !c.hidden); });
     });
   });
-  return heroHTML({ id, name: d.name, facts, stats }) + body + bioBlock(d.bio);
+  return pageWithSide(heroHTML({ id, name: d.name, facts, stats }), d.bio, body);
 }
 
 function recTracks(d, rec, img) {
@@ -717,15 +721,17 @@ async function radio() {
     const inp = $("#q");
     inp.addEventListener("input", () => {
       const v = norm(inp.value);
-      $$("#radios li").forEach((li) => { li.hidden = v && !norm(li.dataset.name).includes(v); });
+      $$("#radios > li").forEach((li) => { li.hidden = v && !norm(li.dataset.name).includes(v); });
     });
   });
-  return `<p class="note">${n2a(rs.length)} إذاعة بث مباشر. الإذاعة بتشتغل في الخلفية حتى لو قفلت الشاشة.</p>
+  return `<section class="shero"><span class="medal">${icSm("radio", 34)}</span><h2>إذاعات القرآن الكريم</h2>
+    <p>${n2a(rs.length)} إذاعة بث مباشر على مدار الساعة، بتفضل شغالة في الخلفية حتى لو قفلت الشاشة</p></section>
   <label class="search">${ic("search")}<input id="q" type="search" placeholder="ابحث باسم القارئ أو الإذاعة" autocomplete="off"></label>
-  <ul class="list" id="radios">${tracks.map((t, i) => `<li data-name="${esc(t.t)}"><div class="row" data-u="${esc(t.u)}">
-    <button class="num" data-play="${L}:${i}" aria-label="تشغيل">${ic("radio").replace('class="icon"', 'class="icon" style="width:18px;height:18px"')}</button>
-    <button class="grow" data-play="${L}:${i}" style="text-align:start"><span class="t">${esc(t.t)}</span><span class="s"><span class="live-badge">مباشر</span></span></button>
-    <span class="end"><button data-fav="${L}:${i}" class="${isFav(t.u) ? "on" : ""}" aria-label="المفضلة">${ic("heart")}</button></span></div></li>`).join("")}</ul>`;
+  <ul class="radio-grid" id="radios">${tracks.map((t, i) => `<li data-name="${esc(t.t)}"><div class="rad" data-u="${esc(t.u)}">
+    <button class="rad-main" data-play="${L}:${i}" aria-label="تشغيل ${esc(t.t)}">
+      <span class="rad-art">${t.img ? `<img src="${esc(t.img)}" alt="" loading="lazy">` : icSm("radio", 26)}<span class="rad-on"></span></span>
+      <span class="rad-t">${esc(t.t)}</span><span class="live-badge">مباشر</span></button>
+    <button class="rad-fav ${isFav(t.u) ? "on" : ""}" data-fav="${L}:${i}" aria-label="المفضلة">${ic("heart")}</button></div></li>`).join("")}</ul>`;
 }
 
 /* ---------------- LIBRARY ---------------- */
@@ -835,7 +841,7 @@ async function lib(parts) {
           const go = k.edition ? `#/r/${META.edmap[k.edition] || ""}/${k.edition}` : `${base}/${i}`;
           const icon = k.counter ? "beads" : k.edition ? "play" : "text";
           return `<a class="fcard k-${k.counter ? "mujawwad" : k.edition ? "audio" : "text"}" href="${go}">
-            <span class="fcard-top"><span class="rcard-ic">${icSm(icon, 20)}</span>${k.counter ? `<span class="pill">${n2a(k.counter)} مرة</span>` : ""}</span>
+            <span class="fcard-top"><span class="rcard-ic">${icSm(icon, 20)}</span>${k.counter ? `<span class="pill">${(S.tasbih && S.tasbih[`${base}/${i}`]) ? `${n2a(S.tasbih[`${base}/${i}`])} / ` : ""}${n2a(k.counter)} مرة</span>` : ""}</span>
             <b>${esc(k.title)}</b>${k.subtitle || k.badge ? `<small class="fsub">${esc(k.badge || k.subtitle)}</small>` : ""}</a>`;
         }).join("")}</div>`;
     }
@@ -851,7 +857,8 @@ async function lib(parts) {
         <div class="vgrid">${vt.map((t, n) => videoCard(t, L, n, { thumb: unique ? thumbOf(t.id) : "", label: (t.t.match(/الآيا?ت?\s*([\d–\-]+)/) || [])[1] || n2a(n + 1) })).join("")}</div>`;
     }
   }
-  return head + body + (node === root && root.bio ? bioBlock(root.bio) : "");
+  if (node === root && root.bio) return pageWithSide(head, root.bio, body);
+  return head + body;
 }
 
 function trackListLib(tracks) {
@@ -891,7 +898,9 @@ function leafView(node, base, root) {
       const t = { t: k.title, s: root.title, d: k.subtitle || k.badge || "", u: k.audio, live: !!k.live, v: !!k.video };
       track = `<div class="btn-row"><button class="btn" data-play="${reg([t])}:0">${ic(t.v ? "video" : "play")}${t.v ? "شاهد الفيديو" : "استمع"}</button></div>`;
     }
-    const tas = k.counter ? `<div class="tasbih"><button class="bead" data-bead="${k.counter}" aria-label="اضغط للتسبيح"><span><span class="cnt">0</span><small class="rounds">الهدف ${n2a(k.counter)}</small></span></button>
+    const key = `${parentPath}/${i}`;
+    const c0 = (S.tasbih && S.tasbih[key]) || 0;
+    const tas = k.counter ? `<div class="tasbih"><button class="bead ${c0 && c0 % k.counter === 0 ? "done" : ""}" data-bead="${k.counter}" data-key="${esc(key)}" data-c="${c0}" aria-label="اضغط للتسبيح"><span><span class="cnt">${n2a(c0)}</span><small class="rounds">${c0 >= k.counter ? `أتممت ${n2a(Math.floor(c0 / k.counter))} مرة` : `الهدف ${n2a(k.counter)}`}</small></span></button>
       <button class="btn ghost" data-act="beadReset">ابدأ من جديد</button></div>` : "";
     return `<div class="tslide" data-i="${i}" data-title="${esc(k.title)}"><div class="tslide-in">
       ${tas}<article class="reader"><span class="rnum">${n2a(n + 1)}</span><h2>${esc(k.title)}</h2>
@@ -1391,12 +1400,13 @@ async function prayer(parts) {
     const isNext = k === n.k && !n.tomorrow;
     const past = t[k] < Date.now() && !isNext;
     return `<li class="prow ${isNext ? "next" : ""} ${past ? "past" : ""}">
+      <svg class="prow-ic" aria-hidden="true"><use href="#i-${P_ICON[k]}"/></svg>
       <span class="pname">${name}</span><span class="ptime">${fmtClock(t[k])}</span>
       ${k === "sunrise" ? `<span class="pbell off" aria-hidden="true"></span>` :
         `<button class="pbell ${c.on[k] ? "on" : ""}" data-act="pbell" data-k="${k}" aria-pressed="${!!c.on[k]}" aria-label="أذان ${name}">${icSm(c.on[k] ? "bell" : "bell-off", 20)}</button>`}</li>`;
   }).join("");
   after(() => refreshCountdown());
-  return `<section class="pnext">
+  return `<div class="ppage"><div class="pcol"><section class="pnext">
       <svg class="parc" viewBox="0 0 200 110" aria-hidden="true"><path d="M10 100 A90 90 0 0 1 190 100" pathLength="100" class="track"/><path id="parc" d="M10 100 A90 90 0 0 1 190 100" pathLength="100" class="fill" style="stroke-dashoffset:100"/></svg>
       <div class="pnext-in"><small>${n.tomorrow ? "غداً" : "الصلاة القادمة"}</small>
         <b id="pnext" data-k="${n.k}">${PNAME[n.k]}</b>
@@ -1405,7 +1415,7 @@ async function prayer(parts) {
       <div class="ploc">${icSm("pin", 16)} ${esc(c.name || "موقعي")}${hijri ? ` · ${esc(hijri)}` : ""}</div>
     </section>
     ${c.auto ? `<div class="setting confirm"><span class="grow"><b>${esc(c.name)} · اتحددت تلقائي</b><small>أكّد مدينتك أو اختار غيرها من الإعدادات تحت، عشان الأذان يشتغل في وقته</small></span><button class="btn" style="height:38px;padding:0 16px" data-act="confirmCity">تأكيد</button></div>` : ""}
-    <ul class="plist">${rows}</ul>
+    <ul class="plist">${rows}</ul></div><div class="pcol">
     <a class="mcard qcard" href="#/prayer/qibla"><span class="avatar">${icSm("pin", 28)}</span><span class="grow"><small>اتجاه القبلة</small><b>${n2a(Math.round(qiblaBearing(c.lat, c.lng)))}° من الشمال</b><span>بوصلة حية على الموبايل</span></span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>
     <div class="sec-h"><h2>المؤذن</h2></div>
     <a class="mcard" href="#/prayer/muezzin">${avatar(m.pid, m.n)}<span class="grow"><small>أذان الصلوات</small><b>${esc(m.n)}</b><span>${esc(m.t)}</span></span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>
@@ -1420,7 +1430,7 @@ async function prayer(parts) {
     <p class="note">الأذان بصوت الشيخ بيشتغل تلقائي طول ما التطبيق مفتوح أو شغال في الخلفية. المتصفحات مش بتسمح لأي موقع إنه يشغّل صوت لوحده وهو مقفول خالص، فلو هتقفله فعّل «تنبيه أكيد» عشان التقويم ينبهك.</p>
 
     <div class="sec-h"><h2>الإعدادات</h2></div>
-    ${prayerSetup(false)}`;
+    ${prayerSetup(false)}</div></div>`;
 }
 
 function prayerSetup(first) {
@@ -1790,6 +1800,7 @@ document.addEventListener("click", async (e) => {
     $(".cnt", el).textContent = n2a(c);
     el.classList.toggle("done", c % goal === 0);
     $(".rounds", el).textContent = c >= goal ? `أتممت ${n2a(Math.floor(c / goal))} مرة` : `الهدف ${n2a(goal)}`;
+    if (el.dataset.key) { S.tasbih ||= {}; S.tasbih[el.dataset.key] = c; save(); }
     return;
   }
   const act = el.dataset.act, t = cur();
@@ -1849,7 +1860,7 @@ document.addEventListener("click", async (e) => {
     case "immersive": toggleImmersive(); break;
     case "compass": { const c = prayerCfg(); startCompass(qiblaBearing(c.lat, c.lng)); break; }
     case "fs": { S.fs = Math.min(1.6, Math.max(0.8, +((S.fs || 1) + 0.1 * +el.dataset.d).toFixed(2))); save(); $("#deck")?.style.setProperty("--rfs", S.fs); break; }
-    case "beadReset": { const b = el.parentElement.querySelector("[data-bead]"); b.dataset.c = 0; $(".cnt", b).textContent = "0"; b.classList.remove("done"); $(".rounds", b).textContent = `الهدف ${n2a(+b.dataset.bead)}`; break; }
+    case "beadReset": { const b = el.parentElement.querySelector("[data-bead]"); b.dataset.c = 0; $(".cnt", b).textContent = "0"; b.classList.remove("done"); $(".rounds", b).textContent = `الهدف ${n2a(+b.dataset.bead)}`; if (b.dataset.key && S.tasbih) { delete S.tasbih[b.dataset.key]; save(true); } toast("العداد رجع صفر"); break; }
     case "pbell": { const c = prayerCfg(); const k = el.dataset.k; c.on[k] = !c.on[k]; save(true); toast(c.on[k] ? `أذان ${PNAME[k]} مفعّل` : `أذان ${PNAME[k]} متوقف`); sessionStorage.setItem("keep-scroll", "1"); route(); break; }
     case "testAdhan": playAdhan("dhuhr", true); break;
     case "gps": locateMe(); break;
@@ -1888,6 +1899,8 @@ window.addEventListener("popstate", () => {
   if ($("#video").classList.contains("open") && !history.state?.video) { closeVideo(true); return; }
 });
 window.addEventListener("hashchange", route);
+document.addEventListener("visibilitychange", () => { if (document.hidden) save(true); });
+window.addEventListener("pagehide", () => save(true));
 document.addEventListener("keydown", (e) => {
   if (e.target.matches("input, textarea")) return;
   if (e.key === " " && cur()) { e.preventDefault(); toggle(); }
@@ -1897,6 +1910,25 @@ document.addEventListener("keydown", (e) => {
   }
   if (e.key === "Escape") { closeSheet(); closeVideo(); }
 });
+
+/* ---------------- VISITORS ---------------- */
+const COUNTER = "https://abacus.jasoncameron.dev";
+const COUNTER_NS = "ultraquran-k3bora";
+async function visitors() {
+  let first = false;
+  try { first = !localStorage.getItem("uq.visited"); } catch {}
+  try {
+    const r = await fetch(`${COUNTER}/${first ? "hit" : "get"}/${COUNTER_NS}/visitors`, { cache: "no-store" });
+    const j = await r.json();
+    if (first && r.ok) { try { localStorage.setItem("uq.visited", "1"); } catch {} }
+    if (typeof j.value === "number" && j.value > 0) {
+      const txt = n2a(j.value);
+      $$("[data-visitors]").forEach((x) => { x.textContent = txt; x.closest(".visits")?.removeAttribute("hidden"); });
+      window.__visitors = txt;
+    }
+  } catch {}
+}
+const visitsHTML = () => `<span class="visits" ${window.__visitors ? "" : "hidden"}>${icSm("people", 14)} <strong data-visitors>${window.__visitors || ""}</strong> زائر</span>`;
 
 /* ======================================================================
    BOOT
@@ -1910,6 +1942,7 @@ document.addEventListener("keydown", (e) => {
   }
   RECITERS.forEach((r) => { RIDX[r[0]] = r; });
   route();
+  visitors();
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((r) => r.update()).catch(() => {});
     // a new version took over: reload once so the page shows it
