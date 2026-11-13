@@ -1465,3 +1465,12 @@ body { overflow-x: clip !important; }
 .top { background: linear-gradient(120deg, #1a5a51f7, #0f3a36fa 55%, #0c2e2bfc) !important; }
 @media (min-width: 1024px) { .rmain .sticky-chips, .sticky-chips { top: 96px; } .rside { top: 100px; max-height: calc(100dvh - 116px); } }
 @media (max-width: 1023px) { .sticky-chips { top: calc(env(safe-area-inset-top) + 74px); } }
+
+/* desktop: chip bars wrap onto more lines instead of hiding items off-screen */
+@media (min-width: 1024px) {
+  .chips { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; row-gap: 10px; }
+  .chip { cursor: pointer; }
+  .chip:hover { border-color: #d9b36c88; color: var(--paper); }
+  .vrow { cursor: grab; }
+  .vrow.dragging { cursor: grabbing; user-select: none; }
+}

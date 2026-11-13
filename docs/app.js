@@ -1949,6 +1949,32 @@ window.addEventListener("popstate", () => {
   if ($("#video").classList.contains("open") && !history.state?.video) { closeVideo(true); return; }
 });
 window.addEventListener("hashchange", route);
+// desktop: horizontal strips scroll with the mouse wheel and by dragging
+const H_STRIPS = ".vrow, .cont-row, .book, .deck";
+document.addEventListener("wheel", (e) => {
+  const el = e.target.closest(".vrow, .cont-row");
+  if (!el || Math.abs(e.deltaX) > Math.abs(e.deltaY) || el.scrollWidth <= el.clientWidth) return;
+  e.preventDefault();
+  el.scrollBy({ left: -e.deltaY, behavior: "auto" });
+}, { passive: false });
+let drag = null;
+document.addEventListener("pointerdown", (e) => {
+  if (e.pointerType !== "mouse" || e.button !== 0) return;
+  const el = e.target.closest(".vrow, .cont-row");
+  if (!el || el.scrollWidth <= el.clientWidth) return;
+  drag = { el, x: e.clientX, left: el.scrollLeft, moved: false };
+});
+document.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x;
+  if (Math.abs(dx) > 5) { drag.moved = true; drag.el.classList.add("dragging"); }
+  if (drag.moved) drag.el.scrollLeft = drag.left - dx;
+});
+document.addEventListener("pointerup", () => {
+  if (!drag) return;
+  const d = drag; drag = null; d.el.classList.remove("dragging");
+  if (d.moved) { const stop = (ev) => { ev.stopPropagation(); ev.preventDefault(); }; document.addEventListener("click", stop, { capture: true, once: true }); setTimeout(() => document.removeEventListener("click", stop, { capture: true }), 50); }
+});
 document.addEventListener("visibilitychange", () => { if (document.hidden) save(true); });
 window.addEventListener("pagehide", () => save(true));
 document.addEventListener("keydown", (e) => {
