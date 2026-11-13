@@ -415,7 +415,7 @@ async function home() {
       <span class="grow"><span class="cap">${t.live ? "ارجع للإذاعة" : "كمّل الاستماع"}${S.last.time > 5 && !t.live ? ` من ${fmtTime(S.last.time)}` : ""}</span>
       <span class="t" style="display:block">${esc(t.t)}</span><span class="s" style="display:block">${esc(t.s || "")}</span></span></button>`;
   }
-  const faces = [241, 51, 112, 118, 125, 121].filter((id) => portrait(id));
+  const faces = RECITERS.filter((r) => r[5] && (r[2] === "q" || r[2] === "k")).slice(0, 72).map((r) => r[0]);
   const tile = (x) => `<a class="tile ${x.p ? "has-p" : ""}" href="${x.go}">${x.p && portrait(x.p) ? `<span class="tile-bg" style="background-image:url('${portrait(x.p)}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`;
   const cards = [resume,
     S.readAt ? `<a class="pstrip read" href="#/mushaf/${S.page}"><span class="pstrip-ic">${icSm("book", 24)}</span><span class="grow"><small>تابع القراءة في المصحف</small><b>سورة ${esc(META.chapters[surahOfPage(S.page)])} · صفحة ${n2a(S.page)}</b></span>${S.bookmark && S.bookmark !== S.page ? `<span class="bmgo" data-go="#/mushaf/${S.bookmark}">${icSm("bookmark", 16)} ${n2a(S.bookmark)}</span>` : ""}</a>` : "",
@@ -433,7 +433,7 @@ async function home() {
   <div class="sec-h"><h2>الأقسام</h2></div>
   <div class="tiles">
     <a class="tile feature" href="#/quran">
-      <span class="feature-faces">${faces.map((id) => `<img src="${portrait(id)}" alt="" loading="lazy">`).join("")}</span>
+      <span class="feature-wall" aria-hidden="true">${faces.map((id) => `<img src="${portrait(id)}" alt="" loading="lazy" decoding="async">`).join("")}</span>
       <span class="ic">${ic("book")}</span><b>القرآن الكريم</b><small>المصاحف المرتلة لـ 260 قارئاً بكل الروايات، وتسجيلات نادرة لأعلام التلاوة</small>
       <span class="feature-go">تصفح القراء ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></a>
     ${TILES.map(tile).join("")}
