@@ -399,7 +399,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 .k-rare     { --c1: #4a2d4f; --c2: #1d1424; --acc: #e9b8ef; }
 .k-alt      { --c1: #2a3b36; --c2: #141e1b; --acc: #a9c2b6; }
 .k-audio    { --c1: #1b5e54; --c2: #0a3a2e; }
-.k-video    { --c1: #6b2f22; --c2: #2a120c; --acc: #ffb59d; }
+.k-video    { --c1: #1d5a6b; --c2: #0b2c36; --acc: #ffb59d; }
 .k-text     { --c1: #1b5048; --c2: #0b2a27; --acc: #e7d9a8; }
 
 /* --- recording page head --- */
@@ -422,7 +422,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 @media (min-width: 760px) { .vgrid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1000px) { .vgrid { grid-template-columns: repeat(4, 1fr); } }
 .vcard { display: flex; flex-direction: column; gap: 8px; text-align: start; }
-.vthumb { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: linear-gradient(140deg, #6b2f22, #1d0d08); box-shadow: 0 0 0 1px #ffffff14; }
+.vthumb { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: linear-gradient(140deg, #1d5a6b, #082423); box-shadow: 0 0 0 1px #ffffff14; }
 .vthumb img { width: 100%; height: 100%; object-fit: cover; }
 .vthumb::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, #000a); }
 .vplay { position: absolute; z-index: 1; inset: 0; margin: auto; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: #ffffffe6; color: #1d0d08; }
@@ -886,7 +886,7 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .cont-bar i { display: block; height: 100%; background: var(--acc); border-radius: 2px; }
 .cont-x { position: absolute; top: 6px; inset-inline-start: 50%; transform: translateX(50%); width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; color: #f4ead2aa; background: #0003; }
 .k-listen  { --c1: #1b5e54; --c2: #0d3531; }
-.k-radio   { --c1: #6b2f22; --c2: #2a120c; --acc: #ffb59d; }
+.k-radio   { --c1: #1d5a6b; --c2: #0b2c36; --acc: #ffb59d; }
 .k-read    { --c1: #1d5a51; --c2: #0b2b28; --acc: #f0d58e; }
 .k-mark    { --c1: #1d5a6b; --c2: #0b2c36; --acc: #9fdcef; }
 .k-fav     { --c1: #5a2b3f; --c2: #22101a; --acc: #f3a9c3; }
@@ -1306,3 +1306,44 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .cairo-main .rad-art { width: 82px; height: 82px; }
   .cairo-txt b { font-size: 23px; }
 }
+
+/* =====================================================================
+   v28: desktop full player rises out of the mini player
+   ===================================================================== */
+.sheet { background: radial-gradient(120% 70% at 50% 0%, #2a7a6a 0%, #15524a 35%, #0c2e2b 75%) !important; }
+.sheet .cover { box-shadow: 0 0 0 3px #d9b36c, 0 0 0 10px #d9b36c1f, 0 24px 60px #0009 !important; }
+.sheet h2 { background: linear-gradient(180deg, #fff6da, #f3d38c 55%, #d1a253); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 4px; }
+.sheet .big-pp { background: linear-gradient(160deg, #fff1c9, #d9b36c 60%, #b8955a) !important; color: #082423 !important; box-shadow: 0 10px 24px #0007, 0 0 0 6px #d9b36c26; }
+.sheet .extras button { border-radius: 14px; }
+.sheet .extras button.on { background: #d9b36c1f; }
+@media (min-width: 1024px) {
+  body:has(.sheet.open)::after { content: ""; position: fixed; inset: 0; z-index: 45; background: #04201a66; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); pointer-events: none; }
+  .sheet {
+    inset: auto !important; left: 50% !important; bottom: 96px !important; top: auto !important; width: min(720px, calc(100vw - var(--rail) - 80px)); max-height: calc(100dvh - 130px);
+    z-index: 50; display: grid !important; grid-template-columns: 230px minmax(0, 1fr); column-gap: 28px; align-content: start;
+    grid-template-areas: "grab grab" "cover title" "cover who" "cover det" "cover seek" "cover controls" "extras extras" "sleep sleep" "queue queue";
+    padding: 18px 28px 22px !important; border-radius: 30px; border: 1px solid #d9b36c80 !important;
+    box-shadow: 0 30px 70px #000a, inset 0 1px 0 #ffffff26, inset 0 0 0 7px #0c2e2b00 !important;
+    transform-origin: 50% 100%; transform: translate(calc(-50% - (var(--rail) + 14px) / 2), 30px) scale(.94) !important; opacity: 0;
+    transition: transform .34s cubic-bezier(.2,.9,.25,1.1), opacity .22s ease, visibility 0s .34s !important; overflow-y: auto;
+  }
+  .sheet.open { transform: translate(calc(-50% - (var(--rail) + 14px) / 2), 0) scale(1) !important; opacity: 1; transition: transform .34s cubic-bezier(.2,.9,.25,1.1), opacity .22s ease !important; }
+  .sheet::before { content: ""; position: absolute; inset: 8px; border-radius: 23px; border: 1px solid #d9b36c2e; pointer-events: none; }
+  .sheet::after { content: ""; position: absolute; left: 50%; bottom: -1px; width: 14px; height: 14px; transform: translate(-50%, 50%) rotate(45deg); background: #0c2e2b; border-right: 1px solid #d9b36c80; border-bottom: 1px solid #d9b36c80; }
+  .sheet .grab { grid-area: grab; margin-bottom: 6px; }
+  .sheet .grab button { width: 38px; height: 38px; background: #ffffff0d; }
+  .sheet .cover { grid-area: cover; width: 230px; margin: 4px 0 0; align-self: start; }
+  .sheet h2 { grid-area: title; margin: 6px 0 2px; text-align: start; font-size: 26px; }
+  .sheet .who { grid-area: who; text-align: start; font-size: 16px; }
+  .sheet .det { grid-area: det; text-align: start; }
+  .sheet .seek { grid-area: seek; margin-top: 14px; }
+  .sheet .controls { grid-area: controls; justify-content: flex-start; gap: 10px; margin-top: 6px; }
+  .sheet .controls button { width: 44px; height: 44px; border-radius: 50%; }
+  .sheet .controls button:not(.big-pp):hover { background: #ffffff12; }
+  .sheet .big-pp { width: 64px !important; height: 64px !important; }
+  .sheet .extras { grid-area: extras; margin-top: 18px; padding: 8px; border-radius: 20px; background: #0824238c; box-shadow: inset 0 0 0 1px #d9b36c26; }
+  .sheet #sleepBox { grid-area: sleep; }
+  .sheet .queue { grid-area: queue; margin-top: 14px; }
+  .sheet .queue .list { columns: 1 !important; max-height: 240px; overflow-y: auto; }
+}
+@media (min-width: 1024px) { body:has(.sheet.open) .mini { z-index: 48; } }

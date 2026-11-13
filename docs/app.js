@@ -1921,6 +1921,13 @@ document.addEventListener("click", async (e) => {
 });
 $("#miniPP").addEventListener("click", toggle);
 $("#miniX").addEventListener("click", closePlayer);
+// desktop: clicking outside the floating player closes it
+document.addEventListener("pointerdown", (e) => {
+  const sh = $("#sheet");
+  if (!sh.classList.contains("open") || innerWidth < 1024) return;
+  if (e.target.closest("#sheet, #mini, .modal")) return;
+  closeSheet();
+});
 $("#miniMeta").addEventListener("click", openSheet);
 $("#miniArt").addEventListener("click", openSheet);
 $("#vClose").addEventListener("click", () => closeVideo());
