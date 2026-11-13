@@ -234,7 +234,10 @@ function renderSheet(full) {
   }
   const rep = ["التكرار مغلق", "تكرار القائمة", "تكرار المقطع"][P.repeat];
   const sleepOn = P.sleepT || P.sleepEnd;
-  const qStart = Math.max(0, P.i - 2), qEnd = Math.min(P.q.length, P.i + 30);
+  // the whole queue is listed so it can be scrolled freely both ways (very long queues show a wide window around the current item)
+  const QMAX = 1500;
+  const qStart = P.q.length <= QMAX ? 0 : Math.max(0, Math.min(P.i - 200, P.q.length - QMAX));
+  const qEnd = Math.min(P.q.length, qStart + QMAX);
   const queue = P.q.length > 1 ? `<div class="queue"><h3>قائمة التشغيل · ${n2a(P.i + 1)} من ${n2a(P.q.length)}</h3><ul class="list">${
     P.q.slice(qStart, qEnd).map((x, k) => `<li><button class="row ${qStart + k === P.i ? "now" : ""}" data-qi="${qStart + k}"><span class="num">${n2a(qStart + k + 1)}</span><span class="grow"><span class="t">${esc(x.t)}</span><span class="s">${esc(x.d || x.s || "")}</span></span></button></li>`).join("")
   }</ul></div>` : "";
@@ -267,6 +270,12 @@ function renderSheet(full) {
   const sk = $("#seek");
   sk.addEventListener("input", () => { sk.dataset.drag = 1; $("#tCur").textContent = fmtTime(+sk.value); });
   sk.addEventListener("change", () => { A.currentTime = +sk.value; delete sk.dataset.drag; });
+  // bring the playing item into view inside the list only (the page itself does not jump)
+  const ql = sh.querySelector(".queue .list"), qn = ql && ql.querySelector(".row.now");
+  if (ql && qn) {
+    const inner = ql.scrollHeight > ql.clientHeight + 2;
+    if (inner) ql.scrollTop = Math.max(0, qn.parentElement.offsetTop - 60);
+  }
   updateProgress();
 }
 function openSheet() {
