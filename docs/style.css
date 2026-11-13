@@ -1440,3 +1440,28 @@ html { scrollbar-width: thin; scrollbar-color: #d9b36c66 #0c2e2b; }
   .scard-tools > * { width: 24px; height: 24px; background: transparent; }
   .scard-tools .icon { width: 13px; height: 13px; }
 }
+
+/* =====================================================================
+   v33: premium page header (floating emerald glass, gold title)
+   ===================================================================== */
+.top { position: sticky; top: calc(env(safe-area-inset-top) + 8px); margin: calc(env(safe-area-inset-top) + 8px) 10px 0; padding: 8px 10px !important; gap: 10px;
+  border-radius: 22px; border: 1px solid #d9b36c59 !important; isolation: isolate; overflow: hidden;
+  background: linear-gradient(120deg, #1a5a51e6, #0f3a36eb 55%, #0c2e2bf0) !important;
+  backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: 0 12px 30px #0006, inset 0 1px 0 #ffffff1f; }
+.top::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .08; background: url("img/lattice.svg") center/56px repeat;
+  -webkit-mask-image: linear-gradient(90deg, #000, transparent 70%); mask-image: linear-gradient(90deg, #000, transparent 70%); }
+.top:not(:has(.brand)) h1 { text-align: center; font: 600 20px/1.4 var(--ui); padding-bottom: 2px;
+  background: linear-gradient(180deg, #fff6da, #f3d38c 55%, #d1a253); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.top .btn-icon { width: 40px; height: 40px; flex: none; color: #f0c879; background: #0824238c; box-shadow: inset 0 0 0 1px #d9b36c4d; }
+.top .btn-icon:hover { background: #d9b36c26; }
+.top:has(.brand) { padding: 8px 12px !important; }
+@media (min-width: 1024px) {
+  .top { top: 14px; margin: 14px 40px 0; padding: 10px 14px !important; border-radius: 24px; }
+  .top:not(:has(.brand)) h1 { font-size: 24px; }
+  .top .btn-icon { width: 44px; height: 44px; }
+}
+body { overflow-x: clip !important; }
+.top { background: linear-gradient(120deg, #1a5a51f7, #0f3a36fa 55%, #0c2e2bfc) !important; }
+@media (min-width: 1024px) { .rmain .sticky-chips, .sticky-chips { top: 96px; } .rside { top: 100px; max-height: calc(100dvh - 116px); } }
+@media (max-width: 1023px) { .sticky-chips { top: calc(env(safe-area-inset-top) + 74px); } }
