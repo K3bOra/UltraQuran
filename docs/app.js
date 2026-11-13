@@ -134,6 +134,18 @@ A.addEventListener("error", () => {
   updatePlayerUI();
 });
 
+function closePlayer() {
+  if (S.last && cur() && !cur().adhan && !cur().live) { S.last.time = A.currentTime || S.last.time; save(true); }
+  A.pause();
+  A.removeAttribute("src"); A.load();
+  if (P.obj) { URL.revokeObjectURL(P.obj); P.obj = null; }
+  P.q = []; P.i = -1;
+  clearTimeout(P.sleepT); P.sleepT = 0; P.sleepEnd = false;
+  closeSheet();
+  if ("mediaSession" in navigator) { try { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = "none"; } catch {} }
+  updatePlayerUI();
+  if (location.hash === "" || location.hash === "#/") { sessionStorage.setItem("keep-scroll", "1"); route(); }
+}
 function toggle() { if (!cur()) return; A.paused ? A.play().catch(() => {}) : A.pause(); }
 function next(auto) {
   if (P.i < P.q.length - 1) { P.i++; loadCur(true); }
@@ -209,7 +221,7 @@ function renderSheet(full) {
   sh.innerHTML = `
     <div class="grab"><button data-act="closeSheet" aria-label="إغلاق المشغّل">${ic("down")}</button>
       ${t.live ? `<span class="live-badge">بث مباشر</span>` : `<span></span>`}
-      <button data-act="share" aria-label="مشاركة">${ic("share")}</button></div>
+      <span style="display:flex"><button data-act="share" aria-label="مشاركة">${ic("share")}</button><button data-act="stopPlayer" aria-label="إيقاف وإغلاق المشغّل">${ic("x")}</button></span></div>
     <div class="cover">${artHTML(t)}</div>
     <h2>${esc(t.t)}</h2>
     <div class="who">${esc(t.s || "")}</div>
@@ -1767,6 +1779,7 @@ document.addEventListener("click", async (e) => {
     case "fwd": seekBy(15); break;
     case "rew": seekBy(-15); break;
     case "closeSheet": closeSheet(); break;
+    case "stopPlayer": closePlayer(); break;
     case "fav": if (t) { toggleFav(t); renderSheet(true); } break;
     case "rate": P.rate = RATES[(RATES.indexOf(P.rate) + 1) % RATES.length]; A.playbackRate = P.rate; renderSheet(true); break;
     case "repeat": P.repeat = (P.repeat + 1) % 3; renderSheet(true); break;
@@ -1843,6 +1856,7 @@ document.addEventListener("click", async (e) => {
   }
 });
 $("#miniPP").addEventListener("click", toggle);
+$("#miniX").addEventListener("click", closePlayer);
 $("#miniMeta").addEventListener("click", openSheet);
 $("#miniArt").addEventListener("click", openSheet);
 $("#vClose").addEventListener("click", () => closeVideo());
@@ -1872,11 +1886,6 @@ document.addEventListener("keydown", (e) => {
     return;
   }
   RECITERS.forEach((r) => { RIDX[r[0]] = r; });
-  if (S.last?.q?.length) {
-    P.q = S.last.q; P.i = Math.min(S.last.i, P.q.length - 1);
-    const t = cur();
-    if (t) { updatePlayerUI(true); setMedia(t); P.resumeAt = t.live ? 0 : S.last.time || 0; A.src = t.u; A.preload = "none"; }
-  }
   route();
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((r) => r.update()).catch(() => {});
