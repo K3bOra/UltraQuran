@@ -3,7 +3,7 @@ name: Build Android app
 on:
   workflow_dispatch:
   push:
-    paths: ["android/**"]
+    paths: ["android/**", ".github/workflows/android.yml"]
 
 jobs:
   apk:
@@ -13,7 +13,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: "17" }
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK (preinstalled on the runner)
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0" > /dev/null || true
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: "8.14.3" }
       - name: Restore signing key
