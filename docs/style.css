@@ -1422,3 +1422,21 @@ html { scrollbar-width: thin; scrollbar-color: #d9b36c66 #0c2e2b; }
 .scard.now .scard-play { animation: pulse 1.6s infinite; }
 @media (max-width: 380px) { .scard-t { font-size: 14.5px; } .scard-num { width: 46px; height: 46px; } }
 .scard.now .scard-play { animation: none; box-shadow: 0 0 0 4px #f0c87933, 0 0 16px #f0c879aa; }
+
+/* phones: compact 3-up cards so 114 surahs are a short scroll */
+@media (max-width: 639px) {
+  .scard-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .scard { border-radius: 16px; }
+  .scard::before { width: 80px; height: 80px; inset-inline-end: -26px; bottom: -28px; }
+  .scard-main { gap: 3px; padding: 10px 6px 8px; }
+  .scard-num { width: 34px; height: 34px; font-size: 13px; margin: 0; }
+  .scard-t { font-size: 13px; line-height: 1.4; }
+  .scard-s { display: none; }
+  .scard-foot { padding-top: 6px; }
+  .scard-dur { font-size: 10.5px; padding: 1px 6px; }
+  .scard-play { width: 26px; height: 26px; }
+  .scard-play .icon { width: 12px; height: 12px; }
+  .scard-tools { top: 4px; inset-inline-start: 4px; }
+  .scard-tools > * { width: 24px; height: 24px; background: transparent; }
+  .scard-tools .icon { width: 13px; height: 13px; }
+}
