@@ -358,7 +358,8 @@ function setTab(root) {
 let renderToken = 0;
 async function route() {
   if (history.state?.sheet || history.state?.video) return;
-  closeSheet(true); closeVideo(true);
+  closeSheet(true); closeVideo(true); stopCompass();
+  if (!location.hash.startsWith("#/mushaf")) { document.body.classList.remove("immersive"); BOOK = null; }
   const hash = location.hash.replace(/^#\/?/, "");
   const [path, qs] = hash.split("?");
   const parts = path.split("/").filter(Boolean).map(decodeURIComponent);
@@ -413,6 +414,7 @@ async function home() {
   </section>
   ${homePrayerCard()}
   ${resume}
+  ${S.readAt ? `<a class="pstrip read" href="#/mushaf/${S.page}"><span class="pstrip-ic">${icSm("book", 24)}</span><span class="grow"><small>تابع القراءة في المصحف</small><b>سورة ${esc(META.chapters[surahOfPage(S.page)])} · صفحة ${n2a(S.page)}</b></span>${S.bookmark && S.bookmark !== S.page ? `<span class="bmgo" data-go="#/mushaf/${S.bookmark}">${icSm("bookmark", 16)} ${n2a(S.bookmark)}</span>` : ""}</a>` : ""}
   ${installCard(false)}
   <div class="sec-h"><h2>الأقسام</h2></div>
   <div class="tiles">
@@ -820,31 +822,61 @@ function trackListLib(tracks) {
 }
 
 function leafView(node, base, root) {
-  const parts = [];
-  let track = "";
-  if (typeof node.audio === "string") {
-    const t = { t: node.title, s: root.title, d: node.subtitle || node.badge || "", u: node.audio, live: !!node.live, v: !!node.video };
-    track = `<div class="btn-row"><button class="btn" data-play="${reg([t])}:0">${ic(t.v ? "video" : "play")}${t.v ? "شاهد الفيديو" : "استمع"}</button></div>`;
-  }
-  if (node.counter) {
-    after(() => {
-      let c = 0; const goal = node.counter; const bead = $("#bead");
-      bead.addEventListener("click", () => {
-        c++;
-        if (navigator.vibrate) navigator.vibrate(c % goal === 0 ? [30, 60, 30] : 12);
-        $("#cnt").textContent = n2a(c);
-        bead.classList.toggle("done", c % goal === 0);
-        $("#rounds").textContent = c >= goal ? `أتممت ${n2a(Math.floor(c / goal))} مرة` : `الهدف ${n2a(goal)}`;
-      });
-      $("#reset").addEventListener("click", () => { c = 0; $("#cnt").textContent = n2a(0); bead.classList.remove("done"); $("#rounds").textContent = `الهدف ${n2a(goal)}`; });
-    });
-    parts.push(`<div class="tasbih"><button class="bead" id="bead" aria-label="اضغط للتسبيح"><span><span id="cnt">${n2a(0)}</span><small id="rounds">الهدف ${n2a(node.counter)}</small></span></button>
-      <button class="btn ghost" id="reset">ابدأ من جديد</button></div>`);
-  }
-  return `${parts.join("")}<article class="reader"><h2>${esc(node.title)}</h2>
-    <div class="sub">${esc([node.subtitle, node.badge].filter(Boolean).join(" · "))}</div>
-    ${track}
-    ${node.body ? `<div class="body" style="margin-top:14px">${esc(node.body)}</div>` : ""}</article>`;
+  // swipeable cards: every readable sibling of this item (Names of Allah, adhkar, tasbih, articles…)
+  const parentPath = base.split("/").slice(0, -1).join("/");
+  const myIndex = +base.split("/").pop();
+  let parent = root;
+  const trail = parentPath.replace(/^#\/lib\/\d+\/?/, "").split("/").filter(Boolean).map(Number);
+  for (const i of trail) parent = kidsOf(parent)[i];
+  const sibs = (kidsOf(parent) || []).map((k, i) => [k, i]).filter(([k]) => !kidsOf(k) && (k.body || k.counter || (k.audio && k.body)));
+  if (!sibs.some(([, i]) => i === myIndex)) sibs.splice(0, sibs.length, [node, myIndex]);
+  const start = Math.max(0, sibs.findIndex(([, i]) => i === myIndex));
+  const total = sibs.length;
+  const slide = ([k, i], n) => {
+    let track = "";
+    if (typeof k.audio === "string") {
+      const t = { t: k.title, s: root.title, d: k.subtitle || k.badge || "", u: k.audio, live: !!k.live, v: !!k.video };
+      track = `<div class="btn-row"><button class="btn" data-play="${reg([t])}:0">${ic(t.v ? "video" : "play")}${t.v ? "شاهد الفيديو" : "استمع"}</button></div>`;
+    }
+    const tas = k.counter ? `<div class="tasbih"><button class="bead" data-bead="${k.counter}" aria-label="اضغط للتسبيح"><span><span class="cnt">0</span><small class="rounds">الهدف ${n2a(k.counter)}</small></span></button>
+      <button class="btn ghost" data-act="beadReset">ابدأ من جديد</button></div>` : "";
+    return `<div class="tslide" data-i="${i}" data-title="${esc(k.title)}"><div class="tslide-in">
+      ${tas}<article class="reader"><span class="rnum">${n2a(n + 1)}</span><h2>${esc(k.title)}</h2>
+      <div class="sub">${esc([k.subtitle, k.badge].filter(Boolean).join(" · "))}</div>${track}
+      ${k.body ? `<div class="body">${esc(k.body)}</div>` : ""}</article></div></div>`;
+  };
+  after(() => {
+    const deck = $("#deck");
+    const go = (n, smooth) => { const el = deck.children[n]; if (el) deck.scrollTo({ left: el.offsetLeft - deck.offsetLeft, behavior: smooth ? "smooth" : "instant" }); };
+    go(start, false);
+    let cur = start, t = 0;
+    deck.addEventListener("scroll", () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        if (!document.body.contains(deck)) return;
+        const n = Math.round(Math.abs(deck.scrollLeft) / (deck.clientWidth || 1));
+        if (n === cur || !deck.children[n]) return;
+        cur = n;
+        const el = deck.children[n];
+        history.replaceState(history.state, "", `${parentPath}/${el.dataset.i}`);
+        setTop(el.dataset.title);
+        $("#dkPos").textContent = `${n2a(n + 1)} / ${n2a(total)}`;
+        $("#dkBar").style.width = `${((n + 1) / total) * 100}%`;
+      }, 80);
+    }, { passive: true });
+    $("#dkPrev").onclick = () => go(cur - 1, true);
+    $("#dkNext").onclick = () => go(cur + 1, true);
+    deck.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") go(cur + 1, true); if (e.key === "ArrowRight") go(cur - 1, true); });
+    if (total > 1 && !S.deckHint) { S.deckHint = 1; save(); toast("اسحب يمين وشمال عشان تتنقل بينهم", 3000); }
+  });
+  return `<div class="deckbar">
+      <button class="navbtn" id="dkPrev" aria-label="السابق">${ic("chev")}</button>
+      <div class="grow"><b id="dkPos">${n2a(start + 1)} / ${n2a(total)}</b><span class="dkprog"><i id="dkBar" style="width:${((start + 1) / total) * 100}%"></i></span></div>
+      <button class="chip fs" data-act="fs" data-d="-1" aria-label="تصغير الخط">أ-</button>
+      <button class="chip fs" data-act="fs" data-d="1" aria-label="تكبير الخط">أ+</button>
+      <button class="navbtn" id="dkNext" aria-label="التالي">${ic("chev").replace('class="icon"', 'class="icon flip"')}</button>
+    </div>
+    <div class="deck" id="deck" dir="rtl" tabindex="0" style="--rfs:${S.fs || 1}">${sibs.map(slide).join("")}</div>`;
 }
 
 /* ---------------- QUIZ ---------------- */
@@ -890,8 +922,8 @@ const PAGE_SRC = {
     (p) => `https://files.quran.app/hafs/madani/width_1920/page${String(p).padStart(3, "0")}.png`,
   ],
   warsh: [
-    (p) => `https://cdn.jsdelivr.net/gh/samaneng2002/nurani-warsh-mushaf@main/pages/page_warsh_${String(p).padStart(3, "0")}.png`,
     (p) => `https://raw.githubusercontent.com/samaneng2002/nurani-warsh-mushaf/main/pages/page_warsh_${String(p).padStart(3, "0")}.png`,
+    (p) => `https://cdn.jsdelivr.net/gh/samaneng2002/nurani-warsh-mushaf@main/pages/page_warsh_${String(p).padStart(3, "0")}.png`,
   ],
 };
 const surahOfPage = (p) => { let s = 0; META.spages.forEach((sp, i) => { if (sp <= p) s = i; }); return s; };
@@ -899,68 +931,96 @@ const juzOfPage = (p) => { let j = 0; META.jpages.forEach((jp, i) => { if (jp <=
 
 async function mushaf(parts) {
   const page = Math.min(604, Math.max(1, +parts[0] || S.page || 1));
-  S.page = page; save();
-  const s = surahOfPage(page);
-  setTop(`سورة ${META.chapters[s]}`);
+  S.page = page; S.readAt = Date.now(); save();
+  setTop(`سورة ${META.chapters[surahOfPage(page)]}`);
   const riw = S.riwaya;
-  after(() => {
-    drawPage(page);
-    if (S.tafsir) drawTafsir(page);
-    const w = $("#pageWrap");
-    let x0 = null, y0 = null;
-    w.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
-    w.addEventListener("touchend", (e) => {
-      if (x0 == null) return;
-      const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
-      x0 = null;
-      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) goPage(page + (dx > 0 ? 1 : -1));
-    });
-    // preload neighbours
-    if (S.mode === "img") [page + 1, page - 1].filter((p) => p >= 1 && p <= 604).forEach((p) => { const im = new Image(); im.src = PAGE_SRC[riw][0](p); });
-  });
+  const mr = MUSHAF_RECITERS.find((x) => x[0] === S.mReciter) || MUSHAF_RECITERS[0];
+  const leaves = Array.from({ length: 604 }, (_, i) => `<div class="leaf" data-p="${i + 1}"><div class="leaf-in ${S.mode === "text" ? "txt" : ""}"></div></div>`).join("");
+  after(() => setupBook(page));
   return `
   <div class="mushaf-bar">
-    <button class="navbtn" data-act="pg" data-p="${page - 1}" aria-label="الصفحة السابقة" ${page <= 1 ? "disabled" : ""}>${ic("chev")}</button>
-    <div class="grow"><b>صفحة ${n2a(page)}</b>الجزء ${n2a(juzOfPage(page))} · ${riw === "hafs" ? "حفص عن عاصم" : "ورش عن نافع"}</div>
-    <button class="navbtn" data-act="pg" data-p="${page + 1}" aria-label="الصفحة التالية" ${page >= 604 ? "disabled" : ""}>${ic("chev").replace('class="icon"', 'class="icon" style="transform:scaleX(-1)"')}</button>
+    <button class="navbtn" data-act="pgPrev" aria-label="الصفحة السابقة">${ic("chev")}</button>
+    <div class="grow"><b id="mbPage">صفحة ${n2a(page)}</b><span id="mbInfo">الجزء ${n2a(juzOfPage(page))} · ${riw === "hafs" ? "حفص عن عاصم" : "ورش عن نافع"}</span></div>
+    <button class="navbtn" data-act="pgNext" aria-label="الصفحة التالية">${ic("chev").replace('class="icon"', 'class="icon flip"')}</button>
   </div>
   <div class="chips" role="group" aria-label="خيارات المصحف">
-    <a class="chip" href="#/index" aria-pressed="false">${ic("list").replace('class="icon"', 'class="icon" style="width:16px;height:16px;vertical-align:-3px"')} الفهرس</a>
+    <button class="chip" data-act="listenSurah" aria-pressed="false">${icSm("play", 15)} استمع · ${esc(mr[2])}</button>
+    <button class="chip" data-act="pickMReciter" aria-pressed="false" aria-label="تغيير القارئ">${icSm("people", 15)}</button>
+    <a class="chip" href="#/index" aria-pressed="false">${icSm("list", 15)} الفهرس</a>
+    <button class="chip" data-act="bookmark" id="bmChip" aria-pressed="${S.bookmark === page}">${icSm("bookmark", 15)} علامة</button>
+    <button class="chip" data-act="immersive" aria-pressed="false">${icSm("expand", 15)} ملء الشاشة</button>
     <button class="chip" data-act="riwaya" aria-pressed="${riw === "warsh"}">رواية ورش</button>
     <button class="chip" data-act="mode" aria-pressed="${S.mode === "text"}">نص بدل الصورة</button>
     <button class="chip" data-act="tafsirT" aria-pressed="${S.tafsir}">التفسير الميسّر</button>
-    <button class="chip" data-act="saveMushaf" aria-pressed="false">حفظ المصحف بدون نت</button>
+    <button class="chip" data-act="saveMushaf" aria-pressed="false">حفظ بدون نت</button>
   </div>
-  <div class="page-wrap" id="pageWrap"><div class="loading">جاري تحميل الصفحة…</div></div>
+  <div class="book" id="book" dir="rtl" tabindex="0" aria-label="صفحات المصحف، اسحب يمين وشمال">${leaves}</div>
+  <button class="imm-exit" data-act="immersive" aria-label="خروج من ملء الشاشة">${icSm("x", 20)}</button>
   <section class="tafsir" id="tafsir" ${S.tafsir ? "" : "hidden"}></section>`;
 }
-function goPage(p) {
-  if (p < 1 || p > 604) return;
-  sessionStorage.setItem("keep-scroll", "1");
-  location.replace(`#/mushaf/${p}`);
+
+const MUSHAF_RECITERS = [
+  [118, 118, "الحصري"], [112, 112, "المنشاوي"], [51, 53, "عبد الباسط"], [125, 125, "مصطفى إسماعيل"],
+  [121, 121, "البنا"], [106, 106, "الطبلاوي"], [123, 123, "العفاسي"], [102, 102, "المعيقلي"],
+  [54, 54, "السديس"], [31, 31, "الشريم"], [92, 92, "ياسر الدوسري"],
+];
+let BOOK = null;
+function setupBook(page) {
+  const book = $("#book");
+  if (!book) return;
+  BOOK = { el: book, page, loaded: new Set() };
+  const leafOf = (p) => book.children[p - 1];
+  const goTo = (p, smooth) => {
+    const leaf = leafOf(p);
+    if (!leaf) return;
+    book.scrollTo({ left: leaf.offsetLeft - book.offsetLeft - (book.clientWidth - leaf.clientWidth) / 2, behavior: smooth ? "smooth" : "instant" });
+  };
+  BOOK.goTo = goTo;
+  goTo(page, false);
+  const ensure = (p) => { for (const q of [p, p + 1, p - 1, p + 2]) if (q >= 1 && q <= 604) fillLeaf(leafOf(q), q); };
+  ensure(page);
+  if (S.tafsir) drawTafsir(page);
+  let t = 0;
+  const settle = () => {
+    if (!document.body.contains(book)) return;
+    const w = book.clientWidth || 1;
+    const p = Math.min(604, Math.max(1, Math.round(Math.abs(book.scrollLeft) / w) + 1));
+    ensure(p);
+    if (p === BOOK.page) return;
+    BOOK.page = p;
+    S.page = p; S.readAt = Date.now(); save();
+    history.replaceState(history.state, "", `#/mushaf/${p}`);
+    setTop(`سورة ${META.chapters[surahOfPage(p)]}`);
+    $("#mbPage").textContent = `صفحة ${n2a(p)}`;
+    $("#mbInfo").textContent = `الجزء ${n2a(juzOfPage(p))} · ${S.riwaya === "hafs" ? "حفص عن عاصم" : "ورش عن نافع"}`;
+    $("#bmChip")?.setAttribute("aria-pressed", String(S.bookmark === p));
+    if (S.tafsir) drawTafsir(p);
+  };
+  book.addEventListener("scroll", () => { clearTimeout(t); t = setTimeout(settle, 90); }, { passive: true });
+  book.addEventListener("click", () => { if (document.body.classList.contains("immersive")) toggleImmersive(); });
+  window.addEventListener("resize", () => { if (BOOK?.el === book) goTo(BOOK.page, false); });
+  if (!S.swipeHint) { S.swipeHint = 1; save(); toast("اسحب الصفحة يمين وشمال عشان تقلّب زي المصحف", 3500); }
 }
-function drawPage(p) {
-  const w = $("#pageWrap");
-  if (!w) return;
-  if (S.mode === "text") return drawText(p);
+function fillLeaf(leaf, p) {
+  if (!leaf || leaf.dataset.done) return;
+  leaf.dataset.done = "1";
+  const box = leaf.firstElementChild;
+  box.innerHTML = `<div class="loading">صفحة ${n2a(p)}…</div>`;
+  if (S.mode === "text") return fillText(box, p);
   const srcs = PAGE_SRC[S.riwaya];
   let k = 0;
   const img = new Image();
   img.alt = `صفحة ${p} من المصحف الشريف`;
   img.decoding = "async";
-  img.onload = () => { w.innerHTML = ""; w.appendChild(img); };
-  img.onerror = () => {
-    k++;
-    if (k < srcs.length) img.src = srcs[k](p);
-    else { w.innerHTML = `<div class="loading">الصورة مش متاحة دلوقتي… جاري عرض النص</div>`; drawText(p); }
-  };
+  img.draggable = false;
+  img.onload = () => { box.innerHTML = ""; box.appendChild(img); };
+  img.onerror = () => { k++; if (k < srcs.length) img.src = srcs[k](p); else fillText(box, p); };
   img.src = srcs[0](p);
 }
-async function drawText(p) {
-  const w = $("#pageWrap");
+async function fillText(box, p) {
+  box.classList.add("txt");
   try {
     const d = await getJSON(`https://api.alquran.cloud/v1/page/${p}/quran-uthmani`);
-    if (!$("#pageWrap")) return;
     let html = "";
     for (const a of d.data.ayahs) {
       let txt = a.text;
@@ -970,10 +1030,35 @@ async function drawText(p) {
       }
       html += `${esc(txt)} <span class="an">﴿${n2a(a.numberInSurah)}﴾</span> `;
     }
-    w.innerHTML = `<div class="page-text">${html}</div>`;
+    box.innerHTML = `<div class="page-text">${html}<div class="pfoot">${n2a(p)}</div></div>`;
   } catch {
-    w.innerHTML = `<div class="loading">الصفحة محتاجة نت أول مرة. اتأكد من الاتصال.</div>`;
+    box.innerHTML = `<div class="loading">الصفحة دي محتاجة نت أول مرة</div>`;
+    delete box.parentElement.dataset.done;
   }
+}
+function goPage(p) {
+  if (p < 1 || p > 604) return;
+  if (BOOK && document.body.contains(BOOK.el)) return BOOK.goTo(p, true);
+  location.hash = `#/mushaf/${p}`;
+}
+function toggleImmersive() {
+  const on = document.body.classList.toggle("immersive");
+  if (on && !S.immHint) { S.immHint = 1; save(); toast("دوس على الصفحة عشان تخرج من ملء الشاشة", 3000); }
+  if (BOOK) setTimeout(() => BOOK.goTo(BOOK.page, false), 60);
+}
+async function listenSurah() {
+  const mr = MUSHAF_RECITERS.find((x) => x[0] === S.mReciter) || MUSHAF_RECITERS[0];
+  const d = await getJSON(`data/r/${mr[0]}.json`);
+  const rec = d.recs.find((r) => r.id === mr[1]) || d.recs[0];
+  const s = surahOfPage(BOOK?.page || S.page) + 1;
+  const tracks = recTracks(d, rec, portrait(mr[0]));
+  const i = Math.max(0, tracks.findIndex((t) => t.ch === s));
+  playList(tracks, i);
+  toast(`سورة ${META.chapters[s - 1]} بصوت ${d.name}`);
+}
+function pickMReciter() {
+  openModal(`<h2>قارئ المصحف</h2><p class="note" style="margin:0 0 10px">زرار «استمع» هيشغّل السورة اللي انت فيها بصوت القارئ ده، ويكمل اللي بعدها.</p>
+    <div class="mpick">${MUSHAF_RECITERS.map((r) => `<button class="mpick-i ${r[0] === (S.mReciter || 118) ? "on" : ""}" data-act="setMReciter" data-id="${r[0]}">${avatar(r[0], r[2])}<span>${esc(r[2])}</span></button>`).join("")}</div>`);
 }
 async function drawTafsir(p) {
   const box = $("#tafsir");
@@ -1191,6 +1276,7 @@ function homePrayerCard() {
 
 async function prayer(parts) {
   if (parts[0] === "muezzin") return muezzinPicker(parts[1]);
+  if (parts[0] === "qibla") return qibla();
   setTop("مواقيت الصلاة");
   const c = prayerCfg();
   if (c.lat == null) return prayerSetup(true);
@@ -1218,6 +1304,7 @@ async function prayer(parts) {
       <div class="ploc">${icSm("pin", 16)} ${esc(c.name || "موقعي")}${hijri ? ` · ${esc(hijri)}` : ""}</div>
     </section>
     <ul class="plist">${rows}</ul>
+    <a class="mcard qcard" href="#/prayer/qibla"><span class="avatar">${icSm("pin", 28)}</span><span class="grow"><small>اتجاه القبلة</small><b>${n2a(Math.round(qiblaBearing(c.lat, c.lng)))}° من الشمال</b><span>بوصلة حية على الموبايل</span></span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>
     <div class="sec-h"><h2>المؤذن</h2></div>
     <a class="mcard" href="#/prayer/muezzin">${avatar(m.pid, m.n)}<span class="grow"><small>أذان الصلوات</small><b>${esc(m.n)}</b><span>${esc(m.t)}</span></span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>
     <a class="mcard" href="#/prayer/muezzin/fajr"><span class="avatar">${icSm("moon", 30)}</span><span class="grow"><small>أذان الفجر</small><b>${fm ? esc(fm.n) : "نفس مؤذن الصلوات"}</b>${fm ? `<span>${esc(fm.t)}</span>` : ""}</span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>
@@ -1374,6 +1461,71 @@ function openModal(html) {
   m.classList.add("open");
 }
 
+/* ---------------- QIBLA ---------------- */
+function qiblaBearing(lat, lng) {
+  const k = [21.4225, 39.8262].map((x) => (x * Math.PI) / 180);
+  const p = [lat, lng].map((x) => (x * Math.PI) / 180);
+  const dl = k[1] - p[1];
+  const b = Math.atan2(Math.sin(dl), Math.cos(p[0]) * Math.tan(k[0]) - Math.sin(p[0]) * Math.cos(dl));
+  return ((b * 180) / Math.PI + 360) % 360;
+}
+function kaabaKm(lat, lng) {
+  const R = 6371, r = (x) => (x * Math.PI) / 180;
+  const dLat = r(21.4225 - lat), dLng = r(39.8262 - lng);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(r(lat)) * Math.cos(r(21.4225)) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(a)));
+}
+let compassOn = null;
+function stopCompass() {
+  if (!compassOn) return;
+  window.removeEventListener("deviceorientationabsolute", compassOn, true);
+  window.removeEventListener("deviceorientation", compassOn, true);
+  compassOn = null;
+}
+async function startCompass(bearing) {
+  stopCompass();
+  if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+    try { if ((await DeviceOrientationEvent.requestPermission()) !== "granted") return toast("محتاجين إذن البوصلة عشان نحدد الاتجاه"); }
+    catch { return toast("البوصلة مش متاحة على الجهاز ده"); }
+  }
+  let got = false;
+  compassOn = (e) => {
+    const dial = $("#qdial");
+    if (!dial) return stopCompass();
+    let heading = null;
+    if (typeof e.webkitCompassHeading === "number") heading = e.webkitCompassHeading;
+    else if (e.absolute && typeof e.alpha === "number") heading = 360 - e.alpha;
+    if (heading == null) return;
+    got = true;
+    dial.style.transform = `rotate(${-heading}deg)`;
+    const diff = Math.abs(((bearing - heading + 540) % 360) - 180);
+    const ok = diff < 4;
+    $("#qwrap").classList.toggle("aligned", ok);
+    $("#qhint").textContent = ok ? "انت في اتجاه القبلة ✓" : `لف ${n2a(Math.round(diff))}° ${((bearing - heading + 360) % 360) < 180 ? "يمين" : "شمال"}`;
+    if (ok && navigator.vibrate && !$("#qwrap").dataset.buzz) { $("#qwrap").dataset.buzz = 1; navigator.vibrate(40); }
+    if (!ok) delete $("#qwrap").dataset.buzz;
+  };
+  window.addEventListener("deviceorientationabsolute", compassOn, true);
+  window.addEventListener("deviceorientation", compassOn, true);
+  setTimeout(() => { if (!got && $("#qhint")) $("#qhint").textContent = "البوصلة مش شغالة على الجهاز ده. استخدم الزاوية من الشمال."; }, 2500);
+}
+function qibla() {
+  setTop("اتجاه القبلة");
+  const c = prayerCfg();
+  if (c.lat == null) return prayerSetup(true);
+  const b = qiblaBearing(c.lat, c.lng);
+  return `<section class="qibla" id="qwrap">
+      <div class="qdial" id="qdial" style="transform:rotate(0deg)">
+        <span class="qn">N</span><span class="qe">E</span><span class="qs">S</span><span class="qw">W</span>
+        <span class="qneedle" style="transform:rotate(${b}deg)"><i></i><b>${icSm("dome", 22)}</b></span>
+      </div>
+      <span class="qphone" aria-hidden="true"></span>
+    </section>
+    <p class="qhint" id="qhint">دوس «شغّل البوصلة» وامسك الموبايل مفرود</p>
+    <div class="btn-row" style="justify-content:center"><button class="btn" data-act="compass">${icSm("pin", 18)}شغّل البوصلة</button></div>
+    <div class="setting"><span class="grow"><b>${n2a(Math.round(b))}° من الشمال</b><small>${esc(c.name || "")} · المسافة للكعبة حوالي ${n2a(kaabaKm(c.lat, c.lng))} كم</small></span></div>
+    <p class="note">ابعد الموبايل عن الحاجات المعدنية والمغناطيس. لو الاتجاه مش مظبوط، حرّك الموبايل على شكل رقم 8 في الهوا عشان البوصلة تتظبط.</p>`;
+}
 /* ---------------- SAVED ---------------- */
 async function saved() {
   setTop("محفوظاتي");
@@ -1462,7 +1614,7 @@ async function search(parts, qs) {
    EVENTS
    ====================================================================== */
 document.addEventListener("click", async (e) => {
-  const el = e.target.closest("[data-play],[data-fav],[data-act],[data-go],[data-qi],[data-unfav],[data-unsave],a[data-keep]");
+  const el = e.target.closest("[data-play],[data-fav],[data-act],[data-go],[data-qi],[data-unfav],[data-unsave],[data-bead],a[data-keep]");
   if (!el) return;
   if (el.matches("a[data-keep]")) { sessionStorage.setItem("keep-scroll", "1"); return; }
   if (el.dataset.play) {
@@ -1484,7 +1636,15 @@ document.addEventListener("click", async (e) => {
     try { await (await caches.open("uq-audio")).delete(u); } catch {}
     delete S.saved[u]; save(true); toast("اتمسح من الحفظ بدون نت"); route(); return;
   }
-  if (el.dataset.go) { location.hash = el.dataset.go; return; }
+  if (el.dataset.go) { e.preventDefault(); location.hash = el.dataset.go; return; }
+  if (el.dataset.bead) {
+    const goal = +el.dataset.bead; const c = (+el.dataset.c || 0) + 1; el.dataset.c = c;
+    if (navigator.vibrate) navigator.vibrate(c % goal === 0 ? [30, 60, 30] : 12);
+    $(".cnt", el).textContent = n2a(c);
+    el.classList.toggle("done", c % goal === 0);
+    $(".rounds", el).textContent = c >= goal ? `أتممت ${n2a(Math.floor(c / goal))} مرة` : `الهدف ${n2a(goal)}`;
+    return;
+  }
   const act = el.dataset.act, t = cur();
   switch (act) {
     case "back": if (history.length > 1) history.back(); else location.hash = "#/"; break;
@@ -1532,6 +1692,16 @@ document.addEventListener("click", async (e) => {
     case "mode": S.mode = S.mode === "img" ? "text" : "img"; save(); sessionStorage.setItem("keep-scroll", "1"); route(); break;
     case "tafsirT": S.tafsir = !S.tafsir; save(); el.setAttribute("aria-pressed", S.tafsir); $("#tafsir").hidden = !S.tafsir; if (S.tafsir) drawTafsir(S.page); break;
     case "saveMushaf": saveMushaf(); break;
+    case "pgPrev": goPage((BOOK?.page || S.page) - 1); break;
+    case "pgNext": goPage((BOOK?.page || S.page) + 1); break;
+    case "listenSurah": listenSurah(); break;
+    case "pickMReciter": pickMReciter(); break;
+    case "setMReciter": S.mReciter = +el.dataset.id; save(true); $("#modal").classList.remove("open"); sessionStorage.setItem("keep-scroll", "1"); route(); setTimeout(listenSurah, 300); break;
+    case "bookmark": { const p = BOOK?.page || S.page; S.bookmark = S.bookmark === p ? null : p; save(true); el.setAttribute("aria-pressed", String(S.bookmark === p)); toast(S.bookmark ? `اتحطت علامة على صفحة ${n2a(p)}` : "اتشالت العلامة"); break; }
+    case "immersive": toggleImmersive(); break;
+    case "compass": { const c = prayerCfg(); startCompass(qiblaBearing(c.lat, c.lng)); break; }
+    case "fs": { S.fs = Math.min(1.6, Math.max(0.8, +((S.fs || 1) + 0.1 * +el.dataset.d).toFixed(2))); save(); $("#deck")?.style.setProperty("--rfs", S.fs); break; }
+    case "beadReset": { const b = el.parentElement.querySelector("[data-bead]"); b.dataset.c = 0; $(".cnt", b).textContent = "0"; b.classList.remove("done"); $(".rounds", b).textContent = `الهدف ${n2a(+b.dataset.bead)}`; break; }
     case "pbell": { const c = prayerCfg(); const k = el.dataset.k; c.on[k] = !c.on[k]; save(true); toast(c.on[k] ? `أذان ${PNAME[k]} مفعّل` : `أذان ${PNAME[k]} متوقف`); sessionStorage.setItem("keep-scroll", "1"); route(); break; }
     case "testAdhan": playAdhan("dhuhr", true); break;
     case "gps": locateMe(); break;

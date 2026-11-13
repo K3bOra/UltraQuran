@@ -569,3 +569,71 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 .steps .icon { vertical-align: -4px; color: var(--gold); }
 @media (min-width: 640px) { .modal { align-items: center; } }
 .row .end .pick { width: auto; height: 34px; padding: 0 14px; border-radius: 999px; }
+
+/* --- swipeable mushaf --- */
+.mushaf-bar .grow span { display: block; }
+.book { display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+  margin: 12px -16px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; outline: none; }
+.book::-webkit-scrollbar { display: none; }
+.leaf { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; padding: 0 12px; display: flex; justify-content: center; }
+.leaf-in { position: relative; width: 100%; max-width: 620px; aspect-ratio: 0.62; background: var(--paper); border-radius: 10px; overflow: hidden;
+  box-shadow: 0 0 0 1px var(--line), 0 18px 40px #00000055; }
+.leaf-in.txt { aspect-ratio: auto; min-height: 60vh; }
+.leaf-in img { width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.leaf-in .loading { position: absolute; inset: 0; display: grid; place-items: center; color: #7a6a48; }
+.page-text .pfoot { text-align: center; margin-top: 10px; font: 600 14px var(--ui); color: #9a7a32; }
+.imm-exit { display: none; }
+body.immersive .top, body.immersive .tabs, body.immersive .mini, body.immersive .mushaf-bar, body.immersive .chips, body.immersive .tafsir { display: none !important; }
+body.immersive { padding-bottom: 0; background: #f7efdb; }
+body.immersive main { padding: 0; max-width: none; }
+body.immersive .book { margin: 0; height: 100dvh; align-items: center; background: #f7efdb; }
+body.immersive .leaf { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); height: 100dvh; align-items: center; }
+body.immersive .leaf-in { box-shadow: none; border-radius: 0; max-height: 100dvh; width: auto; height: 100%; max-width: 100%; }
+body.immersive .imm-exit { display: grid; place-items: center; position: fixed; z-index: 90; top: calc(env(safe-area-inset-top) + 10px); inset-inline-end: 12px;
+  width: 40px; height: 40px; border-radius: 50%; background: #04201a99; color: #fff; }
+.pstrip.read { background: linear-gradient(120deg, #3a3a28, #1a1a10 75%); border-color: #e7d9a840; }
+.pstrip.read .pstrip-ic { color: #e7d9a8; }
+.bmgo { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 999px; font-size: 13px; color: var(--gold); box-shadow: inset 0 0 0 1px var(--line); }
+.mpick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 8px; max-height: 56vh; overflow-y: auto; }
+.mpick-i { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px; border-radius: 14px; font-size: 13.5px; }
+.mpick-i .avatar { width: 64px; font-size: 24px; }
+.mpick-i.on { background: #d9b36c26; box-shadow: inset 0 0 0 1.5px var(--gold); color: var(--gold); }
+
+/* --- swipeable text cards --- */
+.deckbar { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.deckbar .grow { flex: 1; text-align: center; }
+.deckbar .grow b { display: block; font-weight: 600; font-size: 15px; direction: ltr; }
+.dkprog { display: block; height: 4px; margin: 6px auto 0; max-width: 160px; border-radius: 2px; background: #ffffff17; overflow: hidden; }
+.dkprog i { display: block; height: 100%; background: var(--gold); transition: width .2s; }
+.chip.fs { padding: 6px 10px; font-weight: 600; }
+.deck { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; margin: 10px -16px 0; scrollbar-width: none; outline: none;
+  height: calc(100dvh - 61px - 70px - var(--tabbar) - var(--mini) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 26px); }
+.deck::-webkit-scrollbar { display: none; }
+.tslide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; padding: 0 12px; height: 100%; }
+.tslide-in { height: 100%; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-lg); -webkit-overflow-scrolling: touch; }
+.tslide .reader { margin-top: 0; position: relative; min-height: 100%; }
+.tslide .tasbih { margin: 0 0 16px; }
+.tslide .reader .body { font-size: calc(19px * var(--rfs, 1)); margin-top: 14px; }
+.rnum { position: absolute; inset-inline-end: 16px; top: 14px; width: 40px; height: 40px; display: grid; place-items: center; font: 600 14px var(--ui); color: #9a7a32;
+  background: url("img/star.svg") center/contain no-repeat; filter: brightness(.7) saturate(1.4); }
+.tslide .reader h2 { padding-inline-end: 48px; }
+
+/* --- qibla --- */
+.qcard .avatar { color: #9fdcef; }
+.qibla { position: relative; width: min(78vw, 320px); aspect-ratio: 1; margin: 22px auto 0; }
+.qdial { position: absolute; inset: 0; border-radius: 50%; transition: transform .25s ease-out;
+  background: radial-gradient(circle, #0b3b30 0 58%, #15624e 59% 60%, #0b3b30 61%), conic-gradient(from 0deg, #d9b36c22 0 1deg, transparent 1deg 30deg);
+  box-shadow: 0 0 0 2px var(--line), 0 20px 50px #0008, inset 0 0 40px #0006; }
+.qdial > span:not(.qneedle) { position: absolute; font: 600 15px var(--ui); color: var(--mist); }
+.qn { top: 10px; left: 50%; transform: translateX(-50%); color: #ff9a85 !important; }
+.qs { bottom: 10px; left: 50%; transform: translateX(-50%); }
+.qe { right: 14px; top: 50%; transform: translateY(-50%); }
+.qw { left: 14px; top: 50%; transform: translateY(-50%); }
+.qneedle { position: absolute; inset: 0; }
+.qneedle i { position: absolute; left: 50%; top: 14%; width: 4px; height: 36%; margin-left: -2px; border-radius: 2px; background: linear-gradient(var(--gold), transparent); }
+.qneedle b { position: absolute; left: 50%; top: 4%; transform: translateX(-50%); width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); color: var(--night); box-shadow: 0 0 20px #d9b36c99; }
+.qphone { position: absolute; left: 50%; top: -14px; width: 0; height: 0; transform: translateX(-50%); border: 9px solid transparent; border-top: 12px solid var(--paper); }
+.qibla.aligned .qdial { box-shadow: 0 0 0 3px var(--gold), 0 0 50px #d9b36c66, inset 0 0 40px #0006; }
+.qhint { text-align: center; font-weight: 600; font-size: 17px; color: var(--gold); margin: 18px 0 0; min-height: 1.7em; }
+.qdial { overflow: hidden; }
+html { overflow-x: clip; }
