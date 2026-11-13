@@ -129,6 +129,8 @@ A.addEventListener("ended", () => {
 });
 A.addEventListener("error", () => {
   if (!A.getAttribute("src")) return;
+  const t0 = cur();
+  if (t0 && t0.alt && t0.alt.length && !t0.__alt) { t0.__alt = 1; A.src = t0.alt[0]; A.play().catch(() => {}); return; }
   const t = cur();
   toast(t?.live ? "الإذاعة لا تستجيب الآن، جرّب إذاعة أخرى" : "تعذّر تشغيل هذا المقطع من المصدر، جرّب مقطعاً آخر");
   updatePlayerUI();
@@ -364,7 +366,7 @@ function setTop(title, opts = {}) {
 function setTab(root) {
   const h = location.hash || "#/";
   root = { r: "quran", index: "mushaf" }[root] || root;
-  const links = $$("#tabs a:not(.rail-brand)");
+  const links = $$("#tabs a:not(.rail-brand):not(.rail-live)");
   // the most specific link that matches the current address wins
   let best = null;
   for (const a of links) {
@@ -710,6 +712,9 @@ function reciterVideos(d) {
 }
 
 /* ---------------- RADIO ---------------- */
+const CAIRO_RADIO = { t: "إذاعة القرآن الكريم من القاهرة", s: "جمهورية مصر العربية", d: "بث مباشر · الإذاعة المصرية", live: true, cairo: true,
+  u: "https://stream.radiojar.com/8s5u5tpdtwzuv", alt: ["https://radio.xecod.com/station/quran-cairo"], img: "img/cairo-radio.svg" };
+function playCairo() { playList([{ ...CAIRO_RADIO }], 0); }
 let SHEIKH_INDEX = null;
 const nameKey = (t) => qnorm(String(t || "")).replace(/^(اذاعه|الشيخه|الشيخ|القارئ|القاري|شيخ)\s+/, "").replace(/\s*-.*$/, "").replace(/[^\u0621-\u064A\s]/g, " ").replace(/\s+/g, " ").trim();
 function sheikhIdFor(name) {
@@ -733,16 +738,24 @@ async function radio() {
   const rs = await getJSON("data/radios.json");
   const tracks = rs.map((r) => ({ t: r[0], s: "إذاعة القرآن الكريم", d: "بث مباشر على مدار الساعة", u: r[1], live: true, img: portrait(sheikhIdFor(r[0])) }));
   const L = reg(tracks);
+  const CL = reg([{ ...CAIRO_RADIO }]);
   after(() => {
     const inp = $("#q");
     inp.addEventListener("input", () => {
       const v = norm(inp.value);
+      $("#cairo").hidden = v && !norm(CAIRO_RADIO.t + " مصر القاهره").includes(v);
       $$("#radios > li").forEach((li) => { li.hidden = v && !norm(li.dataset.name).includes(v); });
     });
   });
   return `<section class="shero"><span class="medal">${icSm("radio", 34)}</span><h2>إذاعات القرآن الكريم</h2>
     <p>${n2a(rs.length)} إذاعة بث مباشر على مدار الساعة، بتفضل شغالة في الخلفية حتى لو قفلت الشاشة</p></section>
   <label class="search">${ic("search")}<input id="q" type="search" placeholder="ابحث باسم القارئ أو الإذاعة" autocomplete="off"></label>
+  <div class="rad cairo" id="cairo" data-u="${esc(CAIRO_RADIO.u)}">
+    <button class="cairo-main" data-play="${CL}:0" aria-label="تشغيل ${esc(CAIRO_RADIO.t)}">
+      <span class="rad-art"><img src="${CAIRO_RADIO.img}" alt=""><span class="rad-on"></span></span>
+      <span class="cairo-txt"><small>الإذاعة الأولى · مصر</small><b>${esc(CAIRO_RADIO.t)}</b><span class="live-badge">بث مباشر على مدار الساعة</span></span>
+      <span class="cairo-play">${icSm("play", 26)}</span></button>
+    <button class="rad-fav ${isFav(CAIRO_RADIO.u) ? "on" : ""}" data-fav="${CL}:0" aria-label="المفضلة">${ic("heart")}</button></div>
   <ul class="radio-grid" id="radios">${tracks.map((t, i) => `<li data-name="${esc(t.t)}"><div class="rad" data-u="${esc(t.u)}">
     <button class="rad-main" data-play="${L}:${i}" aria-label="تشغيل ${esc(t.t)}">
       <span class="rad-art">${t.img ? `<img src="${esc(t.img)}" alt="" loading="lazy">` : icSm("radio", 26)}<span class="rad-on"></span></span>
@@ -1867,6 +1880,7 @@ document.addEventListener("click", async (e) => {
     case "mode": S.mode = S.mode === "img" ? "text" : "img"; save(); sessionStorage.setItem("keep-scroll", "1"); route(); break;
     case "tafsirT": S.tafsir = !S.tafsir; save(); el.setAttribute("aria-pressed", S.tafsir); $("#tafsir").hidden = !S.tafsir; if (S.tafsir) drawTafsir(S.page); break;
     case "saveMushaf": saveMushaf(); break;
+    case "playCairo": playCairo(); break;
     case "pgPrev": goPage((BOOK?.page || S.page) - (BOOK?.step?.() || 1)); break;
     case "pgNext": goPage((BOOK?.page || S.page) + (BOOK?.step?.() || 1)); break;
     case "listenSurah": listenSurah(); break;

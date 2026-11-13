@@ -1217,3 +1217,28 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .shero { padding: 26px 16px 22px; }
   .shero .medal { width: 76px; height: 76px; }
 }
+
+/* --- Egyptian Quran Radio --- */
+.rad.cairo { margin-top: 14px; border-radius: 24px; background: linear-gradient(120deg, #6b5222, #2a2410 70%); border-color: #f0c87966; box-shadow: 0 10px 28px #0005, inset 0 1px 0 #ffffff1f; }
+.cairo-main { display: flex; align-items: center; gap: 16px; width: 100%; padding: 16px 16px; text-align: start; }
+.cairo-main .rad-art { width: 76px; height: 76px; flex: none; box-shadow: 0 0 0 2px #f0c879, 0 0 0 7px #f0c87926, 0 8px 18px #0006; background: #082423; }
+.cairo-main .rad-on { box-shadow: 0 0 0 3px #2a2410; animation: pulse 1.4s infinite; }
+.cairo-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cairo-txt small { font-size: 12.5px; color: #f0c879; }
+.cairo-txt b { font: 600 19px/1.4 var(--ui); color: #fff4d6; }
+.cairo-play { width: 50px; height: 50px; flex: none; display: grid; place-items: center; border-radius: 50%; background: #f0c879; color: #2a2410; box-shadow: 0 6px 16px #0006; }
+.cairo-play .icon { fill: currentColor; stroke: none; margin-inline-start: 2px; }
+.rad.cairo .rad-fav { top: 10px; inset-inline-start: auto; inset-inline-end: 10px; background: #0003; }
+.rad.cairo.now { box-shadow: 0 0 30px #d9b36c55, inset 0 1px 0 #ffffff1f; }
+@media (min-width: 1024px) {
+  .cairo-main { padding: 22px 26px; gap: 22px; }
+  .cairo-main .rad-art { width: 96px; height: 96px; }
+  .cairo-txt b { font-size: 26px; }
+  .cairo-main { padding-inline-end: 70px; }
+  .tabs a.rail-live { background: linear-gradient(120deg, #3a2f12cc, #1a1608cc); border-color: #f0c87955; }
+  .tabs a.rail-live .icon { background: #c0392b; color: #fff; box-shadow: 0 0 0 2px #f0c87966; }
+  .tabs a.rail-live span { display: flex; flex-direction: column; line-height: 1.3; }
+  .tabs a.rail-live small { font-size: 11px; font-weight: 400; color: #ffb4a2; }
+}
+.rad.cairo .cairo-main { padding-inline-end: 56px; }
+@media (min-width: 1024px) { .rad.cairo .cairo-main { padding-inline-end: 80px; } }
