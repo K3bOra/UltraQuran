@@ -1,7 +1,7 @@
 /* Ultra Quran service worker: app shell offline, data refreshed in the background,
    Mushaf pages and fonts cached after first view. Audio is not intercepted
    (offline audio is read from the "uq-audio" cache by the page itself). */
-const VERSION = "uq-shell-4";
+const VERSION = "uq-shell-5";
 const SHELL = [
   "./", "index.html", "style.css", "app.js", "manifest.webmanifest",
   "img/lattice.svg", "fonts/Cairo-SemiBold.ttf", "img/star.svg", "icons/icon-192.png", "icons/icon-512.png",
