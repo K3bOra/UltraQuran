@@ -857,7 +857,7 @@ async function lib(parts) {
         <div class="vgrid">${vt.map((t, n) => videoCard(t, L, n, { thumb: unique ? thumbOf(t.id) : "", label: (t.t.match(/الآيا?ت?\s*([\d–\-]+)/) || [])[1] || n2a(n + 1) })).join("")}</div>`;
     }
   }
-  if (node === root && root.bio) return pageWithSide(head, root.bio, body);
+  if (node === root) return pageWithSide(head, root.bio || null, body);
   return head + body;
 }
 
@@ -1915,20 +1915,22 @@ document.addEventListener("keydown", (e) => {
 const COUNTER = "https://abacus.jasoncameron.dev";
 const COUNTER_NS = "ultraquran-k3bora";
 async function visitors() {
-  let first = false;
-  try { first = !localStorage.getItem("uq.visited"); } catch {}
-  try {
-    const r = await fetch(`${COUNTER}/${first ? "hit" : "get"}/${COUNTER_NS}/visitors`, { cache: "no-store" });
-    const j = await r.json();
-    if (first && r.ok) { try { localStorage.setItem("uq.visited", "1"); } catch {} }
-    if (typeof j.value === "number" && j.value > 0) {
-      const txt = n2a(j.value);
-      $$("[data-visitors]").forEach((x) => { x.textContent = txt; x.closest(".visits")?.removeAttribute("hidden"); });
-      window.__visitors = txt;
-    }
-  } catch {}
+  let firstDevice = false, newSession = false;
+  try { firstDevice = !localStorage.getItem("uq.visited"); } catch {}
+  try { newSession = !sessionStorage.getItem("uq.session"); sessionStorage.setItem("uq.session", "1"); } catch {}
+  const call = (op, key) => fetch(`${COUNTER}/${op}/${COUNTER_NS}/${key}`, { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+  const [v, t] = await Promise.all([call(firstDevice ? "hit" : "get", "visitors"), call(newSession ? "hit" : "get", "visits")]);
+  if (firstDevice && v) { try { localStorage.setItem("uq.visited", "1"); } catch {} }
+  const nV = v && typeof v.value === "number" && v.value > 0 ? v.value : 0;
+  const nT = t && typeof t.value === "number" && t.value > 0 ? t.value : 0;
+  if (!nV && !nT) return;
+  window.__visitors = nV ? n2a(nV) : "";
+  window.__visits = nT ? n2a(nT) : "";
+  $$("[data-visitors]").forEach((x) => { x.textContent = window.__visitors; });
+  $$("[data-visits]").forEach((x) => { x.textContent = window.__visits; });
+  $$(".visits").forEach((x) => x.removeAttribute("hidden"));
 }
-const visitsHTML = () => `<span class="visits" ${window.__visitors ? "" : "hidden"}>${icSm("people", 14)} <strong data-visitors>${window.__visitors || ""}</strong> زائر</span>`;
+const visitsHTML = () => `<span class="visits" ${window.__visitors ? "" : "hidden"}>${icSm("people", 14)} <strong data-visitors>${window.__visitors || ""}</strong> زائر · <strong data-visits>${window.__visits || ""}</strong> زيارة</span>`;
 
 /* ======================================================================
    BOOT
