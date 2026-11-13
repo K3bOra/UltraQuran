@@ -1,11 +1,11 @@
 /* Ultra Quran service worker: app shell offline, data refreshed in the background,
    Mushaf pages and fonts cached after first view. Audio is not intercepted
    (offline audio is read from the "uq-audio" cache by the page itself). */
-const VERSION = "uq-shell-2";
+const VERSION = "uq-shell-3";
 const SHELL = [
   "./", "index.html", "style.css", "app.js", "manifest.webmanifest",
   "img/lattice.svg", "fonts/Cairo-SemiBold.ttf", "img/star.svg", "icons/icon-192.png", "icons/icon-512.png",
-  "data/meta.json", "data/reciters.json", "data/radios.json",
+  "prayer-calc.js", "data/meta.json", "data/reciters.json", "data/radios.json", "data/adhan.json",
 ];
 const KEEP = [VERSION, "uq-data", "uq-pages", "uq-fonts", "uq-audio", "uq-img"];
 
@@ -53,4 +53,12 @@ self.addEventListener("fetch", (e) => {
   }
   if (url.host === "fonts.googleapis.com" || url.host === "fonts.gstatic.com") return e.respondWith(cacheFirst(req, "uq-fonts"));
   if (PAGE_HOSTS.includes(url.host) && /\.(png|jpg)$|\/v1\/page\//.test(url.pathname)) return e.respondWith(cacheFirst(req, "uq-pages"));
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+    for (const c of list) if ("focus" in c) return c.focus();
+    return self.clients.openWindow("./#/prayer");
+  }));
 });

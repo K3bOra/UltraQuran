@@ -96,7 +96,7 @@ for group, people in groups:
             "id": pid, "name": name, "group": group,
             "bio": bios.get(str(pid)),
             "recs": [recording(r) for r in recs],
-            "videos": [[v[0], v[1], v[2]] for v in vids],
+            "videos": [[v[0], v[1], v[2], v[3] if len(v) > 3 else ""] for v in vids],
         }
         dump("r/%d.json" % pid, detail)
         surahs = sum(len(r[3]) for r in recs)
@@ -123,3 +123,25 @@ for pid in have_portrait:
     im.resize((w, h), Image.LANCZOS).save(os.path.join(pdir, "%d.webp" % pid), "WEBP", quality=78, method=6)
 
 print("people", len(index), "portraits", len(have_portrait), "radios", len(cat["radios"]))
+
+# ---- adhan recordings of the legends (short, standalone tracks only) ----
+ADHAN = re.compile(r"(^|\s|-)(ال)?[أا]ذان")
+SKIP = re.compile(r"صيغة|سنن|سورة|الكهف|البقرة|الرعد|الحجر|الزمر|القصص|القمر|يوسف|الصافات|الحجرات|الاسراء|ابراهيم|الحج |القصار|تلاوة")
+adhans = []
+seen = set()
+for _, people in groups:
+    for person in people:
+        for rec in person[2]:
+            if not (len(rec) >= 5 and isinstance(rec[4], dict) and isinstance(rec[2], dict)):
+                continue
+            durs = rec[5] if len(rec) >= 6 and isinstance(rec[5], dict) else {}
+            for ch, title in rec[4].items():
+                title = DUR_TAIL.sub("", title).strip(" -")
+                dur = int(durs.get(ch) or 0)
+                url = rec[2].get(ch) or rec[2].get(str(ch))
+                if not url or url in seen or not ADHAN.search(title) or SKIP.search(title) or not (60 <= dur <= 330):
+                    continue
+                seen.add(url)
+                adhans.append([person[0], person[1], title, url, dur, 1 if "فجر" in title else 0])
+dump("adhan.json", adhans)
+print("adhan recordings", len(adhans), "by", len({a[0] for a in adhans}), "sheikhs")

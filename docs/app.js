@@ -105,7 +105,7 @@ async function loadCur(autoplay) {
   A.src = src;
   A.playbackRate = t.live ? 1 : P.rate;
   if (autoplay) A.play().catch(() => {});
-  S.last = { q: P.q.length > 400 ? P.q.slice(Math.max(0, P.i - 150), P.i + 250) : P.q, i: P.q.length > 400 ? Math.min(P.i, 150) : P.i, time: P.resumeAt || 0 };
+  if (!t.adhan) S.last = { q: P.q.length > 400 ? P.q.slice(Math.max(0, P.i - 150), P.i + 250) : P.q, i: P.q.length > 400 ? Math.min(P.i, 150) : P.i, time: P.resumeAt || 0 };
   save();
   setMedia(t);
   updatePlayerUI(true);
@@ -118,10 +118,10 @@ let lastPersist = 0;
 A.addEventListener("timeupdate", () => {
   updateProgress();
   const now = Date.now();
-  if (S.last && !cur()?.live && now - lastPersist > 5000) { lastPersist = now; S.last.time = A.currentTime; save(); }
+  if (S.last && !cur()?.live && !cur()?.adhan && now - lastPersist > 5000) { lastPersist = now; S.last.time = A.currentTime; save(); }
 });
 A.addEventListener("play", () => updatePlayerUI());
-A.addEventListener("pause", () => { updatePlayerUI(); if (S.last) { S.last.time = A.currentTime; save(); } });
+A.addEventListener("pause", () => { updatePlayerUI(); if (S.last && !cur()?.adhan) { S.last.time = A.currentTime; save(); } });
 A.addEventListener("ended", () => {
   if (P.sleepEnd) { P.sleepEnd = false; updatePlayerUI(); return; }
   if (P.repeat === 2) { A.currentTime = 0; A.play(); return; }
@@ -367,7 +367,7 @@ async function route() {
   LISTS = {}; listN = 0;
   setTab(parts[0] || "");
   const R = {
-    "": home, quran: quranGallery, r: reciter, mushaf, index: mushafIndex, radio, lib, quiz, saved, search,
+    "": home, quran: quranGallery, r: reciter, mushaf, index: mushafIndex, radio, lib, quiz, saved, search, prayer,
   }[parts[0] || ""] || home;
   try {
     const html = await R(parts.slice(1), new URLSearchParams(qs || ""));
@@ -411,7 +411,9 @@ async function home() {
     <blockquote>﴿${esc(ayah[0])}﴾</blockquote>
     <cite>سورة ${esc(ayah[1])} · الآية ${n2a(ayah[2])}</cite>
   </section>
+  ${homePrayerCard()}
   ${resume}
+  ${installCard(false)}
   <div class="sec-h"><h2>الأقسام</h2></div>
   <div class="tiles">
     <a class="tile wide" href="#/quran"><span class="ic">${ic("book")}</span><span><b>القرآن الكريم</b><small>المصاحف المرتلة لـ 260 قارئاً وتسجيلات نادرة لأعلام التلاوة</small></span></a>
@@ -448,50 +450,204 @@ function norm(s) {
   return String(s || "").replace(/[ً-ٰٟ]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/^ال|\sال/g, " ").toLowerCase().trim();
 }
 
+/* ---------------- shared card helpers ---------------- */
+const RIWAYAT = [
+  ["حفص", "حفص"], ["شعبة", "شعبة"], ["ورش", "ورش"], ["قالون", "قالون"], ["الدوري", "الدوري"], ["دوري", "الدوري"],
+  ["السوسي", "السوسي"], ["البزي", "البزي"], ["قنبل", "قنبل"], ["خلف", "خلف"], ["خلاد", "خلاد"],
+  ["ابن ذكوان", "ابن ذكوان"], ["هشام", "هشام"], ["الكسائي", "الكسائي"], ["يعقوب", "يعقوب"], ["رويس", "رويس"], ["روح", "روح"],
+];
+function riwayaOf(name) {
+  for (const [k, v] of RIWAYAT) if (name.includes(k)) return v;
+  return "حفص";
+}
+const REC_KINDS = {
+  murattal: { label: "المصاحف المرتلة", one: "مرتل", ic: "book" },
+  mujawwad: { label: "المصاحف المجودة", one: "مجود", ic: "mic" },
+  muallim: { label: "المصحف المعلم", one: "معلم", ic: "kid" },
+  rare: { label: "تسجيلات نادرة ومحافل", one: "نادر", ic: "star" },
+  alt: { label: "مصادر بديلة", one: "مصدر بديل", ic: "radio" },
+};
+function kindOf(rec) {
+  const n = rec.name;
+  if (/مصدر بديل|QuranicAudio/.test(n)) return "alt";
+  if (rec.urls || /المكتبة الكاملة|نادر|محافل|حفلات|تسجيلات/.test(n)) return "rare";
+  if (/معلم|المعلم/.test(n)) return "muallim";
+  if (/مجود/.test(n)) return "mujawwad";
+  return "murattal";
+}
+function recTitle(rec) {
+  return rec.name.replace(/^المكتبة الكاملة\s*·\s*/, "").replace(/\s*·\s*(مصدر بديل\s*\(QuranicAudio\)|QuranicAudio)\s*$/, " · QuranicAudio");
+}
+const archiveId = (u) => (String(u).match(/^https:\/\/archive\.org\/download\/([^/]+)\//) || [])[1] || "";
+const thumbOf = (id) => (id ? `https://archive.org/services/img/${encodeURIComponent(id)}` : "");
+const icSm = (n, px = 18) => `<svg class="icon" aria-hidden="true" style="width:${px}px;height:${px}px"><use href="#i-${n}"/></svg>`;
+
+function heroHTML({ id, name, facts, stats, bg }) {
+  const src = portrait(id);
+  return `<section class="phero">
+    ${src ? `<div class="phero-bg" style="background-image:url('${src}')"></div>` : ""}
+    <div class="phero-in">
+      ${avatar(id, name)}
+      <h2>${esc(name)}</h2>
+      ${facts ? `<p class="facts">${esc(facts)}</p>` : ""}
+      ${stats?.length ? `<div class="stats">${stats.map(([v, l]) => `<span><b>${esc(v)}</b>${esc(l)}</span>`).join("")}</div>` : ""}
+    </div></section>`;
+}
+function bioHTML(bio) {
+  if (!bio || !bio.summary) return "";
+  return `<div class="bio clamp" id="bio"><p>${esc(bio.summary)}</p>
+    <button class="more" data-act="bio">اقرأ السيرة كاملة</button>
+    ${bio.source ? `<div class="src">المصدر: ${esc(bio.source)}</div>` : ""}</div>`;
+}
+function bioBlock(bio) {
+  if (!bio || !bio.summary) return "";
+  return `<div class="sec-h"><h2>السيرة الذاتية</h2></div>${bioHTML(bio)}`;
+}
+function videoCard(t, L, i, opts = {}) {
+  const th = opts.thumb;
+  return `<button class="vcard ${th ? "" : "nothumb"}" data-play="${L}:${i}">
+    <span class="vthumb">${th ? `<img src="${esc(th)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : `<span class="vnum">${esc(opts.label || n2a(i + 1))}</span>`}
+      <span class="vplay">${icSm("play", 20)}</span>${t.dur ? `<span class="vdur">${esc(t.dur)}</span>` : ""}</span>
+    <span class="vt">${esc(t.t)}</span></button>`;
+}
+
+/* ---------------- RECITER ---------------- */
 async function reciter(parts) {
   const id = +parts[0];
   const d = await getJSON(`data/r/${id}.json`);
+  const sub = parts[1];
+  if (sub === "v") return reciterVideos(d);
+  if (sub) return recordingView(d, d.recs.find((r) => String(r.id) === sub) || d.recs[0]);
   setTop(d.name);
-  const tab = parts[1] || String(d.recs[0]?.id);
-  const img = portrait(id);
-  const bio = d.bio;
   const word = d.group === "k" ? "خطبة" : d.group === "m" ? "ابتهال" : "سورة";
-  const chips = (d.recs.length > 1 || d.videos.length) ? `<div class="chips" role="group" aria-label="التسجيلات">${
-    d.recs.map((r) => `<a class="chip" href="#/r/${id}/${r.id}" aria-pressed="${String(r.id) === tab}" data-keep>${esc(r.name)}</a>`).join("")
-  }${d.videos.length ? `<a class="chip" href="#/r/${id}/v" aria-pressed="${tab === "v"}" data-keep>${ic("video").replace('class="icon"', 'class="icon" style="width:16px;height:16px;vertical-align:-3px"')} فيديو · ${n2a(d.videos.length)}</a>` : ""}</div>` : "";
-  const bioHTML = bio && bio.summary ? `<div class="bio clamp" id="bio"><p>${esc(bio.summary)}</p>
-    <button class="more" data-act="bio">اقرأ السيرة كاملة</button>
-    ${bio.source ? `<div class="src">المصدر: ${esc(bio.source)}</div>` : ""}</div>` : "";
-  const facts = bio ? [bio.born, bio.died].filter(Boolean).map(esc).join(" · ") : "";
-  let body;
-  if (tab === "v") {
-    const tracks = d.videos.map((v) => ({ t: v[0], s: d.name, d: `فيديو · ${v[2]}`, u: v[1], img, v: true }));
-    const L = reg(tracks);
-    body = `<ul class="list">${tracks.map((t, i) => `<li><button class="row" data-play="${L}:${i}"><span class="num">${ic("video").replace('class="icon"', 'class="icon" style="width:18px;height:18px"')}</span><span class="grow"><span class="t">${esc(t.t)}</span><span class="s">${esc(t.d)}</span></span></button></li>`).join("")}</ul>`;
-  } else {
-    const rec = d.recs.find((r) => String(r.id) === tab) || d.recs[0];
-    const custom = !!rec.urls;
-    const tracks = rec.ch.map((ch) => {
-      const title = rec.titles?.[ch] || (custom ? `${word} رقم ${n2a(ch)}` : `سورة ${META.chapters[ch - 1]}`);
-      let dur = rec.dur?.[ch];
-      if (!dur && !custom) {
-        dur = META.durations[ch - 1];
-        if (/مجود/.test(rec.name)) dur *= 1.45; else if (/المعلم/.test(rec.name)) dur *= 1.6;
-      }
-      const info = custom ? `${word} ${n2a(ch)} من ${n2a(rec.ch.length)}` : `${META.madani.includes(ch) ? "مدنية" : "مكية"} · ${n2a(META.verses[ch - 1])} آية`;
-      return { t: title, s: d.name, d: rec.name, u: audioUrl(rec, ch), img, info, dur, ch };
-    });
-    const L = reg(tracks);
-    body = `<div class="btn-row"><button class="btn" data-play="${L}:0">${ic("play")}تشغيل الكل</button>
-      ${tracks.length > 1 ? `<button class="btn ghost" data-act="shuffle" data-list="${L}">عشوائي</button>` : ""}</div>
-      <ul class="list">${tracks.map((t, i) => `<li><div class="row" data-u="${esc(t.u)}">
-        <button class="num" data-play="${L}:${i}" aria-label="تشغيل ${esc(t.t)}">${custom ? n2a(i + 1) : n2a(t.ch)}</button>
-        <button class="grow" data-play="${L}:${i}" style="text-align:start"><span class="t">${esc(t.t)}</span><span class="s">${esc(t.info)}${t.dur ? ` · ${fmtTime(t.dur)}` : ""}</span></button>
-        <span class="end"><button data-fav="${L}:${i}" class="${isFav(t.u) ? "on" : ""}" aria-label="المفضلة">${ic("heart")}</button></span></div></li>`).join("")}</ul>`;
+  const total = d.recs.reduce((a, r) => a + r.ch.length, 0);
+  const facts = d.bio ? [d.bio.born, d.bio.died].filter(Boolean).join(" · ") : "";
+  const stats = [[n2a(d.recs.length), d.recs.length === 1 ? "تسجيل" : "تسجيلات"], [n2a(total), word]];
+  if (d.videos.length) stats.push([n2a(d.videos.length), "فيديو"]);
+  const img = portrait(id);
+
+  // one queue per recording so the play buttons on the cards start it straight away
+  const playable = (rec) => recTracks(d, rec, img);
+  let body = "";
+  if (d.recs.length === 1 && !d.videos.length) {
+    return heroHTML({ id, name: d.name, facts, stats }) + trackList(playable(d.recs[0]), d.recs[0], word) + bioBlock(d.bio);
   }
-  return `<div class="profile">${avatar(id, d.name)}<div><h2>${esc(d.name)}</h2>${facts ? `<p>${facts}</p>` : ""}
-    <p>${d.recs.length > 1 ? `${n2a(d.recs.length)} تسجيلات · ` : ""}${n2a(d.recs.reduce((a, r) => a + r.ch.length, 0))} ${word}</p></div></div>
-    ${bioHTML}${chips}${body}`;
+  const cardFor = (rec) => {
+    const kind = d.group === "q" ? kindOf(rec) : "rare";
+    const L = reg(playable(rec));
+    const riw = d.group === "q" ? riwayaOf(rec.name) : "";
+    return `<article class="rcard k-${kind}" data-riw="${esc(riw)}">
+      <a class="rcard-link" href="#/r/${id}/${rec.id}" aria-label="${esc(recTitle(rec))}"></a>
+      <div class="rcard-top"><span class="rcard-ic">${icSm(REC_KINDS[kind].ic, 20)}</span>${riw ? `<span class="pill">${esc(riw)}</span>` : ""}</div>
+      <h3>${esc(recTitle(rec))}</h3>
+      <div class="rcard-foot"><span>${n2a(rec.ch.length)} ${word}</span>
+        <button class="rplay" data-play="${L}:0" aria-label="تشغيل ${esc(recTitle(rec))}">${icSm("play", 20)}</button></div>
+    </article>`;
+  };
+  if (d.group === "q") {
+    const groups = {};
+    d.recs.forEach((r) => (groups[kindOf(r)] ||= []).push(r));
+    const riws = [...new Set(d.recs.map((r) => riwayaOf(r.name)))];
+    if (riws.length > 1) {
+      body += `<div class="chips sticky-chips" role="group" aria-label="الرواية" id="riwF">
+        <button class="chip" aria-pressed="true" data-riwf="">كل الروايات</button>
+        ${riws.map((r) => `<button class="chip" aria-pressed="false" data-riwf="${esc(r)}">${esc(r)}</button>`).join("")}</div>`;
+    }
+    for (const k of Object.keys(REC_KINDS)) {
+      if (!groups[k]) continue;
+      body += `<section class="rgroup" data-kind="${k}"><div class="sec-h"><h2>${REC_KINDS[k].label}</h2><span class="count">${n2a(groups[k].length)}</span></div>
+        <div class="rgrid">${groups[k].map(cardFor).join("")}</div></section>`;
+    }
+  } else {
+    body += `<div class="sec-h"><h2>${d.group === "k" ? "أقسام الخطب" : "المجلدات"}</h2><span class="count">${n2a(d.recs.length)}</span></div>
+      <div class="rgrid">${d.recs.map(cardFor).join("")}</div>`;
+  }
+  if (d.videos.length) {
+    const vt = d.videos.map((v) => ({ t: v[0], s: d.name, d: "فيديو", u: v[1], dur: v[2], img, v: true, th: thumbOf(v[3] || archiveId(v[1])) }));
+    const VL = reg(vt);
+    body += `<section><div class="sec-h"><h2>الفيديوهات</h2>${vt.length > 6 ? `<a href="#/r/${id}/v">عرض الكل · ${n2a(vt.length)}</a>` : ""}</div>
+      <div class="vrow">${vt.slice(0, 12).map((t, i) => videoCard(t, VL, i, { thumb: t.th })).join("")}</div></section>`;
+  }
+  after(() => {
+    const f = $("#riwF");
+    if (!f) return;
+    f.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-riwf]");
+      if (!b) return;
+      const r = b.dataset.riwf;
+      $$("[data-riwf]", f).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      $$(".rcard").forEach((c) => { c.hidden = r && c.dataset.riw !== r; });
+      $$(".rgroup").forEach((g) => { g.hidden = !$$(".rcard", g).some((c) => !c.hidden); });
+    });
+  });
+  return heroHTML({ id, name: d.name, facts, stats }) + body + bioBlock(d.bio);
+}
+
+function recTracks(d, rec, img) {
+  const custom = !!rec.urls;
+  const word = d.group === "k" ? "خطبة" : d.group === "m" ? "ابتهال" : "تلاوة";
+  return rec.ch.map((ch) => {
+    const title = rec.titles?.[ch] || (custom ? `${word} رقم ${n2a(ch)}` : `سورة ${META.chapters[ch - 1]}`);
+    let dur = rec.dur?.[ch];
+    if (!dur && !custom) {
+      dur = META.durations[ch - 1];
+      if (/مجود/.test(rec.name)) dur *= 1.45; else if (/المعلم/.test(rec.name)) dur *= 1.6;
+    }
+    const info = custom ? `${word} ${n2a(ch)} من ${n2a(rec.ch.length)}` : `${META.madani.includes(ch) ? "مدنية" : "مكية"} · ${n2a(META.verses[ch - 1])} آية`;
+    return { t: title, s: d.name, d: recTitle(rec), u: audioUrl(rec, ch), img, info, dur, ch, custom };
+  });
+}
+
+function trackList(tracks, rec, word) {
+  const L = reg(tracks);
+  const searchable = tracks.length > 12;
+  if (searchable) {
+    after(() => {
+      const inp = $("#tq");
+      inp.addEventListener("input", () => {
+        const v = norm(inp.value);
+        $$("#tracks li").forEach((li) => { li.hidden = v && !norm(li.dataset.n).includes(v); });
+      });
+    });
+  }
+  return `<div class="btn-row"><button class="btn" data-play="${L}:0">${ic("play")}تشغيل الكل</button>
+    ${tracks.length > 1 ? `<button class="btn ghost" data-act="shuffle" data-list="${L}">عشوائي</button>` : ""}</div>
+    ${searchable ? `<label class="search">${ic("search")}<input id="tq" type="search" placeholder="ابحث في القائمة" autocomplete="off"></label>` : ""}
+    <ul class="list" id="tracks">${tracks.map((t, i) => `<li data-n="${esc(t.t)}"><div class="row" data-u="${esc(t.u)}">
+      <button class="num" data-play="${L}:${i}" aria-label="تشغيل ${esc(t.t)}">${t.custom || !t.ch ? n2a(i + 1) : n2a(t.ch)}</button>
+      <button class="grow" data-play="${L}:${i}" style="text-align:start"><span class="t">${esc(t.t)}</span><span class="s">${esc(t.info || "")}${t.dur ? ` · ${typeof t.dur === "number" ? fmtTime(t.dur) : esc(t.dur)}` : ""}</span></button>
+      <span class="end"><button data-fav="${L}:${i}" class="${isFav(t.u) ? "on" : ""}" aria-label="المفضلة">${ic("heart")}</button></span></div></li>`).join("")}</ul>`;
+}
+
+function recordingView(d, rec) {
+  setTop(d.name);
+  const img = portrait(d.id);
+  const kind = d.group === "q" ? kindOf(rec) : "rare";
+  const word = d.group === "k" ? "خطبة" : d.group === "m" ? "ابتهال" : "سورة";
+  const riw = d.group === "q" ? riwayaOf(rec.name) : "";
+  const head = `<section class="rhead k-${kind}">
+    ${avatar(d.id, d.name)}
+    <div><span class="kind">${esc(d.group === "q" ? REC_KINDS[kind].one : d.name)}${riw ? ` · رواية ${esc(riw)}` : ""}</span>
+    <h2>${esc(recTitle(rec))}</h2><p>${esc(d.name)} · ${n2a(rec.ch.length)} ${word}</p></div></section>`;
+  const others = d.recs.length > 1 ? `<div class="chips" aria-label="تسجيلات أخرى">${d.recs.map((r) => `<a class="chip" href="#/r/${d.id}/${r.id}" aria-pressed="${r === rec}">${esc(recTitle(r))}</a>`).join("")}</div>` : "";
+  after(() => { const on = $('.chips .chip[aria-pressed="true"]'); if (on) on.scrollIntoView({ inline: "center", block: "nearest" }); });
+  return head + others + trackList(recTracks(d, rec, img), rec, word);
+}
+
+function reciterVideos(d) {
+  setTop(`فيديوهات ${d.name}`);
+  const img = portrait(d.id);
+  const vt = d.videos.map((v) => ({ t: v[0], s: d.name, d: "فيديو", u: v[1], dur: v[2], img, v: true, th: thumbOf(v[3] || archiveId(v[1])) }));
+  const L = reg(vt);
+  after(() => {
+    const inp = $("#vq");
+    inp?.addEventListener("input", () => {
+      const v = norm(inp.value);
+      $$(".vgrid .vcard").forEach((c) => { c.hidden = v && !norm(c.textContent).includes(v); });
+    });
+  });
+  return `${vt.length > 8 ? `<label class="search">${ic("search")}<input id="vq" type="search" placeholder="ابحث في الفيديوهات" autocomplete="off"></label>` : ""}
+    <div class="vgrid">${vt.map((t, i) => videoCard(t, L, i, { thumb: t.th })).join("")}</div>`;
 }
 
 /* ---------------- RADIO ---------------- */
@@ -517,9 +673,23 @@ async function radio() {
     <span class="end"><button data-fav="${L}:${i}" class="${isFav(t.u) ? "on" : ""}" aria-label="المفضلة">${ic("heart")}</button></span></div></li>`).join("")}</ul>`;
 }
 
-/* ---------------- LIBRARY (generic tree) ---------------- */
+/* ---------------- LIBRARY ---------------- */
 const kidsOf = (n) => n && (n.folders || n.items || n.children || null);
 const nodeTitle = (n) => n.title || "";
+const SEC_ICON = { 1: "mic", 2: "tafsir", 3: "quote", 4: "lantern", 5: "palm", 6: "ship", 7: "dome", 8: "beads", 9: "star", 11: "books", 12: "kid", 13: "moon" };
+
+function countLeaves(n) {
+  const k = kidsOf(n);
+  if (!k) return { a: typeof n.audio === "string" && !n.video ? 1 : 0, v: n.video ? 1 : 0, t: !n.audio && n.body ? 1 : 0 };
+  return k.reduce((acc, c) => { const x = countLeaves(c); acc.a += x.a; acc.v += x.v; acc.t += x.t; return acc; }, { a: 0, v: 0, t: 0 });
+}
+function folderKind(n) {
+  const c = countLeaves(n);
+  if (c.v && !c.a) return "video";
+  if (c.a) return "audio";
+  return "text";
+}
+const KIND_IC = { video: "video", audio: "mic", text: "text" };
 
 async function lib(parts) {
   const sec = parts[0];
@@ -532,47 +702,121 @@ async function lib(parts) {
   const base = `#/lib/${sec}${trail.length ? "/" + trail.join("/") : ""}`;
   if (!kids) return leafView(node, base, root);
 
-  const posterId = node.poster_id || (node === root && root.bio ? 999 : null);
-  const bio = node.bio;
-  let head = "";
-  if (bio) {
-    head = `<div class="profile">${avatar(posterId, bio.name)}<div><h2>${esc(bio.name)}</h2><p>${esc([bio.born, bio.died].filter(Boolean).join(" · "))}</p></div></div>
-      <div class="bio clamp" id="bio"><p>${esc(bio.summary)}</p><button class="more" data-act="bio">اقرأ السيرة كاملة</button>${bio.source ? `<div class="src">المصدر: ${esc(bio.source)}</div>` : ""}</div>`;
-  } else {
-    const sub = node.sub || node.subtitle;
-    const sum = node.summary || node.body;
-    head = `${sub ? `<p class="note" style="margin-top:14px">${esc(sub)}${node.badge ? ` · ${esc(node.badge)}` : ""}</p>` : ""}${sum ? `<div class="bio"><p>${esc(sum)}</p></div>` : ""}`;
-  }
+  const posterId = node.poster_id || (root.bio ? 999 : null);
   const img = portrait(posterId);
-  const sectionName = root.title;
-  // playable siblings form the queue (audio only; videos open in the video player)
-  const audioKids = [];
-  const rows = kids.map((k, i) => {
-    const sub = kidsOf(k);
-    if (sub) {
-      return `<li><a class="row folder" href="${base}/${i}"><span class="ic">${ic("folder")}</span><span class="grow"><span class="t">${esc(k.title)}</span><span class="s">${esc(k.badge || k.count_label || k.subtitle || "")}</span></span>${ic("chev").replace('class="icon"', 'class="icon chev"')}</a></li>`;
+  const c = countLeaves(node);
+  const stats = [];
+  if (c.a) stats.push([n2a(c.a), "صوتية"]);
+  if (c.v) stats.push([n2a(c.v), "فيديو"]);
+  if (c.t) stats.push([n2a(c.t), "موضوع"]);
+
+  // ---- header
+  let head;
+  if (node === root) {
+    if (root.bio) {
+      head = heroHTML({ id: 999, name: root.bio.name, facts: [root.bio.born, root.bio.died].filter(Boolean).join(" · "), stats });
+    } else {
+      head = `<section class="shero"><span class="medal">${icSm(SEC_ICON[sec] || "star", 34)}</span>
+        <h2>${esc(root.title)}</h2>${root.sub ? `<p>${esc(root.sub)}</p>` : ""}
+        ${stats.length ? `<div class="stats">${stats.map(([v, l]) => `<span><b>${esc(v)}</b>${esc(l)}</span>`).join("")}</div>` : ""}</section>`;
     }
-    if (k.counter || k.edition || (!k.audio && k.body)) {
-      const go = k.edition ? `#/r/${META.edmap[k.edition] || ""}/${k.edition}` : `${base}/${i}`;
-      const icon = k.counter ? "beads" : k.edition ? "play" : "text";
-      return `<li><a class="row folder" href="${go}"><span class="ic">${ic(icon)}</span><span class="grow"><span class="t">${esc(k.title)}</span><span class="s">${esc(k.badge || k.subtitle || "")}</span></span>${ic("chev").replace('class="icon"', 'class="icon chev"')}</a></li>`;
+  } else {
+    const kind = folderKind(node);
+    head = `<section class="rhead k-${kind === "video" ? "mujawwad" : kind === "audio" ? "murattal" : "muallim"}">
+      ${img ? avatar(posterId, "") : `<span class="avatar">${icSm(KIND_IC[kind], 34)}</span>`}
+      <div><span class="kind">${esc(node.type_label || root.title)}</span><h2>${esc(node.title)}</h2>
+      <p>${esc(node.badge || node.count_label || "")}</p></div></section>
+      ${node.summary || node.body ? `<p class="lead">${esc(node.summary || node.body)}</p>` : ""}`;
+  }
+
+  // ---- body: folders as cards, leaves as list or video grid
+  const folders = [], leaves = [];
+  kids.forEach((k, i) => (kidsOf(k) ? folders : leaves).push([k, i]));
+  let body = "";
+  if (folders.length) {
+    const compact = folders.length > 10;
+    const big = folders.length <= 3 && node === root && root.bio;
+    body += `<div class="sec-h"><h2>${compact ? "الفولدرات" : "الأقسام"}</h2><span class="count">${n2a(folders.length)}</span></div>`;
+    if (big) {
+      body += `<div class="poster-grid">${folders.map(([k, i]) => {
+        const kind = folderKind(k);
+        return `<a class="poster k-${kind}" href="${base}/${i}">
+          ${img ? `<span class="poster-bg" style="background-image:url('${img}')"></span>` : ""}
+          <span class="poster-ic">${icSm(KIND_IC[kind], 30)}</span>
+          <span class="poster-t">${esc(k.title)}</span>
+          <span class="poster-m">${esc(k.badge || "")}</span>
+          <span class="poster-s">${esc(k.subtitle || "")}</span>
+          <span class="poster-go">افتح ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></a>`;
+      }).join("")}</div>`;
+    } else if (compact) {
+      body += `<label class="search">${ic("search")}<input id="fq" type="search" placeholder="ابحث في الفولدرات" autocomplete="off"></label>
+        <div class="ftiles" id="ftiles">${folders.map(([k, i], n) => `<a class="ftile" href="${base}/${i}" data-n="${esc(k.title)}">
+          <span class="fnum">${n2a(n + 1)}</span><b>${esc(k.title.replace(/^(خواطر|تفسير)\s+/, ""))}</b><small>${esc(k.count_label || k.badge || "")}${k.riwayas_label && k.riwayas_label !== k.count_label ? ` · ${esc(k.riwayas_label)}` : ""}</small></a>`).join("")}</div>`;
+      after(() => {
+        const inp = $("#fq");
+        inp.addEventListener("input", () => {
+          const v = norm(inp.value);
+          $$("#ftiles .ftile").forEach((t) => { t.hidden = v && !norm(t.dataset.n).includes(v); });
+        });
+      });
+    } else {
+      body += `<div class="fgrid">${folders.map(([k, i]) => {
+        const kind = folderKind(k);
+        return `<a class="fcard k-${kind}" href="${base}/${i}">
+          <span class="fcard-top"><span class="rcard-ic">${icSm(KIND_IC[kind], 20)}</span>${k.type_label ? `<span class="pill">${esc(k.type_label)}</span>` : ""}</span>
+          <b>${esc(k.title)}</b>
+          ${k.subtitle ? `<small class="fsub">${esc(k.subtitle)}</small>` : ""}
+          <span class="fmeta">${esc(k.count_label || k.badge || "")}${k.riwayas_label && k.count_label ? `<i>${esc(k.riwayas_label)}</i>` : ""}</span></a>`;
+      }).join("")}</div>`;
     }
-    if (typeof k.audio === "string") {
-      const t = { t: k.title, s: sectionName, d: k.subtitle || k.badge || "", u: k.audio, img, live: !!k.live, v: !!k.video };
-      let L, idx;
-      if (t.v) { L = reg([t]); idx = 0; } else { audioKids.push(t); idx = audioKids.length - 1; L = "AUD"; }
-      return `<li><div class="row" data-u="${esc(t.u)}">
-        <button class="num" data-play="${L}:${idx}" aria-label="تشغيل ${esc(t.t)}">${t.v ? ic("video").replace('class="icon"', 'class="icon" style="width:18px;height:18px"') : n2a(i + 1)}</button>
-        <button class="grow" data-play="${L}:${idx}" style="text-align:start"><span class="t">${esc(k.title)}</span><span class="s">${esc(k.badge || k.subtitle || "")}</span></button>
-        <span class="end">${k.body ? `<a href="${base}/${i}" aria-label="اقرأ النص" style="width:38px;height:38px;display:grid;place-items:center">${ic("text")}</a>` : ""}
-        <button data-fav="${L}:${idx}" class="${isFav(t.u) ? "on" : ""}" aria-label="المفضلة">${ic("heart")}</button></span></div></li>`;
+  }
+  if (leaves.length) {
+    const videos = leaves.filter(([k]) => k.video && typeof k.audio === "string");
+    const audios = leaves.filter(([k]) => typeof k.audio === "string" && !k.video);
+    const others = leaves.filter(([k]) => typeof k.audio !== "string");
+    if (others.length) {
+      body += `<div class="sec-h"><h2>${others.some(([k]) => k.counter) ? "المسبحة والأذكار" : "المواضيع"}</h2><span class="count">${n2a(others.length)}</span></div>
+        <div class="fgrid">${others.map(([k, i]) => {
+          const go = k.edition ? `#/r/${META.edmap[k.edition] || ""}/${k.edition}` : `${base}/${i}`;
+          const icon = k.counter ? "beads" : k.edition ? "play" : "text";
+          return `<a class="fcard k-${k.counter ? "mujawwad" : k.edition ? "audio" : "text"}" href="${go}">
+            <span class="fcard-top"><span class="rcard-ic">${icSm(icon, 20)}</span>${k.counter ? `<span class="pill">${n2a(k.counter)} مرة</span>` : ""}</span>
+            <b>${esc(k.title)}</b>${k.subtitle || k.badge ? `<small class="fsub">${esc(k.badge || k.subtitle)}</small>` : ""}</a>`;
+        }).join("")}</div>`;
     }
-    return `<li><div class="row"><span class="grow"><span class="t">${esc(k.title)}</span><span class="s">${esc(k.badge || "")}</span></span></div></li>`;
-  });
-  const AL = reg(audioKids);
-  const html = rows.join("").replaceAll('data-play="AUD:', `data-play="${AL}:`).replaceAll('data-fav="AUD:', `data-fav="${AL}:`);
-  return `${head}${audioKids.length > 1 ? `<div class="btn-row"><button class="btn" data-play="${AL}:0">${ic("play")}تشغيل الكل · ${n2a(audioKids.length)}</button></div>` : ""}
-    <ul class="list">${html}</ul>`;
+    if (audios.length) {
+      const tracks = audios.map(([k, i]) => ({ t: k.title, s: root.bio ? root.bio.name : root.title, d: k.subtitle || "", u: k.audio, img, live: !!k.live, dur: k.duration || "", info: k.subtitle && k.subtitle !== k.title ? k.subtitle : (k.badge || ""), bodyHref: k.body ? `${base}/${i}` : "" }));
+      body += `${folders.length || others.length ? `<div class="sec-h"><h2>الصوتيات</h2><span class="count">${n2a(tracks.length)}</span></div>` : ""}` + trackListLib(tracks);
+    }
+    if (videos.length) {
+      const vt = videos.map(([k]) => ({ t: k.title, s: root.bio ? root.bio.name : root.title, d: "فيديو", u: k.audio, img, v: true, dur: k.duration || "", id: archiveId(k.audio) }));
+      const unique = new Set(vt.map((x) => x.id)).size === vt.length;
+      const L = reg(vt);
+      body += `${audios.length || folders.length ? `<div class="sec-h"><h2>الفيديو</h2><span class="count">${n2a(vt.length)}</span></div>` : ""}
+        <div class="vgrid">${vt.map((t, n) => videoCard(t, L, n, { thumb: unique ? thumbOf(t.id) : "", label: (t.t.match(/الآيا?ت?\s*([\d–\-]+)/) || [])[1] || n2a(n + 1) })).join("")}</div>`;
+    }
+  }
+  return head + body + (node === root && root.bio ? bioBlock(root.bio) : "");
+}
+
+function trackListLib(tracks) {
+  const L = reg(tracks);
+  if (tracks.length > 12) {
+    after(() => {
+      const inp = $("#tq");
+      inp?.addEventListener("input", () => {
+        const v = norm(inp.value);
+        $$("#tracks li").forEach((li) => { li.hidden = v && !norm(li.dataset.n).includes(v); });
+      });
+    });
+  }
+  return `<div class="btn-row">${tracks.length > 1 ? `<button class="btn" data-play="${L}:0">${ic("play")}تشغيل الكل</button><button class="btn ghost" data-act="shuffle" data-list="${L}">عشوائي</button>` : `<button class="btn" data-play="${L}:0">${ic("play")}استمع</button>`}</div>
+    ${tracks.length > 12 ? `<label class="search">${ic("search")}<input id="tq" type="search" placeholder="ابحث في القائمة" autocomplete="off"></label>` : ""}
+    <ul class="list" id="tracks">${tracks.map((t, i) => `<li data-n="${esc(t.t)}"><div class="row" data-u="${esc(t.u)}">
+      <button class="num" data-play="${L}:${i}" aria-label="تشغيل ${esc(t.t)}">${t.live ? icSm("radio") : n2a(i + 1)}</button>
+      <button class="grow" data-play="${L}:${i}" style="text-align:start"><span class="t">${esc(t.t)}</span><span class="s">${t.live ? `<span class="live-badge">مباشر</span>` : esc([t.info !== t.t ? t.info : "", t.dur].filter(Boolean).join(" · "))}</span></button>
+      <span class="end">${t.bodyHref ? `<a href="${t.bodyHref}" aria-label="اقرأ النص" style="width:38px;height:38px;display:grid;place-items:center">${ic("text")}</a>` : ""}
+      <button data-fav="${L}:${i}" class="${isFav(t.u) ? "on" : ""}" aria-label="المفضلة">${ic("heart")}</button></span></div></li>`).join("")}</ul>`;
 }
 
 function leafView(node, base, root) {
@@ -780,6 +1024,356 @@ async function mushafIndex() {
     <ul class="list" id="surahs">${sur}</ul>`;
 }
 
+/* ---------------- PRAYER TIMES & ADHAN ---------------- */
+const PRAYERS = [
+  ["fajr", "الفجر"], ["sunrise", "الشروق"], ["dhuhr", "الظهر"], ["asr", "العصر"], ["maghrib", "المغرب"], ["isha", "العشاء"],
+];
+const PNAME = Object.fromEntries(PRAYERS);
+const CITIES = [
+  ["القاهرة", 30.0444, 31.2357, "Africa/Cairo", "egypt"], ["الجيزة", 30.0131, 31.2089, "Africa/Cairo", "egypt"],
+  ["الإسكندرية", 31.2001, 29.9187, "Africa/Cairo", "egypt"], ["المنصورة", 31.0409, 31.3785, "Africa/Cairo", "egypt"],
+  ["طنطا", 30.7865, 31.0004, "Africa/Cairo", "egypt"], ["الزقازيق", 30.5877, 31.502, "Africa/Cairo", "egypt"],
+  ["دمنهور", 31.0341, 30.4682, "Africa/Cairo", "egypt"], ["كفر الشيخ", 31.1107, 30.9388, "Africa/Cairo", "egypt"],
+  ["شبين الكوم", 30.5585, 31.0101, "Africa/Cairo", "egypt"], ["بنها", 30.4659, 31.1848, "Africa/Cairo", "egypt"],
+  ["دمياط", 31.4165, 31.8133, "Africa/Cairo", "egypt"], ["بورسعيد", 31.2653, 32.3019, "Africa/Cairo", "egypt"],
+  ["الإسماعيلية", 30.5965, 32.2715, "Africa/Cairo", "egypt"], ["السويس", 29.9668, 32.5498, "Africa/Cairo", "egypt"],
+  ["الفيوم", 29.3084, 30.8428, "Africa/Cairo", "egypt"], ["بني سويف", 29.0661, 31.0994, "Africa/Cairo", "egypt"],
+  ["المنيا", 28.0871, 30.7618, "Africa/Cairo", "egypt"], ["أسيوط", 27.1783, 31.1859, "Africa/Cairo", "egypt"],
+  ["سوهاج", 26.5591, 31.6957, "Africa/Cairo", "egypt"], ["قنا", 26.1551, 32.716, "Africa/Cairo", "egypt"],
+  ["الأقصر", 25.6872, 32.6396, "Africa/Cairo", "egypt"], ["أسوان", 24.0889, 32.8998, "Africa/Cairo", "egypt"],
+  ["الغردقة", 27.2579, 33.8116, "Africa/Cairo", "egypt"], ["شرم الشيخ", 27.9158, 34.33, "Africa/Cairo", "egypt"],
+  ["العريش", 31.1316, 33.7984, "Africa/Cairo", "egypt"], ["مرسى مطروح", 31.3543, 27.2373, "Africa/Cairo", "egypt"],
+  ["مكة المكرمة", 21.4225, 39.8262, "Asia/Riyadh", "makkah"], ["المدينة المنورة", 24.4672, 39.6111, "Asia/Riyadh", "makkah"],
+  ["الرياض", 24.7136, 46.6753, "Asia/Riyadh", "makkah"], ["جدة", 21.4858, 39.1925, "Asia/Riyadh", "makkah"],
+  ["الدمام", 26.4207, 50.0888, "Asia/Riyadh", "makkah"], ["الكويت", 29.3759, 47.9774, "Asia/Kuwait", "kuwait"],
+  ["دبي", 25.2048, 55.2708, "Asia/Dubai", "dubai"], ["أبوظبي", 24.4539, 54.3773, "Asia/Dubai", "dubai"],
+  ["الدوحة", 25.2854, 51.531, "Asia/Qatar", "qatar"], ["المنامة", 26.2285, 50.586, "Asia/Bahrain", "makkah"],
+  ["مسقط", 23.588, 58.3829, "Asia/Muscat", "makkah"], ["عمّان", 31.9454, 35.9284, "Asia/Amman", "mwl"],
+  ["القدس", 31.7683, 35.2137, "Asia/Jerusalem", "mwl"], ["بيروت", 33.8938, 35.5018, "Asia/Beirut", "mwl"],
+  ["دمشق", 33.5138, 36.2765, "Asia/Damascus", "egypt"], ["بغداد", 33.3152, 44.3661, "Asia/Baghdad", "mwl"],
+  ["الخرطوم", 15.5007, 32.5599, "Africa/Khartoum", "egypt"], ["طرابلس", 32.8872, 13.1913, "Africa/Tripoli", "egypt"],
+  ["تونس", 36.8065, 10.1815, "Africa/Tunis", "tunisia"], ["الجزائر", 36.7538, 3.0588, "Africa/Algiers", "algeria"],
+  ["الرباط", 34.0209, -6.8416, "Africa/Casablanca", "morocco"], ["الدار البيضاء", 33.5731, -7.5898, "Africa/Casablanca", "morocco"],
+  ["إسطنبول", 41.0082, 28.9784, "Europe/Istanbul", "turkey"], ["لندن", 51.5074, -0.1278, "Europe/London", "mwl"],
+  ["باريس", 48.8566, 2.3522, "Europe/Paris", "mwl"], ["برلين", 52.52, 13.405, "Europe/Berlin", "mwl"],
+  ["نيويورك", 40.7128, -74.006, "America/New_York", "isna"],
+];
+const DEFAULT_MUEZZIN = { u: "", t: "الاذان الاول المشهور من التلفزيون المصرى الثمانينيات", pid: 241, n: "محمد رفعت" };
+
+function prayerCfg() {
+  S.pray ||= {};
+  const c = S.pray;
+  c.on ||= { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true };
+  c.method ||= "egypt";
+  c.asr ||= 1;
+  return c;
+}
+function ymdIn(tz, date = new Date()) {
+  const p = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(date).split("-").map(Number);
+  return p;
+}
+function dayTimes(offsetDays = 0) {
+  const c = prayerCfg();
+  if (c.lat == null) return null;
+  const tz = c.tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const d = new Date(Date.now() + offsetDays * 864e5);
+  return PrayerCalc.times(ymdIn(tz, d), c.lat, c.lng, c.method, c.asr);
+}
+const fmtClock = (d) => {
+  const c = prayerCfg();
+  try { return new Intl.DateTimeFormat("ar-EG-u-nu-latn", { hour: "numeric", minute: "2-digit", timeZone: c.tz || undefined }).format(d); }
+  catch { return new Intl.DateTimeFormat("ar-EG-u-nu-latn", { hour: "numeric", minute: "2-digit" }).format(d); }
+};
+function nextPrayer() {
+  const now = Date.now();
+  const today = dayTimes(0);
+  if (!today) return null;
+  const order = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
+  let prev = null;
+  for (const k of order) {
+    if (today[k].getTime() > now) {
+      if (!prev) { const y = dayTimes(-1); prev = { k: "isha", t: y.isha }; }
+      return { k, t: today[k], prev, today };
+    }
+    prev = { k, t: today[k] };
+  }
+  const tm = dayTimes(1);
+  return { k: "fajr", t: tm.fajr, prev, today, tomorrow: true };
+}
+function countdown(ms) {
+  ms = Math.max(0, ms);
+  const h = Math.floor(ms / 3600e3), m = Math.floor((ms % 3600e3) / 60e3), s = Math.floor((ms % 60e3) / 1000);
+  const p = (x) => String(x).padStart(2, "0");
+  return `${h}:${p(m)}:${p(s)}`;
+}
+
+/* --- adhan engine: runs while the app is open (or alive in the background) --- */
+let ADHANS = null;
+async function adhanList() { return ADHANS || (ADHANS = await getJSON("data/adhan.json")); }
+function muezzinFor(key) {
+  const c = prayerCfg();
+  return (key === "fajr" && c.fajrMuezzin) || c.muezzin || null;
+}
+async function resolveMuezzin(key) {
+  let m = muezzinFor(key);
+  if (!m || !m.u) {
+    const list = await adhanList();
+    const a = list.find((x) => x[2] === DEFAULT_MUEZZIN.t) || list[0];
+    m = { u: a[3], t: a[2], pid: a[0], n: a[1] };
+  }
+  return m;
+}
+async function playAdhan(key, test) {
+  const m = await resolveMuezzin(key);
+  const track = { t: `أذان ${PNAME[key] || ""}`.trim(), s: m.n, d: test ? "تجربة الأذان" : `حان الآن موعد صلاة ${PNAME[key]}`, u: m.u, img: portrait(m.pid), adhan: true };
+  playList([track], 0);
+}
+function adhanTick() {
+  if (!META) return;
+  const c = prayerCfg();
+  if (c.lat == null) return;
+  const t = dayTimes(0);
+  const now = Date.now();
+  const stamp = ymdIn(c.tz || Intl.DateTimeFormat().resolvedOptions().timeZone).join("-");
+  c.fired ||= {};
+  for (const [k] of PRAYERS) {
+    if (k === "sunrise" || !c.on[k]) continue;
+    const at = t[k].getTime();
+    const id = stamp + k;
+    if (now >= at && now - at < 4 * 60e3 && !c.fired[id]) {
+      c.fired = { [id]: 1 };
+      save(true);
+      playAdhan(k);
+      notifyPrayer(k, t[k]);
+    }
+  }
+  if ($("#pcount")) refreshCountdown();
+  if ($("#hcount")) refreshHomePrayer();
+}
+async function notifyPrayer(k, at) {
+  if (!("Notification" in window) || Notification.permission !== "granted" || !prayerCfg().notify) return;
+  const body = `حان الآن موعد أذان ${PNAME[k]} · ${fmtClock(at)}`;
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg) reg.showNotification(`صلاة ${PNAME[k]}`, { body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "adhan", renotify: true, vibrate: [300, 120, 300] });
+    else new Notification(`صلاة ${PNAME[k]}`, { body, icon: "icons/icon-192.png" });
+  } catch {}
+}
+setInterval(adhanTick, 1000);
+
+function refreshCountdown() {
+  const n = nextPrayer();
+  if (!n) return;
+  const el = $("#pcount");
+  el.textContent = countdown(n.t - Date.now());
+  const span = n.t - n.prev.t, done = Date.now() - n.prev.t;
+  const arc = $("#parc");
+  if (arc) arc.style.strokeDashoffset = String(100 - Math.max(0, Math.min(100, (done / span) * 100)));
+  if ($("#pnext").dataset.k !== n.k) route();
+}
+function refreshHomePrayer() {
+  const n = nextPrayer();
+  if (!n) return;
+  $("#hcount").textContent = countdown(n.t - Date.now());
+  if ($("#hnext").dataset.k !== n.k) { $("#hnext").dataset.k = n.k; $("#hnext").textContent = PNAME[n.k]; $("#htime").textContent = fmtClock(n.t); }
+}
+function homePrayerCard() {
+  const c = prayerCfg();
+  if (c.lat == null) {
+    return `<a class="pstrip setup" href="#/prayer"><span class="pstrip-ic">${icSm("dome", 24)}</span>
+      <span class="grow"><b>مواقيت الصلاة والأذان</b><small>حدد مدينتك والأذان يشتغل بصوت الشيخ محمد رفعت أو مؤذنك المفضل</small></span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>`;
+  }
+  const n = nextPrayer();
+  return `<a class="pstrip" href="#/prayer"><span class="pstrip-ic">${icSm("dome", 24)}</span>
+    <span class="grow"><small>الصلاة القادمة · ${esc(c.name || "")}</small><b><span id="hnext" data-k="${n.k}">${PNAME[n.k]}</span> · <span id="htime">${fmtClock(n.t)}</span></b></span>
+    <span class="pstrip-count" id="hcount">${countdown(n.t - Date.now())}</span></a>`;
+}
+
+async function prayer(parts) {
+  if (parts[0] === "muezzin") return muezzinPicker(parts[1]);
+  setTop("مواقيت الصلاة");
+  const c = prayerCfg();
+  if (c.lat == null) return prayerSetup(true);
+  const n = nextPrayer();
+  const t = n.today;
+  let hijri = "";
+  try { hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "long", year: "numeric", timeZone: c.tz || undefined }).format(new Date()); } catch {}
+  const m = await resolveMuezzin("dhuhr");
+  const fm = c.fajrMuezzin;
+  const rows = PRAYERS.map(([k, name]) => {
+    const isNext = k === n.k && !n.tomorrow;
+    const past = t[k] < Date.now() && !isNext;
+    return `<li class="prow ${isNext ? "next" : ""} ${past ? "past" : ""}">
+      <span class="pname">${name}</span><span class="ptime">${fmtClock(t[k])}</span>
+      ${k === "sunrise" ? `<span class="pbell off" aria-hidden="true"></span>` :
+        `<button class="pbell ${c.on[k] ? "on" : ""}" data-act="pbell" data-k="${k}" aria-pressed="${!!c.on[k]}" aria-label="أذان ${name}">${icSm(c.on[k] ? "bell" : "bell-off", 20)}</button>`}</li>`;
+  }).join("");
+  after(() => refreshCountdown());
+  return `<section class="pnext">
+      <svg class="parc" viewBox="0 0 200 110" aria-hidden="true"><path d="M10 100 A90 90 0 0 1 190 100" pathLength="100" class="track"/><path id="parc" d="M10 100 A90 90 0 0 1 190 100" pathLength="100" class="fill" style="stroke-dashoffset:100"/></svg>
+      <div class="pnext-in"><small>${n.tomorrow ? "غداً" : "الصلاة القادمة"}</small>
+        <b id="pnext" data-k="${n.k}">${PNAME[n.k]}</b>
+        <span class="pcount" id="pcount">${countdown(n.t - Date.now())}</span>
+        <span class="pat">الأذان ${fmtClock(n.t)}</span></div>
+      <div class="ploc">${icSm("pin", 16)} ${esc(c.name || "موقعي")}${hijri ? ` · ${esc(hijri)}` : ""}</div>
+    </section>
+    <ul class="plist">${rows}</ul>
+    <div class="sec-h"><h2>المؤذن</h2></div>
+    <a class="mcard" href="#/prayer/muezzin">${avatar(m.pid, m.n)}<span class="grow"><small>أذان الصلوات</small><b>${esc(m.n)}</b><span>${esc(m.t)}</span></span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>
+    <a class="mcard" href="#/prayer/muezzin/fajr"><span class="avatar">${icSm("moon", 30)}</span><span class="grow"><small>أذان الفجر</small><b>${fm ? esc(fm.n) : "نفس مؤذن الصلوات"}</b>${fm ? `<span>${esc(fm.t)}</span>` : ""}</span>${icSm("chev", 18).replace('class="icon"', 'class="icon flip"')}</a>
+    <div class="btn-row"><button class="btn ghost" data-act="testAdhan">${ic("play")}جرّب الأذان</button></div>
+
+    <div class="sec-h"><h2>التنبيهات</h2></div>
+    <div class="setting"><span class="grow"><b>إشعار وقت الصلاة</b><small>إشعار على الموبايل مع الأذان</small></span>
+      <button class="switch" data-act="notify" aria-pressed="${!!c.notify && typeof Notification !== "undefined" && Notification.permission === "granted"}" aria-label="إشعار وقت الصلاة"><i></i></button></div>
+    <div class="setting"><span class="grow"><b>تنبيه أكيد حتى والتطبيق مقفول</b><small>يضيف مواعيد الصلاة لتقويم الموبايل لمدة 30 يوم، والتقويم بينبهك في كل صلاة</small></span>
+      <button class="btn" style="height:38px;padding:0 14px" data-act="ics">إضافة</button></div>
+    <p class="note">الأذان بصوت الشيخ بيشتغل تلقائي طول ما التطبيق مفتوح أو شغال في الخلفية. المتصفحات مش بتسمح لأي موقع إنه يشغّل صوت لوحده وهو مقفول خالص، فلو هتقفله فعّل «تنبيه أكيد» عشان التقويم ينبهك.</p>
+
+    <div class="sec-h"><h2>الإعدادات</h2></div>
+    ${prayerSetup(false)}`;
+}
+
+function prayerSetup(first) {
+  const c = prayerCfg();
+  const opts = Object.entries(PrayerCalc.METHODS).map(([k, v]) => `<option value="${k}" ${c.method === k ? "selected" : ""}>${esc(v.name)}</option>`).join("");
+  const cities = CITIES.map((x, i) => `<option value="${i}" ${c.name === x[0] ? "selected" : ""}>${esc(x[0])}</option>`).join("");
+  const html = `${first ? `<section class="shero"><span class="medal">${icSm("dome", 34)}</span><h2>مواقيت الصلاة والأذان</h2><p>حدد مكانك عشان نحسب المواعيد بدقة، والأذان يشتغل في وقته.</p></section>` : ""}
+    <div class="setting"><span class="grow"><b>موقعي الحالي</b><small>${c.lat != null ? esc(c.name || "") : "الأدق: بيستخدم GPS الموبايل مرة واحدة"}</small></span>
+      <button class="btn" style="height:38px;padding:0 14px" data-act="gps">${icSm("pin", 18)}حدد موقعي</button></div>
+    <label class="setting"><span class="grow"><b>أو اختار مدينة</b></span>
+      <select id="pcity"><option value="">— اختار —</option>${cities}</select></label>
+    <label class="setting"><span class="grow"><b>طريقة الحساب</b></span><select id="pmethod">${opts}</select></label>
+    <label class="setting"><span class="grow"><b>صلاة العصر</b></span>
+      <select id="pasr"><option value="1" ${c.asr == 1 ? "selected" : ""}>الجمهور (شافعي، مالكي، حنبلي)</option><option value="2" ${c.asr == 2 ? "selected" : ""}>الحنفي</option></select></label>`;
+  after(() => {
+    $("#pcity").addEventListener("change", (e) => {
+      const x = CITIES[+e.target.value];
+      if (!x) return;
+      Object.assign(c, { name: x[0], lat: x[1], lng: x[2], tz: x[3], method: x[4] });
+      save(true); toast(`تم: ${x[0]}`); route();
+    });
+    $("#pmethod").addEventListener("change", (e) => { c.method = e.target.value; save(true); route(); });
+    $("#pasr").addEventListener("change", (e) => { c.asr = +e.target.value; save(true); route(); });
+  });
+  return html;
+}
+
+function locateMe() {
+  if (!navigator.geolocation) return toast("الموبايل مش بيدعم تحديد الموقع، اختار مدينتك من القائمة");
+  toast("جاري تحديد موقعك…", 15000);
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const c = prayerCfg();
+    c.lat = +pos.coords.latitude.toFixed(4); c.lng = +pos.coords.longitude.toFixed(4);
+    c.tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    c.name = "موقعي الحالي";
+    // pick the method of the nearest listed city
+    let best = null, bd = 1e9;
+    for (const x of CITIES) { const dd = (x[1] - c.lat) ** 2 + (x[2] - c.lng) ** 2; if (dd < bd) { bd = dd; best = x; } }
+    if (best && bd < 60) c.method = best[4];
+    try {
+      const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${c.lat}&longitude=${c.lng}&localityLanguage=ar`);
+      const j = await r.json();
+      c.name = j.city || j.locality || j.principalSubdivision || c.name;
+    } catch {}
+    save(true); toast(`تم تحديد موقعك: ${c.name}`); route();
+  }, () => toast("مقدرناش نحدد موقعك. اسمح للموقع بالوصول للمكان أو اختار مدينتك من القائمة", 5000),
+  { enableHighAccuracy: false, timeout: 15000, maximumAge: 6 * 3600e3 });
+}
+
+async function muezzinPicker(which) {
+  const fajr = which === "fajr";
+  setTop(fajr ? "مؤذن الفجر" : "اختار المؤذن");
+  const list = await adhanList();
+  const c = prayerCfg();
+  const cur = fajr ? c.fajrMuezzin?.u : (c.muezzin?.u || (list.find((x) => x[2] === DEFAULT_MUEZZIN.t) || [])[3]);
+  const by = new Map();
+  list.forEach((a) => { if (!by.has(a[0])) by.set(a[0], []); by.get(a[0]).push(a); });
+  const tracks = list.map((a) => ({ t: a[2], s: a[1], d: "أذان", u: a[3], img: portrait(a[0]) }));
+  const L = reg(tracks);
+  let idx = 0;
+  const groups = [...by.entries()].map(([pid, arr]) => {
+    const rows = arr.map((a) => {
+      const i = idx++;
+      const sel = a[3] === cur;
+      return `<li><div class="row ${sel ? "now" : ""}" data-u="${esc(a[3])}">
+        <button class="num" data-play="${L}:${i}" aria-label="استمع">${icSm("play", 16)}</button>
+        <button class="grow" data-play="${L}:${i}" style="text-align:start"><span class="t">${esc(a[2])}</span><span class="s">${fmtTime(a[4])}${a[5] ? " · أذان فجر" : ""}</span></button>
+        <span class="end"><button class="pick ${sel ? "on" : ""}" data-act="pickM" data-w="${fajr ? "fajr" : ""}" data-i="${i}">${sel ? "المختار" : "اختيار"}</button></span></div></li>`;
+    }).join("");
+    return `<section class="mgroup"><div class="mhead">${avatar(pid, arr[0][1])}<b>${esc(arr[0][1])}</b><span class="count">${n2a(arr.length)}</span></div><ul class="list">${rows}</ul></section>`;
+  }).join("");
+  window.__adhanPick = list;
+  return `${fajr ? `<div class="setting"><span class="grow"><b>نفس مؤذن الصلوات</b><small>استخدم نفس الأذان للفجر</small></span><button class="btn ${c.fajrMuezzin ? "ghost" : ""}" style="height:38px;padding:0 14px" data-act="pickM" data-w="fajr" data-i="-1">${c.fajrMuezzin ? "استخدمه" : "مفعّل"}</button></div>` : ""}
+    <p class="note">${n2a(list.length)} أذان بأصوات ${n2a(by.size)} من أعلام المقرئين. دوس ▶ تسمع، و«اختيار» يخليه أذانك.</p>${groups}`;
+}
+
+function buildICS() {
+  const c = prayerCfg();
+  const pad = (x) => String(x).padStart(2, "0");
+  const z = (d) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+  const now = z(new Date());
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//UltraQuran//Prayer//AR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:مواقيت الصلاة · ألترا قرآن"];
+  for (let day = 0; day < 30; day++) {
+    const t = dayTimes(day);
+    for (const [k, name] of PRAYERS) {
+      if (k === "sunrise" || !c.on[k]) continue;
+      const s = t[k], e = new Date(s.getTime() + 10 * 60e3);
+      lines.push("BEGIN:VEVENT", `UID:uq-${k}-${z(s)}@ultraquran`, `DTSTAMP:${now}`, `DTSTART:${z(s)}`, `DTEND:${z(e)}`,
+        `SUMMARY:🕌 أذان ${name}`, `DESCRIPTION:حان الآن موعد صلاة ${name} · ${c.name || ""}`, "TRANSP:TRANSPARENT",
+        "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:أذان ${name}`, "TRIGGER:PT0M", "END:VALARM", "END:VEVENT");
+    }
+  }
+  lines.push("END:VCALENDAR");
+  const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "mawaqit-alsalah.ics";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  toast("افتح الملف اللي نزل واختار «إضافة الكل» للتقويم", 6000);
+}
+
+/* ---------------- INSTALL AS APP ---------------- */
+let installEvt = null;
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; $$(".install-card").forEach((x) => x.hidden = false); });
+window.addEventListener("appinstalled", () => { installEvt = null; toast("اتثبت ✓ هتلاقي ألترا قرآن على الشاشة الرئيسية"); $$(".install-card").forEach((x) => x.remove()); });
+function installCard(force) {
+  if (isStandalone() || (!force && S.installHidden)) return "";
+  return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png" alt=""></span>
+    <span class="grow"><b>ثبّت ألترا قرآن كتطبيق</b><small>أيقونة على الشاشة الرئيسية، يفتح ملء الشاشة، والأذان والإشعارات يشتغلوا أحسن</small></span>
+    <span class="install-btns"><button class="btn" style="height:38px;padding:0 16px" data-act="install">تثبيت</button>
+    ${force ? "" : `<button class="xbtn" data-act="installHide" aria-label="إخفاء">${icSm("x", 16)}</button>`}</span></div>`;
+}
+async function doInstall() {
+  if (installEvt) {
+    installEvt.prompt();
+    const r = await installEvt.userChoice.catch(() => null);
+    installEvt = null;
+    if (r && r.outcome === "accepted") return;
+    return;
+  }
+  openModal(isIOS()
+    ? `<h2>التثبيت على الآيفون</h2><ol class="steps">
+        <li>افتح الموقع من <b>Safari</b></li>
+        <li>دوس زرار المشاركة ${icSm("share", 18)} تحت</li>
+        <li>اختار <b>«إضافة إلى الشاشة الرئيسية»</b></li>
+        <li>دوس <b>«إضافة»</b> فوق على اليمين</li></ol>
+        <p class="note">بعد التثبيت افتحه من الأيقونة، وفعّل إشعار وقت الصلاة من صفحة المواقيت.</p>`
+    : `<h2>تثبيت التطبيق</h2><ol class="steps">
+        <li>افتح قائمة المتصفح ⋮ فوق</li>
+        <li>اختار <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b></li>
+        <li>وافق، وهتلاقي الأيقونة على الشاشة الرئيسية</li></ol>`);
+}
+function openModal(html) {
+  let m = $("#modal");
+  if (!m) { m = document.createElement("div"); m.id = "modal"; m.className = "modal"; document.body.appendChild(m); }
+  m.innerHTML = `<div class="modal-card" role="dialog" aria-modal="true">${html}<div class="btn-row" style="justify-content:center"><button class="btn" data-act="closeModal">تمام</button></div></div>`;
+  m.classList.add("open");
+}
+
 /* ---------------- SAVED ---------------- */
 async function saved() {
   setTop("محفوظاتي");
@@ -796,7 +1390,8 @@ async function saved() {
     ${fav.length ? `<ul class="list">${fav.map((t, i) => row(t, LF, i, "unfav")).join("")}</ul>` : `<p class="note">دوس على ♡ جنب أي سورة أو درس أو إذاعة عشان يتحفظ هنا.</p>`}
     <div class="sec-h"><h2>محفوظ بدون نت</h2>${off.length > 1 ? `<button data-play="${LO}:0">تشغيل الكل</button>` : ""}</div>
     ${off.length ? `<ul class="list">${off.map((t, i) => row(t, LO, i, "unsave")).join("")}</ul>` : `<p class="note">افتح المشغّل ودوس «بدون نت» عشان تسمع المقطع بعدين من غير إنترنت.</p>`}
-    ${usage ? `<p class="note">${usage}</p>` : ""}`;
+    ${usage ? `<p class="note">${usage}</p>` : ""}
+    ${installCard(true)}`;
 }
 
 /* ---------------- SEARCH ---------------- */
@@ -937,6 +1532,31 @@ document.addEventListener("click", async (e) => {
     case "mode": S.mode = S.mode === "img" ? "text" : "img"; save(); sessionStorage.setItem("keep-scroll", "1"); route(); break;
     case "tafsirT": S.tafsir = !S.tafsir; save(); el.setAttribute("aria-pressed", S.tafsir); $("#tafsir").hidden = !S.tafsir; if (S.tafsir) drawTafsir(S.page); break;
     case "saveMushaf": saveMushaf(); break;
+    case "pbell": { const c = prayerCfg(); const k = el.dataset.k; c.on[k] = !c.on[k]; save(true); toast(c.on[k] ? `أذان ${PNAME[k]} مفعّل` : `أذان ${PNAME[k]} متوقف`); sessionStorage.setItem("keep-scroll", "1"); route(); break; }
+    case "testAdhan": playAdhan("dhuhr", true); break;
+    case "gps": locateMe(); break;
+    case "ics": buildICS(); break;
+    case "notify": {
+      const c = prayerCfg();
+      if (!("Notification" in window)) { toast(isIOS() ? "على الآيفون: ثبّت التطبيق على الشاشة الرئيسية الأول، وبعدين فعّل الإشعارات" : "المتصفح ده مبيدعمش الإشعارات", 5000); break; }
+      if (c.notify && Notification.permission === "granted") { c.notify = false; save(true); el.setAttribute("aria-pressed", "false"); break; }
+      const p = await Notification.requestPermission();
+      c.notify = p === "granted"; save(true);
+      el.setAttribute("aria-pressed", String(c.notify));
+      toast(c.notify ? "الإشعارات اتفعلت ✓" : "الإشعارات مرفوضة من إعدادات الموبايل");
+      break;
+    }
+    case "pickM": {
+      const c = prayerCfg(); const i = +el.dataset.i; const fajr = el.dataset.w === "fajr";
+      if (i < 0) { delete c.fajrMuezzin; save(true); toast("أذان الفجر هيبقى بنفس مؤذن الصلوات"); history.back(); break; }
+      const a = window.__adhanPick[i];
+      const m = { u: a[3], t: a[2], pid: a[0], n: a[1] };
+      if (fajr) c.fajrMuezzin = m; else c.muezzin = m;
+      save(true); toast(`تم اختيار أذان ${a[1]}`); history.back(); break;
+    }
+    case "install": doInstall(); break;
+    case "installHide": S.installHidden = true; save(true); el.closest(".install-card").remove(); toast("تقدر تثبته بعدين من «محفوظاتي»"); break;
+    case "closeModal": $("#modal").classList.remove("open"); break;
   }
 });
 $("#miniPP").addEventListener("click", toggle);
