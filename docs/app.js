@@ -527,10 +527,10 @@ async function home() {
       <blockquote>﴿${esc(ayah[0])}﴾</blockquote>
       <cite>سورة ${esc(ayah[1])} · الآية ${n2a(ayah[2])}</cite>
     </section>
+    ${appPromo()}
     ${homePrayerPanel()}
   </div>
   ${cont.length ? `<div class="cont-row">${cont.join("")}</div>` : ""}
-  ${appPromo()}
   <div class="sec-h"><h2>الأقسام</h2></div>
   <div class="tiles">
     <a class="tile feature" href="#/quran">
@@ -548,7 +548,7 @@ if (!NATIVE && IS_ANDROID && navigator.getInstalledRelatedApps) {
   }).catch(() => {});
 }
 function appPromo() {
-  if (NATIVE || S.promoHidden || S.appInstalled || !IS_PHONE) return "";
+  if (NATIVE || S.promoOff || S.appInstalled || !IS_PHONE) return "";
   return `<section class="promo" aria-label="تطبيق الترا قرآن للأندرويد">
     <button class="promo-x" data-act="promoHide" aria-label="إخفاء">${icSm("x", 14)}</button>
     <div class="promo-art"><img src="icons/icon-192.png" alt=""><span class="promo-tag">أندرويد</span></div>
@@ -2079,8 +2079,8 @@ document.addEventListener("click", async (e) => {
     case "listenSurah": listenSurah(); break;
     case "readAlong": readAlong(); break;
     case "mute": { if (A.muted || A.volume === 0) setVolume(S.volBefore || 0.8); else { S.volBefore = A.volume; setVolume(0); } break; }
-    case "promoGot": S.promoHidden = 1; save(true); setTimeout(() => { $(".promo")?.remove(); toast("التطبيق بيتحمل. افتحه من الإشعارات أو من التنزيلات وثبّته", 5000); }, 300); break;
-    case "promoHide": S.promoHidden = 1; save(true); el.closest(".promo")?.remove(); toast("اتخفى البانر"); break;
+    case "promoGot": setTimeout(() => toast(IS_IOS ? "ملف التطبيق للأندرويد بس، ابعته لصاحبك اللي معاه أندرويد" : "التطبيق بيتحمل. افتحه من الإشعارات أو من التنزيلات وثبّته", 5000), 300); break;
+    case "promoHide": S.promoOff = 1; save(true); el.closest(".promo")?.remove(); toast("اتخفى البانر"); break;
     case "followStop": stopFollow(); toast("وقفت متابعة المصحف"); break;
     case "followResume": FOLLOW.paused = false; FOLLOW.auto = 0; followTick(); break;
     case "pickMReciter": pickMReciter(); break;

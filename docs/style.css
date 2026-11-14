@@ -1728,3 +1728,5 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
   .tabs a:not(.rail-brand) .icon { width: 32px !important; height: 32px !important; padding: 6px !important; }
   .rail-brand { margin-bottom: 4px !important; }
 }
+.home-top > .promo { margin: 14px 0 16px; }
+@media (min-width: 1024px) { .home-top > .promo { grid-column: 1 / -1; margin: 0; grid-template-columns: auto minmax(0, 1fr) auto; } }
