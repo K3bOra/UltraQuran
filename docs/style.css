@@ -1561,3 +1561,15 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
   .home > .promo { grid-column: 1 / -1; margin: 0; align-self: stretch; grid-template-columns: auto minmax(0, 1fr) auto; align-content: center; }
   .home > .promo .promo-cta { min-width: 260px; }
 }
+
+/* v38: promo button is a single-line direct download on every screen */
+.promo-btn { white-space: nowrap; min-width: 0; }
+@media (max-width: 639px) {
+  .promo { padding: 16px; gap: 12px 14px; }
+  .promo-art { width: 64px; height: 64px; border-radius: 18px; }
+  .promo-body h3 { font-size: 17.5px; margin-bottom: 8px; }
+  .promo-feats li { font-size: 12px; padding: 4px 9px; }
+  .promo-cta { flex-direction: column; align-items: stretch; gap: 8px; }
+  .promo-btn { width: 100%; flex: none; height: 50px; }
+  .promo-meta { text-align: center; }
+}

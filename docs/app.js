@@ -516,11 +516,6 @@ async function home() {
 
 function appPromo() {
   if (NATIVE || S.promoHidden) return "";
-  const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const full = new URL(APK_URL, location.href).href;
-  const btn = IS_IOS
-    ? `<button class="promo-btn" data-act="sharePromo" data-u="${esc(full)}">${icSm("share", 17)} ابعته لصاحبك اللي معاه أندرويد</button>`
-    : `<a class="promo-btn" href="${APK_URL}" download>${icSm("dl", 18)} حمّل التطبيق</a>`;
   return `<section class="promo" aria-label="تطبيق الترا قرآن للأندرويد">
     <button class="promo-x" data-act="promoHide" aria-label="إخفاء">${icSm("x", 14)}</button>
     <div class="promo-art"><img src="icons/icon-192.png" alt=""><span class="promo-tag">أندرويد</span></div>
@@ -532,9 +527,8 @@ function appPromo() {
         <li>${icSm("play", 15)} الاستماع يكمل والشاشة مقفولة</li>
         <li>${icSm("radio", 15)} تتحكم في التشغيل من الإشعارات</li>
       </ul>
-      ${IS_IOS ? `<p class="promo-note">التطبيق للأندرويد بس، وعلى الآيفون تقدر تضيف الموقع للشاشة الرئيسية من زرار المشاركة.</p>` : ""}
     </div>
-    <div class="promo-cta">${btn}<span class="promo-meta">ملف APK · حجمه صغير جداً</span></div>
+    <div class="promo-cta"><a class="promo-btn" href="${APK_URL}" download="UltraQuran.apk" type="application/vnd.android.package-archive">${icSm("dl", 18)} حمّل التطبيق</a><span class="promo-meta">ملف APK · حجمه صغير جداً</span></div>
   </section>`;
 }
 
@@ -2052,12 +2046,6 @@ document.addEventListener("click", async (e) => {
     case "listenSurah": listenSurah(); break;
     case "readAlong": readAlong(); break;
     case "promoHide": S.promoHidden = 1; save(true); el.closest(".promo")?.remove(); toast("اتخفى البانر"); break;
-    case "sharePromo": {
-      const u = el.dataset.u, text = "تطبيق الترا قرآن للأندرويد: المصاحف المرتلة والإذاعات ومواعيد الصلاة والأذان";
-      if (navigator.share) navigator.share({ title: "الترا قرآن", text, url: u }).catch(() => {});
-      else { navigator.clipboard?.writeText(u); toast("اتنسخ رابط التحميل"); }
-      break;
-    }
     case "followStop": stopFollow(); toast("وقفت متابعة المصحف"); break;
     case "followResume": FOLLOW.paused = false; FOLLOW.auto = 0; followTick(); break;
     case "pickMReciter": pickMReciter(); break;
