@@ -195,9 +195,27 @@ A.addEventListener("ended", () => {
   if (P.repeat === 2) { A.currentTime = 0; A.play(); return; }
   next(true);
 });
+A.addEventListener("playing", () => { const t = cur(); if (t) t.__retry = 0; clearTimeout(P.stallT); });
+// if playback hangs while loading for a long time, reload the same link from the same spot (once per hang)
+A.addEventListener("waiting", () => {
+  clearTimeout(P.stallT);
+  const t = cur(); if (!t || t.live || P.obj) return;
+  const at = A.currentTime;
+  P.stallT = setTimeout(() => {
+    if (cur() !== t || A.paused || Math.abs(A.currentTime - at) > 0.5 || A.readyState >= 3) return;
+    const src = A.getAttribute("src"); P.resumeAt = at; A.src = src; A.play().catch(() => {});
+  }, 15000);
+});
 A.addEventListener("error", () => {
   if (!A.getAttribute("src")) return;
   const t0 = cur();
+  // sources like archive.org sometimes fail for a moment: try the same link again (from the same spot) before giving up
+  if (t0 && !P.obj && (t0.__retry || 0) < 2) {
+    t0.__retry = (t0.__retry || 0) + 1;
+    const pos = A.currentTime || 0, src = A.getAttribute("src");
+    setTimeout(() => { if (cur() !== t0) return; P.resumeAt = pos; A.src = src; A.play().catch(() => {}); }, 1200 * t0.__retry);
+    return;
+  }
   if (t0 && t0.alt && t0.alt.length && !t0.__alt) { t0.__alt = 1; A.src = t0.alt[0]; A.play().catch(() => {}); return; }
   const t = cur();
   toast(t?.live ? "الإذاعة لا تستجيب الآن، جرّب إذاعة أخرى" : "تعذّر تشغيل هذا المقطع من المصدر، جرّب مقطعاً آخر");
