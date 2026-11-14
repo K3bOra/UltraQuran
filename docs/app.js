@@ -2215,6 +2215,8 @@ const visitsHTML = () => `<span class="visits" ${window.__visitors ? "" : "hidde
     return;
   }
   RECITERS.forEach((r) => { RIDX[r[0]] = r; });
+  // a reload keeps history.state: if the player sheet was open the router would skip drawing the page
+  if (history.state?.sheet || history.state?.video) history.replaceState(null, "");
   route();
   visitors();
   if ("serviceWorker" in navigator && location.protocol === "https:") {
@@ -2222,11 +2224,22 @@ const visitsHTML = () => `<span class="visits" ${window.__visitors ? "" : "hidde
     // a new version took over: reload once so the page shows it
     let reloaded = false;
     const hadController = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (!hadController || reloaded) return;
+    // never interrupt listening: wait until playback is paused and the page is in front
+    const safeReload = () => {
+      if (reloaded || !window.__uqUpdate) return;
+      if (!A.paused || document.hidden || $("#sheet")?.classList.contains("open")) return;
       reloaded = true;
+      if (cur() && S.last) { S.last.time = A.currentTime; save(true); }
       location.reload();
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController) return;
+      window.__uqUpdate = true;
+      safeReload();
     });
+    A.addEventListener("pause", () => setTimeout(safeReload, 800));
+    window.addEventListener("hashchange", safeReload);
+    document.addEventListener("visibilitychange", () => setTimeout(safeReload, 1500));
   }
 })();
 })();
