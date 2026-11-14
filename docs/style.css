@@ -1712,3 +1712,19 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
 @keyframes rlEq { from { height: 20%; } to { height: 100%; } }
 @media (prefers-reduced-motion: reduce) { .tabs a.rail-live .rl-ic::after, .tabs a.rail-live.on .eq i { animation: none; } }
 .tabs a.rail-live .rl-t { white-space: nowrap; }
+/* v44: the designer card stays compact so the menu fits on 1080p screens */
+@media (min-width: 1024px) {
+  .rail-credit { padding: 10px 10px 9px !important; }
+  .rc-orn { margin-bottom: 2px; }
+  .rail-credit b { font-size: 24px !important; }
+  .rail-credit .rc-stats { margin-top: 6px; padding: 4px 6px; border-radius: 12px; }
+  .rc-stat { flex-direction: row; justify-content: center; align-items: baseline; gap: 4px; }
+  .rc-stat strong { font-size: 14px !important; }
+  .rc-stat small { font-size: 11px; }
+}
+@media (min-width: 1024px) and (max-height: 1060px) {
+  .tabs { gap: 2px !important; padding-top: 16px !important; padding-bottom: 12px !important; }
+  .tabs a:not(.rail-brand) { padding-block: 5px !important; }
+  .tabs a:not(.rail-brand) .icon { width: 32px !important; height: 32px !important; padding: 6px !important; }
+  .rail-brand { margin-bottom: 4px !important; }
+}
