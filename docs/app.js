@@ -286,8 +286,6 @@ function renderSheet(full) {
     </div>
     <div id="sleepBox"></div>
     ${queue}`;
-  // desktop: the volume sits small at the end of the controls row, not on its own line
-  if (innerWidth >= 1024) { const vb = sh.querySelector(".vol"), cb = sh.querySelector(".controls"); if (vb && cb) { vb.classList.add("inline"); cb.appendChild(vb); } }
   const vr = $("#volRange");
   if (vr) {
     const paint = () => vr.style.setProperty("--p", vr.value + "%");

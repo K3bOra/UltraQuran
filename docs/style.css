@@ -1587,10 +1587,18 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
 .sheet .vol input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 50%; background: #fff6da; border: 2px solid #d9b36c; box-shadow: 0 2px 6px #0007; }
 .sheet .vol input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #fff6da; border: 2px solid #d9b36c; }
 @media (min-width: 1024px) {
-  .sheet .controls { align-items: center; }
-  .sheet .vol.inline { margin: 0; margin-inline-start: auto; width: auto; max-width: none; gap: 6px; }
-  .sheet .vol.inline button { width: 32px; height: 32px; background: transparent; }
-  .sheet .vol.inline button .icon { width: 19px; height: 19px; }
-  .sheet .vol.inline input[type=range] { flex: none; width: 96px; }
-  .sheet .vol.inline span { min-width: 34px; font-size: 11.5px; }
+  /* desktop: a slim vertical volume on the far side of the title; the controls keep the whole row */
+  .sheet { grid-template-columns: 180px minmax(0, 1fr) 46px !important;
+    grid-template-areas: "grab grab grab" "cover title vol" "cover who vol" "cover det vol" "cover seek vol" "cover controls vol" "extras extras extras" "sleep sleep sleep" "queue queue queue" !important;
+    grid-template-rows: auto auto auto auto auto auto auto auto minmax(0, 1fr) !important; }
+  .sheet .grab, .sheet .extras, .sheet #sleepBox, .sheet .queue { grid-column: 1 / -1; }
+  .sheet .vol { grid-area: vol; flex-direction: column-reverse; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 0; width: 46px; max-width: none; align-self: stretch;
+    padding: 10px 0; border-radius: 23px; background: #08242380; box-shadow: inset 0 0 0 1px #d9b36c2e; }
+  .sheet .vol button { width: 32px; height: 32px; background: transparent; }
+  .sheet .vol button .icon { width: 19px; height: 19px; }
+  .sheet .vol span { min-width: 0; text-align: center; font-size: 11px; }
+  .sheet .vol input[type=range] { flex: 1; width: 22px; min-height: 90px; height: auto; writing-mode: vertical-lr; direction: rtl; }
+  .sheet .vol input[type=range]::-webkit-slider-runnable-track { width: 6px; height: 100%; background: linear-gradient(to top, #d9b36c 0 var(--p), #ffffff26 var(--p) 100%); }
+  .sheet .vol input[type=range]::-webkit-slider-thumb { margin-top: 0; margin-left: -6px; }
+  .sheet .controls { justify-content: space-between; gap: 0; padding-inline-end: 12px; }
 }
