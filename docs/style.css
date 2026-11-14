@@ -104,7 +104,29 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 .sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 26px 0 12px; }
 .hero + .sec-h { margin-top: 8px; }
 .sec-h h2 { margin: 0; font: 600 22px/1.3 var(--kufi); color: var(--parchment); }
-.sec-h button { margin: 0; font-size: 13px; color: var(--gold); }
+.sec-h a, .sec-h button { font-size: 14px; color: var(--gold); }
+
+/* ---------- home tiles ---------- */
+.tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+@media (min-width: 640px) { .tiles { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 960px) { .tiles { grid-template-columns: repeat(5, 1fr); } }
+.tile {
+  display: flex; flex-direction: column; gap: 10px; text-align: start;
+  min-height: 132px; padding: 16px 14px 14px; border-radius: var(--radius);
+  background: linear-gradient(160deg, #134640, #0d3531);
+  border: 1px solid #ffffff10;
+}
+.tile:active { transform: scale(.98); }
+.tile .ic { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: var(--gold-soft); color: var(--gold); }
+.tile .ic .icon { width: 26px; height: 26px; }
+.tile b { font: 600 17px/1.35 var(--kufi); }
+.tile small { font-size: 12.5px; line-height: 1.5; color: var(--mist); }
+.tile.wide { grid-column: 1 / -1; flex-direction: row; align-items: center; min-height: 0; padding: 18px 16px; background: linear-gradient(120deg, #1a5a51, #0f3a36 70%); border-color: var(--line); }
+.tile.wide .ic { width: 54px; height: 54px; }
+.tile.wide b { font-size: 21px; }
+.tile.wide > span:not(.ic) { display: flex; flex-direction: column; flex: 1; }
+
+/* ---------- chips / tabs ---------- */
 .chips { display: flex; gap: 8px; overflow-x: auto; padding: 4px 16px 6px; margin: 12px -16px 0; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
@@ -326,9 +348,9 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-/* ==========================================================================
+/* =====================================================================
    Premium surfaces (v2)
-   ========================================================================== */
+   ===================================================================== */
 .sec-h .count { font-size: 13px; color: var(--mist); background: #ffffff0f; padding: 1px 10px; border-radius: 999px; }
 .pill { font-size: 12px; line-height: 1; padding: 6px 10px; border-radius: 999px; background: #08242399; color: var(--gold); border: 1px solid #d9b36c40; white-space: nowrap; }
 .flip { transform: scaleX(-1); }
@@ -416,10 +438,10 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 .shero::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .12; background: url("img/lattice.svg") center/80px repeat;
   mask-image: linear-gradient(#000, transparent); -webkit-mask-image: linear-gradient(#000, transparent); }
 .medal { width: 84px; height: 84px; margin: 0 auto; display: grid; place-items: center; border-radius: 50%; color: var(--gold);
-  background: radial-gradient(circle at 50% 35%, #1d7a61, #0f3a36); box-shadow: 0 0 0 2px var(--gold), 0 0 0 8px #d9b36c22; }
+  background: radial-gradient(circle at 50% 35%, #1d7a61, #0f3a36); box-shadow: 0 0 0 2px var(--gold), 0 0 0 8px #d9b36c1f; }
 .shero h2 { margin: 14px 0 4px; font: 600 25px/1.45 var(--kufi); color: var(--paper); }
 .shero p { margin: 0 auto; max-width: 40ch; color: var(--mist); font-size: 14.5px; }
-@media (min-width: 760px) { .shero { margin: 16px 0 0; border-radius: 28px; padding: 44px 20px 32px; } }
+@media (min-width: 760px) { .shero { margin: 16px 0 0; border-radius: 28px; } }
 
 /* --- big poster folders (Sha'rawi audio / video) --- */
 .poster-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
@@ -431,8 +453,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
   background: linear-gradient(150deg, var(--c1), var(--c2)); border: 1px solid #ffffff1a;
 }
 .poster-bg { position: absolute; z-index: -1; inset-inline-start: -10%; top: -10%; width: 70%; height: 130%; background: center 20%/cover no-repeat;
-  opacity: .35; mask-image: linear-gradient(to left, #000 10%, transparent 85%); -webkit-mask-image: linear-gradient(to left, #000 10%, transparent 85%);
-  filter: grayscale(.2); }
+  opacity: .35; mask-image: linear-gradient(to left, #000 10%, transparent 85%); -webkit-mask-image: linear-gradient(to left, #000 10%, transparent 85%); filter: grayscale(.2); }
 [dir="rtl"] .poster-bg { inset-inline-start: auto; inset-inline-end: auto; left: -6%; }
 .poster-ic { width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; background: #08242380; color: var(--acc); margin-bottom: 8px; }
 .poster-t { font: 600 26px/1.3 var(--kufi); color: var(--paper); }
@@ -478,7 +499,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 .pstrip-count { font: 600 20px/1 var(--ui); color: var(--gold); direction: ltr; font-variant-numeric: tabular-nums; }
 
 /* --- prayer page --- */
-.pnext { position: relative; overflow: hidden; isolation: isolate; margin: 0 -16px; padding: 22px 20px 18px; text-align: center;
+.pnext { position: relative; isolation: isolate; overflow: hidden; margin: 0 -16px; padding: 22px 20px 18px; text-align: center;
   background: radial-gradient(120% 100% at 50% 0%, #1d7a61 0%, #0f3a36cc 50%, transparent 100%); }
 .pnext::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .1; background: url("img/lattice.svg") center/84px repeat;
   mask-image: linear-gradient(#000, transparent); -webkit-mask-image: linear-gradient(#000, transparent); }
@@ -585,7 +606,7 @@ body.immersive .imm-exit { display: grid; place-items: center; position: fixed; 
 .dkprog { display: block; height: 4px; margin: 6px auto 0; max-width: 160px; border-radius: 2px; background: #ffffff17; overflow: hidden; }
 .dkprog i { display: block; height: 100%; background: var(--gold); transition: width .2s; }
 .chip.fs { padding: 6px 10px; font-weight: 600; }
-.deck { display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; margin: 10px -16px 0; scrollbar-width: none; outline: none;
+.deck { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; margin: 10px -16px 0; scrollbar-width: none; outline: none;
   height: calc(100dvh - 61px - 70px - var(--tabbar) - var(--mini) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 26px); }
 .deck::-webkit-scrollbar { display: none; }
 .tslide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; padding: 0 12px; height: 100%; }
@@ -644,9 +665,9 @@ html { overflow-x: clip; }
 .ayah-m { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; padding-top: 8px; border-top: 1px solid #b8955240; font: 600 13px var(--ui); color: #0f3a36; }
 .ayah-m i { font-style: normal; display: inline-flex; align-items: center; gap: 2px; color: #9a7a32; }
 
-/* ==========================================================================
+/* =====================================================================
    Home v3: full prayer panel, cards row, feature + portrait tiles
-   ========================================================================== */
+   ===================================================================== */
 .rail-brand, .rail-credit, .rail-only { display: none !important; }
 .home-cards { display: flex; flex-direction: column; }
 .home-cards > * { margin-top: 12px; }
@@ -684,9 +705,9 @@ html { overflow-x: clip; }
 .tile.feature .ic { display: none; }
 .feature-go { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding: 6px 14px; border-radius: 999px; background: var(--gold); color: var(--night); font-weight: 600; font-size: 14px; }
 
-/* ==========================================================================
+/* =====================================================================
    Desktop & large tablets
-   ========================================================================== */
+   ===================================================================== */
 @media (min-width: 1024px) {
   :root { --rail: 248px; --tabbar: 0px; }
   body { padding-right: var(--rail); padding-bottom: calc(var(--mini) + 32px); }
@@ -750,7 +771,7 @@ html { overflow-x: clip; }
   .tile.feature b { font-size: 38px; }
   .tile.feature small { font-size: 16.5px; margin-top: 0; max-width: 36ch; }
   .feature-faces { position: absolute; top: 28px; inset-inline-start: 28px; flex-wrap: wrap; width: 70%; gap: 12px; flex-direction: row; justify-content: flex-start; }
-  .feature-faces img { width: 78px; height: 78px; margin: 0 !important; box-shadow: 0 0 0 3px #0f3a36, 0 0 0 3px var(--gold), 0 10px 24px #0008; }
+  .feature-faces img { width: 78px; height: 78px; margin: 0 !important; box-shadow: 0 0 0 3px var(--gold), 0 10px 24px #0008; }
   .feature-go { font-size: 16px; padding: 9px 20px; }
 
   /* other pages use the room */
@@ -851,7 +872,8 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .cont::before { content: ""; position: absolute; z-index: -1; inset-inline-end: -36px; bottom: -40px; width: 120px; height: 120px; opacity: .13; background: url("img/lattice.svg") center/contain no-repeat; }
 .cont:active { transform: scale(.98); }
 .cont-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
-.cont-art { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; color: var(--acc); background: #08242380; box-shadow: 0 0 0 2px var(--acc); flex: none; }
+.cont-art { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; color: var(--acc);
+  background: #08242380; box-shadow: 0 0 0 2px var(--acc); flex: none; }
 .cont-art img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
 .cont-num { font: 600 15px var(--ui); color: var(--acc); }
 .cont-btn { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--acc); color: #082423; box-shadow: 0 4px 12px #0005; }
@@ -862,7 +884,7 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .cont-s { font-size: 12px; color: #f4ead2a6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cont-bar { display: block; height: 3px; margin-top: 8px; border-radius: 2px; background: #ffffff1c; overflow: hidden; }
 .cont-bar i { display: block; height: 100%; background: var(--acc); border-radius: 2px; }
-.cont-x { position: absolute; top: 8px; inset-inline-start: auto; inset-inline-end: 8px; transform: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; color: #f4ead2aa; background: #0003; }
+.cont-x { position: absolute; top: 6px; inset-inline-start: 50%; transform: translateX(50%); width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; color: #f4ead2aa; background: #0003; }
 .k-listen  { --c1: #1b5e54; --c2: #0d3531; }
 .k-radio   { --c1: #1d5a6b; --c2: #0b2c36; --acc: #ffb59d; }
 .k-read    { --c1: #1d5a51; --c2: #0b2b28; --acc: #f0d58e; }
@@ -892,7 +914,7 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .home .ppanel { grid-column: span 2; grid-row: span 2; margin: 0; min-height: 0; overflow: hidden; }
   .home > .cont-row { grid-column: span 3; display: flex; flex-wrap: nowrap; overflow-x: auto; margin: 0; padding: 0; gap: 16px; scrollbar-width: thin; }
   .home .cont { flex: 1 1 0; width: auto; max-width: none; min-width: 200px; margin: 0; }
-  .home .cont-x { inset-inline-start: auto; inset-inline-end: 8px; transform: none; }
+  .home .cont-x { inset-inline-start: auto; inset-inline-end: 46%; transform: none; }
   .home .tile { min-height: 0; }
   .home .tile.feature { grid-column: span 2; grid-row: span 2; }
   .home .pp-times { gap: 8px; margin-top: 12px; }
@@ -900,10 +922,6 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .home .pp-cell b { font-size: 22px; }
   .home .pp-count { font-size: 34px; }
   .home .pp-head b { font-size: 28px; }
-}
-@media (min-width: 1024px) and (max-width: 1439px) {
-  .tiles > .tile:nth-last-child(2) { grid-column: span 2; }
-  .tiles > .tile:last-child { grid-column: span 3; }
 }
 @media (min-width: 1440px) {
   .home { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -931,7 +949,8 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .tabs a:not(.rail-brand) { gap: 12px; padding: 9px 10px; border-radius: 16px; color: #e3ece6; font-weight: 600; font-size: 15px; border: 1px solid transparent; transition: background .15s, border-color .15s; }
   .tabs a:not(.rail-brand) .icon { width: 36px; height: 36px; padding: 7px; border-radius: 11px; background: #08242380; color: var(--gold); box-shadow: inset 0 0 0 1px #d9b36c33; stroke-width: 1.7; }
   .tabs a:not(.rail-brand):hover { background: #ffffff0d; border-color: #d9b36c26; }
-  .tabs a[aria-current="page"] { color: #082423 !important; background: linear-gradient(120deg, #f8dca0, #d9b36c 55%, #b8955a) !important; border-color: #f8dca0 !important; box-shadow: 0 6px 18px #d9b36c40, inset 0 1px 0 #ffffffaa !important; }
+  .tabs a[aria-current="page"] { color: #082423 !important; background: linear-gradient(120deg, #f8dca0, #d9b36c 55%, #b8955a) !important;
+    border-color: #f8dca0 !important; box-shadow: 0 6px 18px #d9b36c40, inset 0 1px 0 #ffffffaa !important; }
   .tabs a[aria-current="page"] .icon { background: #082423; color: #f8dca0; box-shadow: none; }
   .rail-credit { background: linear-gradient(150deg, #08242399, #0824234d) !important; box-shadow: inset 0 0 0 1px #d9b36c4d, 0 8px 20px #0004 !important; border-radius: 18px !important; padding: 12px !important; }
 }
@@ -955,9 +974,9 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .mini { inset-inline: calc(var(--rail) + 38px) 24px; }
 }
 
-/* ==========================================================================
+/* =====================================================================
    Home prayer panel — luxe
-   ========================================================================== */
+   ===================================================================== */
 .ppanel.lux { position: relative; isolation: isolate; overflow: hidden; padding: 18px 16px 14px; border-radius: 26px;
   background: radial-gradient(120% 90% at 85% 0%, #2a6b5e 0%, #154a43 40%, #0c2e2b 100%);
   border: 1px solid #d9b36c59; box-shadow: inset 0 1px 0 #ffffff1f, 0 20px 40px #0005; }
@@ -994,8 +1013,8 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .pq.next .pq-n, .pq.next .pq-t, .pq.next .pq-t i { color: #082423; }
 .pq.next::after { content: ""; position: absolute; top: -4px; left: 50%; width: 7px; height: 7px; background: #f8dca0; transform: translateX(-50%) rotate(45deg); box-shadow: 0 0 8px #f8dca0; }
 
-.pl-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; margin-top: 12px; font-size: 12.5px; }
-.pl-foot a { display: inline-flex; align-items: center; gap: 5px; color: var(--gold); white-space: normal; }
+.pl-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; font-size: 12.5px; }
+.pl-foot a { display: inline-flex; align-items: center; gap: 5px; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 380px) { .pl-ring { width: 96px; height: 96px; } .pl-info b, .pl-count { font-size: 25px; } .pq-t { font-size: 13.5px; } }
 
 @media (min-width: 1024px) {
@@ -1069,9 +1088,9 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; -webkit-text-stroke: .4px #f3d38c;
 }
 
-/* ==========================================================================
+/* =====================================================================
    v22: profile column pages, radio cards, prayer page, counters, visitors
-   ========================================================================== */
+   ===================================================================== */
 .side-bio { display: none; }
 .rmain > :first-child { margin-top: 18px; }
 @media (min-width: 1024px) {
@@ -1168,9 +1187,9 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   .rmain .rgrid > [hidden] { display: none; }
 }
 
-/* ==========================================================================
+/* =====================================================================
    v24: phones get the same polish as desktop
-   ========================================================================== */
+   ===================================================================== */
 /* card rows always fill (odd last card / single card stretch) */
 .fgrid, .rgrid { display: flex !important; flex-wrap: wrap; gap: 10px; }
 .fgrid > *, .rgrid > * { flex: 1 1 150px; min-width: 0; }
@@ -1224,9 +1243,9 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .rad.cairo .cairo-main { padding-inline-end: 56px; }
 @media (min-width: 1024px) { .rad.cairo .cairo-main { padding-inline-end: 80px; } }
 
-/* ==========================================================================
+/* =====================================================================
    v26: no brown — emerald + gold only; premium Cairo radio card & player
-   ========================================================================== */
+   ===================================================================== */
 .k-mujawwad, .k-read, .k-install, .k-text { box-shadow: inset 0 0 0 1px #d9b36c40, inset 0 1px 0 #ffffff14; }
 .prow.next, .pp-cell.next { background: linear-gradient(150deg, #1f6a5c, #0c2e2b); box-shadow: 0 0 0 1px #f0c879aa, 0 0 18px #d9b36c33; }
 
@@ -1241,8 +1260,7 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .cairo-main .rad-on { box-shadow: 0 0 0 3px #15524a !important; }
 .cairo-txt small { display: inline-flex; align-items: center; gap: 6px; color: #f0c879; }
 .cairo-txt b { background: linear-gradient(180deg, #fff6da, #f3d38c 55%, #d1a253); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 2px; }
-.cairo-txt .live-badge { align-self: flex-start; padding: 3px 10px 3px 12px; border-radius: 999px; background: #c0392b26; box-shadow: inset 0 0 0 1px #ff7a5c66;
-color: #ffc2b4; font-size: 12px; }
+.cairo-txt .live-badge { align-self: flex-start; padding: 3px 10px 3px 12px; border-radius: 999px; background: #c0392b26; box-shadow: inset 0 0 0 1px #ff7a5c66; color: #ffc2b4; font-size: 12px; }
 .cairo-play { background: linear-gradient(160deg, #fff1c9, #d9b36c 60%, #b8955a) !important; color: #082423 !important; box-shadow: 0 8px 20px #0007, 0 0 0 4px #d9b36c26 !important; }
 .eq { display: none; align-items: flex-end; gap: 3px; height: 16px; }
 .eq i { width: 3px; border-radius: 2px; background: #f0c879; animation: eq 1s ease-in-out infinite; }
@@ -1289,9 +1307,9 @@ color: #ffc2b4; font-size: 12px; }
   .cairo-txt b { font-size: 23px; }
 }
 
-/* ==========================================================================
+/* =====================================================================
    v28: desktop full player rises out of the mini player
-   ========================================================================== */
+   ===================================================================== */
 .sheet { background: radial-gradient(120% 70% at 50% 0%, #2a7a6a 0%, #15524a 35%, #0c2e2b 75%) !important; }
 .sheet .cover { box-shadow: 0 0 0 3px #d9b36c, 0 0 0 10px #d9b36c1f, 0 24px 60px #0009 !important; }
 .sheet h2 { background: linear-gradient(180deg, #fff6da, #f3d38c 55%, #d1a253); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 4px; }
@@ -1375,9 +1393,9 @@ html { scrollbar-width: thin; scrollbar-color: #d9b36c66 #0c2e2b; }
 ::-webkit-scrollbar-thumb { background: linear-gradient(#f0c879aa, #b8955a99); border-radius: 4px; border: 2px solid #0c2e2b; }
 ::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
 
-/* ==========================================================================
+/* =====================================================================
    v31: surah / lesson cards (like the radio cards)
-   ========================================================================== */
+   ===================================================================== */
 .scard-grid { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @media (min-width: 640px) { .scard-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .scard-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; } }
@@ -1423,9 +1441,9 @@ html { scrollbar-width: thin; scrollbar-color: #d9b36c66 #0c2e2b; }
   .scard-tools .icon { width: 13px; height: 13px; }
 }
 
-/* ==========================================================================
+/* =====================================================================
    v33: premium page header (floating emerald glass, gold title)
-   ========================================================================== */
+   ===================================================================== */
 .top { position: sticky; top: calc(env(safe-area-inset-top) + 8px); margin: calc(env(safe-area-inset-top) + 8px) 10px 0; padding: 8px 10px !important; gap: 10px;
   border-radius: 22px; border: 1px solid #d9b36c59 !important; isolation: isolate; overflow: hidden;
   background: linear-gradient(120deg, #1a5a51e6, #0f3a36eb 55%, #0c2e2bf0) !important;
@@ -1479,9 +1497,9 @@ body { overflow-x: clip !important; }
   .sheet .queue .list { columns: auto !important; max-height: 52vh; padding-inline-end: 2px; }
 }
 
-/* ==========================================================================
+/* =====================================================================
    v37: read along with the reciter, Android app banner
-   ========================================================================== */
+   ===================================================================== */
 .sheet .read-along { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px 0 12px; border-radius: 999px;
   font: 600 13.5px var(--ui); color: #082423; white-space: nowrap;
   background: linear-gradient(160deg, #fff1c9, #d9b36c 60%, #b8955a); box-shadow: 0 6px 16px #0006, 0 0 0 4px #d9b36c22; }
@@ -1501,7 +1519,7 @@ body { overflow-x: clip !important; }
 .follow-bar button { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 999px; white-space: nowrap;
   font: 600 12.5px var(--ui); color: #082423; background: linear-gradient(160deg, #fff1c9, #d9b36c); }
 .follow-bar .fb-x { width: 34px; padding: 0; justify-content: center; color: var(--parchment, #f4ead2); background: #ffffff14; }
-@media (min-width: 1024px) { .follow-bar { bottom: 112px; margin-inline-start: calc(var(--rail) / -2); } }
+@media (min-width: 1024px) { .follow-bar { bottom: 112px; margin-inline-start: calc(var(--rail, 0px) / -2); } }
 body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
 
 .promo { position: relative; margin: 18px 0 4px; padding: 18px; border-radius: 26px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 16px; align-items: center;
@@ -1571,8 +1589,8 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
 @media (min-width: 1024px) {
   /* desktop: a slim vertical volume on the far side of the title; the controls keep the whole row */
   .sheet { grid-template-columns: 180px minmax(0, 1fr) 46px !important;
-    grid-template-areas: "grab grab grab" "cover title vol" "cover who vol" "cover det vol" "cover seek vol" "cover controls vol" "extras extras extras" "sleep sleep sleep" "queue queue queue";
-    grid-template-rows: auto auto auto auto auto auto minmax(0, 1fr) !important; }
+    grid-template-areas: "grab grab grab" "cover title vol" "cover who vol" "cover det vol" "cover seek vol" "cover controls vol" "extras extras extras" "sleep sleep sleep" "queue queue queue" !important;
+    grid-template-rows: auto auto auto auto auto auto auto auto minmax(0, 1fr) !important; }
   .sheet .grab, .sheet .extras, .sheet #sleepBox, .sheet .queue { grid-column: 1 / -1; }
   .sheet .vol { grid-area: vol; flex-direction: column-reverse; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 0; width: 46px; max-width: none; align-self: stretch;
     padding: 10px 0; border-radius: 23px; background: #08242380; box-shadow: inset 0 0 0 1px #d9b36c2e; }
@@ -1585,10 +1603,10 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
   .sheet .controls { justify-content: space-between; gap: 0; padding-inline-end: 12px; }
 }
 
-/* ==========================================================================
+/* =====================================================================
    v42: premium details — prayer arches, volume capsule, player dock,
    designer card, Cairo radio capsule
-   ========================================================================== */
+   ===================================================================== */
 
 /* prayer times: each prayer is an arched mihrab window */
 .pq-row { gap: 8px !important; padding: 0 !important; background: none !important; box-shadow: none !important; }
@@ -1731,7 +1749,7 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
 .sheet .queue .qs-d { flex: none; margin-inline-start: auto; font-variant-numeric: tabular-nums; direction: ltr; font-size: 12px; color: #d9b36c; }
 @media (min-width: 1024px) { .home-top > .promo-pill { grid-column: 1 / -1; margin: 0 auto; width: 100%; max-width: 560px; } }
 
-/* v47: prayer ring – glow no longer clipped by the svg box, cleaner halo */
+/* v47: prayer ring — glow no longer clipped by the svg box, cleaner halo */
 .pl-ring svg:first-child { overflow: visible; }
 .pl-ring .trk { stroke: #d9b36c1f; stroke-width: 4; }
 .pl-ring .arc { stroke-width: 6; filter: drop-shadow(0 0 4px #d9b36c80); }
