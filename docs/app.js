@@ -230,12 +230,6 @@ function updateProgress() {
   const d = A.duration, c = A.currentTime;
   const pct = isFinite(d) && d > 0 ? (c / d) * 100 : 0;
   $("#miniProg").style.width = pct + "%";
-  const vr = $("#volRange");
-  if (vr) {
-    const paint = () => vr.style.setProperty("--p", vr.value + "%");
-    paint();
-    vr.addEventListener("input", () => { setVolume(+vr.value / 100); paint(); });
-  }
   const sk = $("#seek");
   if (sk && !sk.dataset.drag) {
     sk.max = isFinite(d) ? d : 0; sk.value = c;
@@ -292,6 +286,14 @@ function renderSheet(full) {
     </div>
     <div id="sleepBox"></div>
     ${queue}`;
+  // desktop: the volume sits small at the end of the controls row, not on its own line
+  if (innerWidth >= 1024) { const vb = sh.querySelector(".vol"), cb = sh.querySelector(".controls"); if (vb && cb) { vb.classList.add("inline"); cb.appendChild(vb); } }
+  const vr = $("#volRange");
+  if (vr) {
+    const paint = () => vr.style.setProperty("--p", vr.value + "%");
+    paint();
+    vr.addEventListener("input", () => { setVolume(+vr.value / 100); paint(); });
+  }
   const sk = $("#seek");
   sk.addEventListener("input", () => { sk.dataset.drag = 1; $("#tCur").textContent = fmtTime(+sk.value); });
   sk.addEventListener("change", () => { A.currentTime = +sk.value; delete sk.dataset.drag; });
