@@ -12,6 +12,8 @@ const n2a = (n) => AR.format(n);
 /* ---------------- Android app bridge ---------------- */
 const NATIVE = window.UltraQuranNative || null;
 const IS_ANDROID = /android/i.test(navigator.userAgent);
+const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const IS_PHONE = IS_ANDROID || IS_IOS || matchMedia("(pointer: coarse)").matches;
 const APK_URL = "app/UltraQuran.apk";
 if (NATIVE) document.documentElement.classList.add("in-app");
 let nativeSig = "";
@@ -91,6 +93,18 @@ function audioUrl(rec, ch) {
    PLAYER
    ====================================================================== */
 const A = new Audio();
+function volIcon() { return A.muted || A.volume === 0 ? "mute" : A.volume < 0.5 ? "vol-low" : "vol"; }
+function setVolume(v, quiet) {
+  v = Math.max(0, Math.min(1, v));
+  A.volume = v; A.muted = v === 0;
+  S.volume = v; save();
+  const pct = Math.round(v * 100);
+  const r = $("#volRange"); if (r && +r.value !== pct) { r.value = pct; r.style.setProperty("--p", pct + "%"); }
+  const l = $("#volVal"); if (l) l.textContent = `${n2a(pct)}%`;
+  const b = $("#volBtn"); if (b) { b.innerHTML = ic(volIcon()); b.setAttribute("aria-label", A.muted ? "تشغيل الصوت" : "كتم الصوت"); }
+  if (!quiet && !$("#sheet")?.classList.contains("open")) toast(pct ? `الصوت ${n2a(pct)}%` : "الصوت مكتوم", 1200);
+}
+if (typeof S.volume === "number" && !IS_IOS) { A.volume = Math.max(0, Math.min(1, S.volume)); A.muted = S.volume === 0; }
 A.preload = "metadata";
 const P = { q: [], i: -1, repeat: 0, rate: 1, sleepT: 0, sleepEnd: false, obj: null, resumeAt: 0 };
 const RATES = [1, 1.25, 1.5, 0.75];
@@ -216,6 +230,12 @@ function updateProgress() {
   const d = A.duration, c = A.currentTime;
   const pct = isFinite(d) && d > 0 ? (c / d) * 100 : 0;
   $("#miniProg").style.width = pct + "%";
+  const vr = $("#volRange");
+  if (vr) {
+    const paint = () => vr.style.setProperty("--p", vr.value + "%");
+    paint();
+    vr.addEventListener("input", () => { setVolume(+vr.value / 100); paint(); });
+  }
   const sk = $("#seek");
   if (sk && !sk.dataset.drag) {
     sk.max = isFinite(d) ? d : 0; sk.value = c;
@@ -258,6 +278,11 @@ function renderSheet(full) {
       <button data-act="fwd" aria-label="تقديم 15 ثانية" ${t.live ? "disabled" : ""}>${ic("fwd")}</button>
       <button data-act="next" aria-label="التالي">${ic("next")}</button>
     </div>
+    ${IS_IOS ? "" : `<div class="vol">
+      <button data-act="mute" id="volBtn" aria-label="${A.muted ? "تشغيل الصوت" : "كتم الصوت"}">${ic(volIcon())}</button>
+      <input id="volRange" type="range" min="0" max="100" step="1" value="${Math.round((A.muted ? 0 : A.volume) * 100)}" aria-label="مستوى الصوت">
+      <span id="volVal">${n2a(Math.round((A.muted ? 0 : A.volume) * 100))}%</span>
+    </div>`}
     <div class="extras">
       <button data-act="fav" class="${isFav(t.u) ? "on" : ""}">${ic("heart")}${isFav(t.u) ? "في المفضلة" : "المفضلة"}</button>
       <button data-act="rate" ${t.live ? "disabled" : ""}>${ic("speed")}${n2a(P.rate)}×</button>
@@ -514,8 +539,14 @@ async function home() {
   </div><div class="home-foot">${visitsHTML()}</div></div>`;
 }
 
+// Chrome on Android can tell whether the Ultra Quran app is already installed (app 1.0.1+)
+if (!NATIVE && IS_ANDROID && navigator.getInstalledRelatedApps) {
+  navigator.getInstalledRelatedApps().then((apps) => {
+    if (apps.some((a) => a.id === "com.k3bora.ultraquran")) { S.appInstalled = 1; save(); $(".promo")?.remove(); }
+  }).catch(() => {});
+}
 function appPromo() {
-  if (NATIVE || S.promoHidden) return "";
+  if (NATIVE || S.promoHidden || S.appInstalled || !IS_PHONE) return "";
   return `<section class="promo" aria-label="تطبيق الترا قرآن للأندرويد">
     <button class="promo-x" data-act="promoHide" aria-label="إخفاء">${icSm("x", 14)}</button>
     <div class="promo-art"><img src="icons/icon-192.png" alt=""><span class="promo-tag">أندرويد</span></div>
@@ -528,7 +559,7 @@ function appPromo() {
         <li>${icSm("radio", 15)} تتحكم في التشغيل من الإشعارات</li>
       </ul>
     </div>
-    <div class="promo-cta"><a class="promo-btn" href="${APK_URL}" download="UltraQuran.apk" type="application/vnd.android.package-archive">${icSm("dl", 18)} حمّل التطبيق</a><span class="promo-meta">ملف APK · حجمه صغير جداً</span></div>
+    <div class="promo-cta"><a class="promo-btn" href="${APK_URL}" download="UltraQuran.apk" type="application/vnd.android.package-archive" data-act="promoGot">${icSm("dl", 18)} حمّل التطبيق</a><span class="promo-meta">ملف APK · حجمه صغير جداً</span></div>
   </section>`;
 }
 
@@ -2045,6 +2076,8 @@ document.addEventListener("click", async (e) => {
     case "pgNext": goPage((BOOK?.page || S.page) + (BOOK?.step?.() || 1)); break;
     case "listenSurah": listenSurah(); break;
     case "readAlong": readAlong(); break;
+    case "mute": { if (A.muted || A.volume === 0) setVolume(S.volBefore || 0.8); else { S.volBefore = A.volume; setVolume(0); } break; }
+    case "promoGot": S.promoHidden = 1; save(true); setTimeout(() => { $(".promo")?.remove(); toast("التطبيق بيتحمل. افتحه من الإشعارات أو من التنزيلات وثبّته", 5000); }, 300); break;
     case "promoHide": S.promoHidden = 1; save(true); el.closest(".promo")?.remove(); toast("اتخفى البانر"); break;
     case "followStop": stopFollow(); toast("وقفت متابعة المصحف"); break;
     case "followResume": FOLLOW.paused = false; FOLLOW.auto = 0; followTick(); break;
@@ -2137,6 +2170,10 @@ window.addEventListener("pagehide", () => save(true));
 document.addEventListener("keydown", (e) => {
   if (e.target.matches("input, textarea")) return;
   if (e.key === " " && cur()) { e.preventDefault(); toggle(); }
+  if (cur() && !location.hash.startsWith("#/mushaf") && (e.key === "ArrowUp" || e.key === "ArrowDown") && !IS_IOS) {
+    e.preventDefault(); setVolume((A.muted ? 0 : A.volume) + (e.key === "ArrowUp" ? 0.1 : -0.1));
+  }
+  if ((e.key === "m" || e.key === "M" || e.key === "ء") && cur() && !IS_IOS) { if (A.muted || A.volume === 0) setVolume(S.volBefore || 0.8); else { S.volBefore = A.volume; setVolume(0); } }
   if (location.hash.startsWith("#/mushaf")) {
     if (e.key === "ArrowLeft") goPage(S.page + (BOOK?.step?.() || 1));
     if (e.key === "ArrowRight") goPage(S.page - (BOOK?.step?.() || 1));

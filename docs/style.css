@@ -1573,3 +1573,22 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
   .promo-btn { width: 100%; flex: none; height: 50px; }
   .promo-meta { text-align: center; }
 }
+
+/* v39: volume in the full player */
+.sheet .vol { display: flex; align-items: center; gap: 12px; margin: 16px auto 0; width: min(100%, 420px); direction: ltr; }
+.sheet .vol button { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 50%; color: #f4ead2; background: #ffffff12; }
+.sheet .vol button:hover { background: #ffffff20; }
+.sheet .vol button .icon { width: 21px; height: 21px; }
+.sheet .vol span { flex: none; min-width: 44px; text-align: end; font-size: 13px; color: #d9b36c; font-variant-numeric: tabular-nums; }
+.sheet .vol input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; height: 22px; background: transparent; cursor: pointer; margin: 0; --p: 100%; }
+.sheet .vol input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; background: linear-gradient(90deg, #d9b36c 0 var(--p), #ffffff26 var(--p) 100%); }
+.sheet .vol input[type=range]::-moz-range-track { height: 6px; border-radius: 6px; background: #ffffff26; }
+.sheet .vol input[type=range]::-moz-range-progress { height: 6px; border-radius: 6px; background: #d9b36c; }
+.sheet .vol input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 50%; background: #fff6da; border: 2px solid #d9b36c; box-shadow: 0 2px 6px #0007; }
+.sheet .vol input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #fff6da; border: 2px solid #d9b36c; }
+@media (min-width: 1024px) {
+  .sheet { grid-template-areas: "grab grab" "cover title" "cover who" "cover det" "cover seek" "cover controls" "cover vol" "extras extras" "sleep sleep" "queue queue" !important;
+    grid-template-rows: auto auto auto auto auto auto auto auto auto minmax(0, 1fr) !important; }
+  .sheet .vol { grid-area: vol; margin: 10px 0 0; width: 100%; max-width: 360px; }
+  .sheet .vol button { width: 34px; height: 34px; }
+}

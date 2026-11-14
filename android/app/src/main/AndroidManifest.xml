@@ -23,6 +23,8 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="false"
         android:hardwareAccelerated="true">
+        <!-- Lets the website notice the app is installed and stop offering the download. -->
+        <meta-data android:name="asset_statements" android:resource="@string/asset_statements" />
 
         <activity
             android:name=".MainActivity"
