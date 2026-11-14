@@ -142,7 +142,44 @@ async function loadCur(autoplay) {
   updatePlayerUI(true);
 }
 
+// durations of recitations are not in the data, so remember them once known (played or probed)
+const DURS = (() => { try { return JSON.parse(localStorage.getItem("uq-durs") || "{}") || {}; } catch { return {}; } })();
+function saveDur(u, sec) {
+  if (!u || !isFinite(sec) || sec < 5 || DURS[u] === Math.round(sec)) return;
+  DURS[u] = Math.round(sec);
+  const keys = Object.keys(DURS); if (keys.length > 4000) keys.slice(0, 500).forEach((k) => delete DURS[k]);
+  try { localStorage.setItem("uq-durs", JSON.stringify(DURS)); } catch {}
+}
+function durOf(x) {
+  if (typeof x.dur === "number" && x.dur > 0) return fmtTime(x.dur);
+  if (typeof x.dur === "string" && x.dur) return x.dur;
+  return DURS[x.u] ? fmtTime(DURS[x.u]) : "";
+}
+let probeRun = 0;
+function probeQueueDurs() {
+  const run = ++probeRun;
+  if (navigator.connection?.saveData) return;
+  const todo = [];
+  for (let i = P.i; i < P.q.length && todo.length < 6; i++) { const x = P.q[i]; if (x && !x.live && !x.v && x.u && !durOf(x)) todo.push([i, x]); }
+  const next = () => {
+    if (run !== probeRun || !todo.length || !$("#sheet .queue")) return;
+    const [i, x] = todo.shift();
+    const a = new Audio(); a.preload = "metadata"; a.muted = true;
+    let done = false;
+    const fin = () => { if (done) return; done = true; if (isFinite(a.duration)) saveDur(x.u, a.duration); a.removeAttribute("src"); try { a.load(); } catch {} fillDur(i, x); setTimeout(next, 150); };
+    a.addEventListener("loadedmetadata", fin); a.addEventListener("error", fin); setTimeout(fin, 8000);
+    a.src = x.u;
+  };
+  next();
+}
+function fillDur(i, x) {
+  const line = $(`#sheet .queue [data-qi="${i}"] .qline`), d = durOf(x);
+  if (!line || !d || line.querySelector(".qs-d")) return;
+  line.insertAdjacentHTML("beforeend", `<span class="qs-d">${esc(d)}</span>`);
+}
+
 A.addEventListener("loadedmetadata", () => {
+  const t = cur(); if (t && !t.live && isFinite(A.duration)) { saveDur(t.u, A.duration); fillDur(P.i, t); }
   if (P.resumeAt) { try { A.currentTime = P.resumeAt; } catch {} P.resumeAt = 0; }
 });
 let lastPersist = 0;
@@ -254,7 +291,7 @@ function renderSheet(full) {
   const qStart = P.q.length <= QMAX ? 0 : Math.max(0, Math.min(P.i - 200, P.q.length - QMAX));
   const qEnd = Math.min(P.q.length, qStart + QMAX);
   const queue = P.q.length > 1 ? `<div class="queue"><h3>قائمة التشغيل · ${n2a(P.i + 1)} من ${n2a(P.q.length)}</h3><ul class="list">${
-    P.q.slice(qStart, qEnd).map((x, k) => `<li><button class="row ${qStart + k === P.i ? "now" : ""}" data-qi="${qStart + k}"><span class="num">${n2a(qStart + k + 1)}</span><span class="grow"><span class="t">${esc(x.t)}</span><span class="s">${esc(x.d || x.s || "")}</span></span></button></li>`).join("")
+    P.q.slice(qStart, qEnd).map((x, k) => `<li><button class="row ${qStart + k === P.i ? "now" : ""}" data-qi="${qStart + k}"><span class="num">${n2a(qStart + k + 1)}</span><span class="grow"><span class="t">${esc(x.t)}</span><span class="s qline"><span class="qs-r">${esc(x.d || x.s || "")}</span>${durOf(x) ? `<span class="qs-d">${esc(durOf(x))}</span>` : ""}</span></span></button></li>`).join("")
   }</ul></div>` : "";
   sh.innerHTML = `
     <div class="grab"><button data-act="closeSheet" aria-label="إغلاق المشغّل">${ic("down")}</button>
@@ -297,6 +334,7 @@ function renderSheet(full) {
   const sk = $("#seek");
   sk.addEventListener("input", () => { sk.dataset.drag = 1; $("#tCur").textContent = fmtTime(+sk.value); });
   sk.addEventListener("change", () => { A.currentTime = +sk.value; delete sk.dataset.drag; });
+  if (full !== false) setTimeout(probeQueueDurs, 600);
   // bring the playing item into view inside the list only (the page itself does not jump)
   const ql = sh.querySelector(".queue .list"), qn = ql && ql.querySelector(".row.now");
   if (ql && qn) {
@@ -549,20 +587,14 @@ if (!NATIVE && IS_ANDROID && navigator.getInstalledRelatedApps) {
 }
 function appPromo() {
   if (NATIVE || S.promoOff || S.appInstalled || !IS_PHONE) return "";
-  return `<section class="promo" aria-label="تطبيق الترا قرآن للأندرويد">
-    <button class="promo-x" data-act="promoHide" aria-label="إخفاء">${icSm("x", 14)}</button>
-    <div class="promo-art"><img src="icons/icon-192.png" alt=""><span class="promo-tag">أندرويد</span></div>
-    <div class="promo-body">
-      <small>متاح دلوقتي لموبايلات أندرويد · مجاناً</small>
-      <h3>تطبيق الترا قرآن على موبايلك</h3>
-      <ul class="promo-feats">
-        <li>${icSm("bell", 15)} الأذان في ميعاده حتى والتطبيق مقفول</li>
-        <li>${icSm("play", 15)} الاستماع يكمل والشاشة مقفولة</li>
-        <li>${icSm("radio", 15)} تتحكم في التشغيل من الإشعارات</li>
-      </ul>
-    </div>
-    <div class="promo-cta"><a class="promo-btn" href="${APK_URL}" download="UltraQuran.apk" type="application/vnd.android.package-archive" data-act="promoGot">${icSm("dl", 18)} حمّل التطبيق</a><span class="promo-meta">ملف APK · حجمه صغير جداً</span></div>
-  </section>`;
+  return `<div class="promo-pill">
+    <a class="pp-main" href="${APK_URL}" download="UltraQuran.apk" type="application/vnd.android.package-archive" data-act="promoGot">
+      <span class="pp-ic"><img src="icons/icon-192.png" alt=""></span>
+      <span class="pp-t">تطبيق أندرويد<small>الأذان حتى والتطبيق مقفول · مجاناً</small></span>
+      <span class="pp-dl">${icSm("dl", 17)}</span>
+    </a>
+    <button class="pp-x" data-act="promoHide" aria-label="إخفاء">${icSm("x", 12)}</button>
+  </div>`;
 }
 
 /* ---------------- RECITERS ---------------- */
@@ -2080,7 +2112,7 @@ document.addEventListener("click", async (e) => {
     case "readAlong": readAlong(); break;
     case "mute": { if (A.muted || A.volume === 0) setVolume(S.volBefore || 0.8); else { S.volBefore = A.volume; setVolume(0); } break; }
     case "promoGot": setTimeout(() => toast(IS_IOS ? "ملف التطبيق للأندرويد بس، ابعته لصاحبك اللي معاه أندرويد" : "التطبيق بيتحمل. افتحه من الإشعارات أو من التنزيلات وثبّته", 5000), 300); break;
-    case "promoHide": S.promoOff = 1; save(true); el.closest(".promo")?.remove(); toast("اتخفى البانر"); break;
+    case "promoHide": S.promoOff = 1; save(true); el.closest(".promo-pill")?.remove(); toast("اتخفى"); break;
     case "followStop": stopFollow(); toast("وقفت متابعة المصحف"); break;
     case "followResume": FOLLOW.paused = false; FOLLOW.auto = 0; followTick(); break;
     case "pickMReciter": pickMReciter(); break;
