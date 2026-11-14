@@ -211,6 +211,7 @@ function updatePlayerUI(full) {
   const t = cur();
   const mini = $("#mini");
   nativePlayback(t && !t.adhan ? t : null, !A.paused);
+  $(".rail-live")?.classList.toggle("on", !!(t && t.cairo && !A.paused));
   if (!t) { mini.classList.remove("show"); document.body.style.setProperty("--mini", "0px"); return; }
   mini.classList.add("show");
   document.body.style.setProperty("--mini", "70px");
@@ -276,6 +277,7 @@ function renderSheet(full) {
       <button data-act="mute" id="volBtn" aria-label="${A.muted ? "تشغيل الصوت" : "كتم الصوت"}">${ic(volIcon())}</button>
       <input id="volRange" type="range" min="0" max="100" step="1" value="${Math.round((A.muted ? 0 : A.volume) * 100)}" aria-label="مستوى الصوت">
       <span id="volVal">${n2a(Math.round((A.muted ? 0 : A.volume) * 100))}%</span>
+      <svg class="icon vol-hi" aria-hidden="true"><use href="#i-vol"/></svg>
     </div>`}
     <div class="extras">
       <button data-act="fav" class="${isFav(t.u) ? "on" : ""}">${ic("heart")}${isFav(t.u) ? "في المفضلة" : "المفضلة"}</button>
