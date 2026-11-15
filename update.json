@@ -1,18 +1,20 @@
 {
-  "version": "1.1.0",
-  "name": "Ultra Quran 1.1.0",
-  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.1.0/UltraQuran_Open.ipk",
-  "ipk_sha256": "7ca2083080f32799b72138309750003f407b68b4c179006905c80a2d47132194",
-  "ipk_size": 30719718,
-  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.1.0/UltraQuran_DreamOS.deb",
-  "deb_sha256": "7ca2083080f32799b72138309750003f407b68b4c179006905c80a2d47132194",
-  "deb_size": 30719718,
+  "version": "1.2",
+  "name": "Ultra Quran 1.2",
+  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.2/UltraQuran_Open.ipk",
+  "ipk_sha256": "0e92f89c91983f7767f83540aeb53a847f22dfb40b8323078c6a406b4d54776d",
+  "ipk_size": 31516136,
+  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.2/UltraQuran_DreamOS.deb",
+  "deb_sha256": "0e92f89c91983f7767f83540aeb53a847f22dfb40b8323078c6a406b4d54776d",
+  "deb_size": 31516136,
   "notes": [
-    "The plugin version is now shown at the left end of the bottom bar on every screen.",
-    "129 garbled titles fixed: Sheikh Nasr El-Din Tobar's 83 rare ibtihalat (already corrupted on the Internet Archive) are now numbered 01-83 with the Hijri year where known; Turkish file names for Tobar, El-Feshni and El-Bahtimi are written in Arabic; YouTube codes glued to El-Sayed Saeed's recitations and words stuck together for Abdul Basit, Khaled Al-Jalil and others are cleaned up."
+    "Added Sheikh Muhammad Al-Mukhtar Al-Shanqiti to the Islamic library, with recordings and a short biography.",
+    "Added a daily Ramadan countdown to the home screen.",
+    "Added offline English and French translations of the Quran in the Mushaf reader for Hafs and Warsh."
   ],
   "notes_ar": [
-    "رقم الإصدار بقى ظاهر على الشمال في آخر الشريط اللي تحت في كل الشاشات.",
-    "إصلاح 129 اسم متلخبط: ابتهالات الشيخ نصر الدين طوبار النادرة (83 ابتهال) بقت مرقّمة من 01 لـ 83 ومعاها السنة الهجرية لو معروفة، والأسامي التركي عند طوبار والفشني والبهتيمي اتكتبت بالعربي، واتشالت أكواد يوتيوب من تلاوات السيد سعيد، واتصلحت كلمات لازقة في عبد الباسط وخالد الجليل وغيرهم."
+    "إضافة الشيخ محمد المختار الشنقيطي إلى المكتبة الإسلامية، مع تسجيلاته ونبذة عنه.",
+    "إضافة عدّاد رمضان في الشاشة الرئيسية.",
+    "إضافة الترجمة الإنجليزية والفرنسية لمعاني القرآن داخل المصحف لروايتي حفص وورش، وتعمل بدون إنترنت."
   ]
 }

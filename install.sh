@@ -179,7 +179,7 @@ def get_manifest(channel):
     if not isinstance(meta, dict):
         raise ValueError('Malformed release manifest')
     version = meta.get('version')
-    if not isinstance(version, STRING_TYPE) or not fullmatch(r'\d+\.\d+\.\d+', version):
+    if not isinstance(version, STRING_TYPE) or not fullmatch(r'\d+\.\d+(?:\.\d+)?', version):
         raise ValueError('Invalid official release version')
     key = 'deb' if channel == 'dreamos' else 'ipk'
     filename = 'UltraQuran_DreamOS.deb' if key == 'deb' else 'UltraQuran_Open.ipk'
@@ -267,10 +267,10 @@ def installed_status(channel):
 
 
 def numeric_version(text):
-    found = re.match(r'^(\d+)\.(\d+)\.(\d+)', text)
+    found = re.match(r'^(\d+)\.(\d+)(?:\.(\d+))?(?=$|[^0-9.])', text)
     if not found:
         raise ValueError('Cannot compare installed version; no changes made')
-    return tuple(int(x) for x in found.groups())
+    return tuple(int(x or 0) for x in found.groups())
 
 
 PILLOW_PACKAGES = {
