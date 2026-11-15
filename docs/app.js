@@ -1642,16 +1642,21 @@ function ramadanState() {
     kicker: eid ? "عيد فطر مبارك" : "باقي على رمضان", title: `رمضان ${r.year}`, sub: r.date ? `أول أيام الصيام · ${r.date}` : "" };
 }
 const RMD_ART = `<svg class="rmd-art" viewBox="0 0 120 150" aria-hidden="true">
-  <defs><radialGradient id="rmdGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffe2a0"/><stop offset=".6" stop-color="#f1b85a"/><stop offset="1" stop-color="#c47f2a"/></radialGradient></defs>
-  <mask id="rmdM"><rect width="120" height="150" fill="#fff"/><circle cx="101" cy="22" r="16" fill="#000"/></mask>
-  <circle class="rmd-moon" cx="93" cy="30" r="19" mask="url(#rmdM)"/>
-  <g class="rmd-lan l1"><line x1="38" y1="0" x2="38" y2="40"/><circle cx="38" cy="43" r="3"/>
-    <path class="cap" d="M27 56 L38 46 L49 56 Z"/><path class="body" d="M28 57 h20 l5 12 v22 l-5 12 h-20 l-5 -12 v-22 Z"/>
-    <path class="win" d="M31 66 h14 v28 h-14 Z"/><path class="rib" d="M38 57 v46 M23 80 h30"/><path class="cap" d="M30 103 h16 l-3 7 h-10 Z"/><line x1="38" y1="110" x2="38" y2="116"/></g>
-  <g class="rmd-lan l2"><line x1="70" y1="0" x2="70" y2="72"/><circle cx="70" cy="75" r="2.4"/>
-    <path class="cap" d="M62 85 L70 78 L78 85 Z"/><path class="body" d="M62.5 86 h15 l4 9 v16 l-4 9 h-15 l-4 -9 v-16 Z"/>
-    <path class="win" d="M65 93 h10 v20 h-10 Z"/><path class="rib" d="M70 86 v34 M58.5 103 h23"/><path class="cap" d="M64 120 h12 l-2 5 h-8 Z"/></g>
-  <g class="rmd-stars"><circle cx="12" cy="22" r="1.6"/><circle cx="104" cy="70" r="1.4"/><circle cx="16" cy="96" r="1.2"/><circle cx="96" cy="118" r="1.6"/></g>
+  <defs>
+    <linearGradient id="rmdGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1c9"/><stop offset=".5" stop-color="#f0cf86"/><stop offset="1" stop-color="#c99a4e"/></linearGradient>
+    <radialGradient id="rmdLight" cx="50%" cy="55%" r="60%"><stop offset="0" stop-color="#fff1c9" stop-opacity=".95"/><stop offset="1" stop-color="#d9b36c" stop-opacity=".15"/></radialGradient>
+    <mask id="rmdM"><rect width="120" height="150" fill="#fff"/><circle cx="101" cy="24" r="15" fill="#000"/></mask>
+  </defs>
+  <circle class="rmd-moon" cx="94" cy="31" r="17" mask="url(#rmdM)"/>
+  <path class="rmd-spark" d="M106 52l1.6 4 4 1.6-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6z"/>
+  <g class="rmd-lan l1"><line x1="40" y1="0" x2="40" y2="38"/><circle class="ring" cx="40" cy="41" r="3"/>
+    <path class="cap" d="M29 55 Q40 40 51 55 Z"/><path class="body" d="M29 56 h22 l5 11 v24 l-5 11 h-22 l-5 -11 v-24 Z"/>
+    <path class="glass" d="M32 63 h16 l2.5 5 v22 l-2.5 5 h-16 l-2.5 -5 v-22 Z"/><path class="arch" d="M35 88 v-12 a5 5 0 0 1 10 0 v12"/>
+    <path class="cap" d="M31 102 h18 l-4 6 h-10 Z"/><path class="tip" d="M40 108 l2.5 4 -2.5 4 -2.5 -4 Z"/></g>
+  <g class="rmd-lan l2"><line x1="73" y1="0" x2="73" y2="70"/><circle class="ring" cx="73" cy="72.5" r="2.4"/>
+    <path class="cap" d="M65 83 Q73 72 81 83 Z"/><path class="body" d="M65 84 h16 l3.6 8 v17 l-3.6 8 h-16 l-3.6 -8 v-17 Z"/>
+    <path class="glass" d="M67 89 h12 l2 4 v15 l-2 4 h-12 l-2 -4 v-15 Z"/><path class="arch" d="M69.5 107 v-8 a3.5 3.5 0 0 1 7 0 v8"/>
+    <path class="cap" d="M67 117 h12 l-3 4.5 h-6 Z"/><path class="tip" d="M73 121.5 l2 3 -2 3 -2 -3 Z"/></g>
 </svg>`;
 function rmdSegs(ms) {
   ms = Math.max(0, ms % 864e5);
@@ -1670,7 +1675,7 @@ function ramadanCard() {
     ? `<span class="rmd-lbl" id="rmdL">${s.label}</span><span class="rmd-clock big" id="rmdC">${countdown(s.ms)}</span>`
     : `<span class="rmd-big"><b id="rmdD">${s.days}</b><i>${dayWord(s.days)}</i></span><span class="rmd-segs" id="rmdC">${rmdSegs(s.ms)}</span>`;
   return `<div class="rmd ${s.mode}" id="rmd" data-mode="${s.mode}">
-    ${RMD_ART}
+    <i class="rmd-gem" aria-hidden="true"></i>${RMD_ART}
     <span class="rmd-txt">${head}</span>
     <span class="rmd-num">${big}</span>
     <span class="rmd-bar" aria-hidden="true"><i id="rmdP" style="width:${s.pct.toFixed(1)}%"></i></span>

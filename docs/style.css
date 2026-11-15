@@ -1871,3 +1871,42 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
 .rmd.in .rmd-num { align-items: flex-end; }
 .rmd.in .rmd-lbl { white-space: nowrap; }
 @media (min-width: 1024px) { .home .rmd.in .rmd-num { align-items: flex-start; } @container (max-width: 640px) { .home .rmd.in .rmd-num { align-items: flex-end; } .home .rmd-clock.big { font-size: 24px; } } }
+
+/* v51: Ramadan card in the app's own materials (green glass, gold line-work, mihrab arch) */
+.rmd { background: radial-gradient(70% 90% at 14% 30%, #d9b36c1c 0%, transparent 60%), linear-gradient(180deg, #ffffff10, #ffffff03 60%), #082423b3;
+  border: 0; box-shadow: inset 0 0 0 1px #d9b36c4d, inset 0 14px 22px -14px #d9b36c66, 0 10px 24px #0004; overflow: visible; }
+.rmd::before { inset: 5px; border-radius: 15px; border-color: #d9b36c2e; }
+.rmd::after { content: ""; position: absolute; inset: 0; z-index: -2; border-radius: inherit; opacity: .07; background: url("img/lattice.svg") center/56px repeat;
+  -webkit-mask-image: radial-gradient(circle at 15% 40%, #000, transparent 75%); mask-image: radial-gradient(circle at 15% 40%, #000, transparent 75%); }
+.rmd-gem { position: absolute; top: -5px; left: 50%; width: 9px; height: 9px; background: #f8dca0; transform: translateX(-50%) rotate(45deg); box-shadow: 0 0 10px #f8dca0aa; }
+.rmd-moon { fill: url(#rmdGold); filter: drop-shadow(0 0 5px #d9b36c80); }
+.rmd-spark { fill: #f8dca0; opacity: .8; animation: rmdTwinkle 3s ease-in-out infinite alternate; }
+.rmd-lan line { stroke: #d9b36c; stroke-width: 1.2; }
+.rmd-lan .ring { fill: none; stroke: #d9b36c; stroke-width: 1.4; }
+.rmd-lan .cap, .rmd-lan .tip { fill: url(#rmdGold); stroke: none; }
+.rmd-lan .body { fill: #d9b36c14; stroke: url(#rmdGold); stroke-width: 1.6; stroke-linejoin: round; filter: none; }
+.rmd-lan .glass { fill: url(#rmdLight); stroke: none; opacity: .5; filter: drop-shadow(0 0 6px #f8dca0aa); animation: rmdFlicker 2.6s ease-in-out infinite alternate; }
+.rmd-lan .arch { fill: none; stroke: #082423; stroke-width: 1.4; opacity: .55; }
+@keyframes rmdFlicker { from { opacity: .38; } to { opacity: .62; } }
+@media (prefers-reduced-motion: reduce) { .rmd-lan .glass, .rmd-spark { animation: none; } }
+.rmd-k, .rmd-lbl { color: var(--mist); }
+.rmd-segs span { background: linear-gradient(180deg, #ffffff0d, #ffffff02), #08242399; box-shadow: inset 0 0 0 1px #d9b36c33; border-radius: 10px 10px 7px 7px / 9px 9px 7px 7px; }
+.rmd-segs b { color: #fff6da; }
+.rmd-segs i { color: #d9b36c99; }
+.rmd-bar { height: 4px; background: #d9b36c1f; box-shadow: none; overflow: visible; }
+.rmd-bar i { background: var(--gold); box-shadow: 0 0 6px #d9b36c99; }
+@media (min-width: 1024px) {
+  .home .rmd { border-radius: 50% 50% 20px 20px / 46px 46px 20px 20px; padding-top: 30px; }
+  .home .rmd::before { border-radius: 50% 50% 16px 16px / 42px 42px 16px 16px; }
+  @container (max-width: 640px) {
+    .home .rmd { border-radius: 18px; padding-top: 10px; }
+    .home .rmd::before { border-radius: 14px; }
+    .home .rmd-gem { display: none; }
+  }
+}
+@media (max-width: 1023px) { .rmd-gem { display: none; } }
+@media (max-width: 1023px) {
+  .rmd-t { font-size: clamp(16px, 4.6vw, 20px); }
+  .rmd-segs span { min-width: 30px; }
+}
+@keyframes rmdFlicker { from { opacity: .5; } to { opacity: .78; } }
