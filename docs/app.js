@@ -114,7 +114,7 @@ function cur() { return P.q[P.i]; }
 async function playList(tracks, i = 0, startAt = 0) {
   if (!tracks.length) return;
   const t = tracks[i];
-  if (t.v) return openVideo(t);
+  if (t.v) return openVideo(t, tracks, i);
   P.q = tracks; P.i = i; P.resumeAt = startAt;
   await loadCur(true);
 }
@@ -422,25 +422,67 @@ async function saveOffline(t) {
 function toggleFav(t) {
   const k = S.fav.findIndex((f) => f.u === t.u);
   if (k >= 0) { S.fav.splice(k, 1); toast("اتشال من المفضلة"); }
-  else { S.fav.unshift({ t: t.t, s: t.s, d: t.d, u: t.u, img: t.img, live: t.live, v: t.v }); toast("اتضاف للمفضلة"); }
+  else { S.fav.unshift({ t: t.t, s: t.s, d: t.d, u: t.u, img: t.img, live: t.live, v: t.v, yt: t.yt }); toast("اتضاف للمفضلة"); }
   save(true);
 }
 
 /* ---- video ---- */
-function openVideo(t) {
+// mp4 files play in <video>; YouTube plays inside the page (youtube-nocookie, no related videos)
+const V = { list: [], i: 0 };
+function ytSrc(id) {
+  const o = encodeURIComponent(location.origin);
+  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&hl=ar&cc_lang_pref=ar&color=white&origin=${o}`;
+}
+function openVideo(t, list, i) {
   A.pause();
+  const vids = list ? list.filter((x) => x.v) : [t];
+  V.list = vids; V.i = Math.max(0, vids.indexOf(t));
   const v = $("#video");
+  if (!v.classList.contains("open")) {
+    v.classList.add("open"); v.setAttribute("aria-hidden", "false");
+    history.pushState({ video: 1 }, "");
+  }
+  showVideo();
+}
+function showVideo() {
+  const t = V.list[V.i];
+  if (!t) return;
+  const v = $("#video"), el = $("#vEl"), box = $("#vYt");
   $("#vTitle").textContent = t.t;
-  $("#vEl").src = t.u;
-  v.classList.add("open"); v.setAttribute("aria-hidden", "false");
-  $("#vEl").play().catch(() => {});
-  history.pushState({ video: 1 }, "");
+  $("#vSub").textContent = t.yt ? [t.s, t.ch].filter(Boolean).filter((x, k, a) => a.indexOf(x) === k).join(" · ") : (t.s || "");
+  v.classList.toggle("yt", !!t.yt);
+  if (t.yt) {
+    el.pause(); el.removeAttribute("src"); el.load(); el.hidden = true;
+    box.hidden = false;
+    $("#vFrame").innerHTML = `<iframe src="${ytSrc(t.yt)}" title="${esc(t.t)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+    S.ytSeen ||= {};
+    S.ytSeen[t.yt] = Date.now();
+    const ids = Object.keys(S.ytSeen);
+    if (ids.length > 600) ids.sort((a, b) => S.ytSeen[a] - S.ytSeen[b]).slice(0, ids.length - 600).forEach((k) => delete S.ytSeen[k]);
+    save(true);
+    $$(`.vcard[data-yt="${t.yt}"], .epcard[data-yt="${t.yt}"]`).forEach((c) => c.classList.add("seen"));
+  } else {
+    $("#vFrame").innerHTML = ""; box.hidden = true; el.hidden = false;
+    el.src = t.u; el.play().catch(() => {});
+  }
+  const many = V.list.length > 1;
+  $("#vPrev").hidden = !many || V.i === 0;
+  $("#vNext").hidden = !many || V.i >= V.list.length - 1;
+  const nx = V.list[V.i + 1];
+  $("#vNextT").textContent = nx ? nx.t : "";
+  $("#vCount").textContent = many ? `${n2a(V.i + 1)} من ${n2a(V.list.length)}` : "";
+}
+function stepVideo(d) {
+  const j = V.i + d;
+  if (j < 0 || j >= V.list.length) return;
+  V.i = j; showVideo();
 }
 function closeVideo(fromPop) {
   const v = $("#video");
   if (!v.classList.contains("open")) return;
   $("#vEl").pause(); $("#vEl").removeAttribute("src"); $("#vEl").load();
-  v.classList.remove("open"); v.setAttribute("aria-hidden", "true");
+  $("#vFrame").innerHTML = "";
+  v.classList.remove("open", "yt"); v.setAttribute("aria-hidden", "true");
   if (!fromPop && history.state?.video) history.back();
 }
 
@@ -448,10 +490,12 @@ function closeVideo(fromPop) {
    ROUTER
    ====================================================================== */
 const TILES = [
+  { t: "دولة التلاوة", m: "الموسمين كاملين بالصوت والصورة", ic: "tv", go: "#/tv", cls: "dawla" },
   { t: "الشيخ الشعراوي", m: "خواطر التفسير صوتاً وصورة", ic: "mic", go: "#/lib/1", p: 999 },
   { t: "المصحف والتفسير", m: "604 صفحة بروايتي حفص وورش", ic: "book", go: "#/mushaf" },
   { t: "الشيخ كشك", m: "383 خطبة في 10 أقسام", ic: "mic", go: "#/r/950", p: 950 },
   { t: "المبتهلون", m: "14 من أعلام الابتهال", ic: "star", go: "#/quran/m", p: 951 },
+  { t: "المكتبة المرئية", m: "تلاوات وخواطر وابتهالات نادرة", ic: "video", go: "#/watch" },
   { t: "التفسير وعلومه", m: "الطبري وابن كثير · 1155 درساً", ic: "tafsir", go: "#/lib/2" },
   { t: "الحديث الشريف", m: "شروح صوتية كاملة · 681 مادة", ic: "quote", go: "#/lib/3" },
   { t: "السنة والشمائل", m: "الشمائل والطب النبوي", ic: "lantern", go: "#/lib/4" },
@@ -508,7 +552,7 @@ async function route() {
   LISTS = {}; listN = 0;
   setTab(parts[0] || "");
   const R = {
-    "": home, quran: quranGallery, r: reciter, mushaf, index: mushafIndex, radio, lib, quiz, saved, search, prayer,
+    "": home, quran: quranGallery, r: reciter, mushaf, index: mushafIndex, radio, lib, quiz, saved, search, prayer, tv: dawla, watch,
   }[parts[0] || ""] || home;
   try {
     const html = await R(parts.slice(1), new URLSearchParams(qs || ""));
@@ -574,7 +618,7 @@ async function home() {
     cont.push(card({ k: "install", act: "install", btn: "dl", cap: "على موبايلك", t: "ثبّت التطبيق", s: "أيقونة على الشاشة الرئيسية",
       art: `<img src="icons/icon-192.png?v=2" alt="">`, extra: `<span class="cont-x" data-act="installHide" role="button" aria-label="إخفاء">${icSm("x", 13)}</span>` }));
   }
-  const tile = (x) => `<a class="tile ${x.p ? "has-p" : ""}" href="${x.go}">${x.p && portrait(x.p) ? `<span class="tile-bg" style="background-image:url('${portrait(x.p)}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`;
+  const tile = (x) => `<a class="tile ${x.p ? "has-p" : ""} ${x.cls || ""}" href="${x.go}">${x.cls === "dawla" ? DAWLA_ART : ""}${x.p && portrait(x.p) ? `<span class="tile-bg" style="background-image:url('${portrait(x.p)}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`;
   const faces = RECITERS.filter((r) => r[5] && (r[2] === "q" || r[2] === "k")).slice(0, 72).map((r) => r[0]);
   return `<div class="home">
   <div class="home-top">
@@ -726,9 +770,12 @@ async function reciter(parts) {
 
   // one queue per recording so the play buttons on the cards start it straight away
   const playable = (rec) => recTracks(d, rec, img);
+  const yk = ytKeyOf(d.group, id);
+  const ytRows = (await ytLists())[yk] || [];
+  if (ytRows.length) stats.push([n2a(ytRows.length), "مرئي"]);
   let body = "";
   if (d.recs.length === 1 && !d.videos.length) {
-    return pageWithSide(heroHTML({ id, name: d.name, facts, stats }), d.bio, trackList(playable(d.recs[0]), d.recs[0], word));
+    return pageWithSide(heroHTML({ id, name: d.name, facts, stats }), d.bio, ytSection(yk, ytRows, 8) + trackList(playable(d.recs[0]), d.recs[0], word));
   }
   const cardFor = (rec) => {
     const kind = d.group === "q" ? kindOf(rec) : "rare";
@@ -766,6 +813,7 @@ async function reciter(parts) {
     body += `<section><div class="sec-h"><h2>الفيديوهات</h2>${vt.length > 6 ? `<a href="#/r/${id}/v">عرض الكل · ${n2a(vt.length)}</a>` : ""}</div>
       <div class="vrow">${vt.slice(0, 12).map((t, i) => videoCard(t, VL, i, { thumb: t.th })).join("")}</div></section>`;
   }
+  if (ytRows.length) body = ytSection(yk, ytRows) + body;
   after(() => {
     const f = $("#riwF");
     if (!f) return;
@@ -856,6 +904,150 @@ function reciterVideos(d) {
   });
   return `${vt.length > 8 ? `<label class="search">${ic("search")}<input id="vq" type="search" placeholder="ابحث في الفيديوهات" autocomplete="off"></label>` : ""}
     <div class="vgrid">${vt.map((t, i) => videoCard(t, L, i, { thumb: t.th })).join("")}</div>`;
+}
+
+/* ---------------- YOUTUBE: دولة التلاوة + المكتبة المرئية ---------------- */
+const ytThumb = (id, q = "mqdefault") => `https://i.ytimg.com/vi/${id}/${q}.jpg`;
+function ytTrack(id, t, s, dur, extra = {}) {
+  return { t, s, d: "فيديو", u: `https://www.youtube.com/watch?v=${id}`, yt: id, v: true, dur: dur ? fmtTime(dur) : "", th: ytThumb(id), ...extra };
+}
+const ytSeen = (id) => !!(S.ytSeen && S.ytSeen[id]);
+const ytKeyOf = (group, id) => `${group}${id}`;
+function ytWho(key) {
+  if (key === "s1") return { name: "الشيخ محمد متولي الشعراوي", pid: 999, href: "#/lib/1" };
+  const id = +key.slice(1);
+  const r = RECITERS.find((x) => x[0] === id);
+  return { name: r ? r[1] : "", pid: id, href: `#/r/${id}` };
+}
+async function ytLists() {
+  try { return (await getJSON("data/yt/sheikhs.json")).lists || {}; } catch { return {}; }
+}
+function ytCard(t, L, i, opts = {}) {
+  return `<button class="vcard yt ${ytSeen(t.yt) ? "seen" : ""}" data-play="${L}:${i}" data-yt="${t.yt}">
+    <span class="vthumb"><img src="${esc(t.th)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+      <span class="vplay">${icSm("play", 20)}</span>${t.dur ? `<span class="vdur">${esc(t.dur)}</span>` : ""}${ytSeen(t.yt) ? `<span class="vseen">${icSm("check", 12)} شاهدتها</span>` : ""}</span>
+    <span class="vt">${esc(t.t)}</span>${opts.sub && t.ch ? `<span class="vs">${esc(t.ch)}</span>` : ""}</button>`;
+}
+function ytRowsToTracks(rows, who) {
+  return rows.map((r) => ytTrack(r[0], r[1], who.name, r[2], { ch: r[4], img: portrait(who.pid) }));
+}
+function ytSection(key, rows, limit = 12) {
+  if (!rows || !rows.length) return "";
+  const who = ytWho(key);
+  const vt = ytRowsToTracks(rows, who);
+  const L = reg(vt);
+  return `<section class="ytsec"><div class="sec-h"><h2>مرئيات مختارة</h2>${vt.length > limit ? `<a href="#/watch/${key}">عرض الكل · ${n2a(vt.length)}</a>` : `<span class="count">${n2a(vt.length)}</span>`}</div>
+    <div class="vrow">${vt.slice(0, limit).map((t, i) => ytCard(t, L, i, { sub: true })).join("")}</div></section>`;
+}
+
+/* دولة التلاوة */
+const DAWLA_ART = `<span class="dawla-art" aria-hidden="true"><svg viewBox="0 0 200 120"><g fill="none" stroke="currentColor" stroke-width="1.4">
+  <path d="M100 8 L112 20 L100 32 L88 20 Z"/><path d="M60 118 V70 a40 40 0 0 1 80 0 V118"/><path d="M72 118 V74 a28 28 0 0 1 56 0 V118"/>
+  <path d="M20 118 V88 a18 18 0 0 1 36 0 V118 M144 118 V88 a18 18 0 0 1 36 0 V118"/><circle cx="100" cy="20" r="3"/></g></svg></span>`;
+async function dawla(parts) {
+  setTop("دولة التلاوة");
+  const d = await getJSON("data/yt/dawla.json");
+  const seasons = d.seasons || [];
+  if (!seasons.length) return `<div class="empty"><b>الحلقات لسه بتتجهز</b>جرّب كمان شوية.</div>`;
+  const sn = +parts[0] || seasons[0].n;
+  const season = seasons.find((s) => s.n === sn) || seasons[0];
+  const nowS = seasons[0];
+  const latest = nowS.eps[nowS.eps.length - 1];
+  const all = seasons.flatMap((s) => s.eps);
+  const hours = Math.round(all.reduce((a, e) => a + (e.d || 0), 0) / 3600);
+  const toTracks = (s) => s.eps.map((e) => ytTrack(e.id, `${s.title} · ${e.label}`, e.sub || "دولة التلاوة", e.d, { ep: e, img: ytThumb(e.id) }));
+  const nowL = reg(toTracks(nowS));
+  const L = season === nowS ? nowL : reg(toTracks(season));
+  const tracks = LISTS[L];
+  // first episode of the season the viewer hasn't watched yet
+  const nextUp = nowS.eps.findIndex((e) => !ytSeen(e.id));
+  const resume = nextUp > 0 && nextUp < nowS.eps.length - 1 ? nextUp : -1;
+  const cards = tracks.map((t, i) => {
+    const e = t.ep, final = e.n === 0, seen = ytSeen(e.id);
+    return `<button class="epcard ${seen ? "seen" : ""} ${final ? "final" : ""}" data-play="${L}:${i}" data-yt="${e.id}">
+      <span class="ep-thumb"><img src="${esc(t.th)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        <span class="ep-no">${final ? icSm("star", 16) : `<small>حلقة</small>${n2a(e.n)}`}</span>
+        <span class="vplay">${icSm("play", 20)}</span>${t.dur ? `<span class="vdur">${esc(t.dur)}</span>` : ""}
+        ${seen ? `<span class="vseen">${icSm("check", 12)} شاهدتها</span>` : ""}</span>
+      <span class="ep-txt"><b>${esc(e.label)}</b>${e.sub ? `<small>${esc(e.sub)}</small>` : ""}</span></button>`;
+  }).join("");
+  return `<section class="dhero">
+      <img class="dhero-bg" src="${ytThumb(latest.id, "hqdefault")}" alt="" decoding="async">
+      <span class="pl-corner tl"></span><span class="pl-corner tr"></span><span class="pl-corner bl"></span><span class="pl-corner br"></span>
+      <div class="dhero-in">
+        <span class="dh-k">${icSm("star", 12)} ${esc(nowS.title)} يُعرض الآن</span>
+        <h2 class="dh-t">دولة التلاوة</h2>
+        <p class="dh-s">${esc(d.sub || "")}</p>
+        <div class="dh-stats"><span><b>${n2a(seasons.length)}</b>${seasons.length === 1 ? "موسم" : "مواسم"}</span><span><b>${n2a(all.length)}</b>حلقة</span><span><b>${n2a(hours)}</b>ساعة</span></div>
+        <div class="dh-btns">
+          <button class="btn" data-play="${nowL}:${nowS.eps.length - 1}">${ic("play")}أحدث حلقة · ${esc(latest.label)}</button>
+          ${resume >= 0 ? `<button class="btn ghost" data-play="${nowL}:${resume}">كمّل من ${esc(nowS.eps[resume].label)}</button>` : ""}
+        </div>
+      </div>
+      <button class="dh-feature" data-play="${nowL}:${nowS.eps.length - 1}" aria-label="شاهد ${esc(latest.label)}">
+        <img src="${ytThumb(latest.id, "hqdefault")}" alt="" decoding="async"><span class="vplay">${icSm("play", 26)}</span>
+        <span class="dh-feat-cap"><small>${esc(nowS.title)} · أحدث حلقة</small><b>${esc(latest.label)}</b></span></button>
+    </section>
+    ${seasons.length > 1 ? `<div class="chips season-chips" role="group" aria-label="المواسم">${seasons.map((s) => `<a class="chip" href="#/tv/${s.n}" aria-pressed="${s === season}">${esc(s.title)} · ${n2a(s.eps.length)} ${s.eps.length > 10 ? "حلقة" : "حلقات"}</a>`).join("")}</div>` : ""}
+    <div class="sec-h"><h2>${esc(season.title)}</h2><span class="count">${esc(season.years || "")}</span></div>
+    <div class="epgrid">${cards}</div>
+    <p class="yt-src">${icSm("video", 14)} الحلقات من القناة الرسمية للبرنامج على يوتيوب · ${esc(d.by || "")}</p>`;
+}
+
+/* المكتبة المرئية: دولة التلاوة + مختارات المشايخ */
+const WATCH_GROUPS = [
+  ["أعلام التلاوة المصرية", (k) => k[0] === "q"],
+  ["الشيخ محمد متولي الشعراوي", (k) => k === "s1"],
+  ["الشيخ عبد الحميد كشك", (k) => k[0] === "k"],
+  ["المبتهلون", (k) => k[0] === "m"],
+];
+async function watch(parts) {
+  const lists = await ytLists();
+  if (parts[0]) return watchOne(parts[0], lists);
+  setTop("المكتبة المرئية");
+  let dawlaCard = "";
+  try {
+    const d = await getJSON("data/yt/dawla.json");
+    const s = d.seasons[0], e = s.eps[s.eps.length - 1];
+    const n = d.seasons.reduce((a, x) => a + x.eps.length, 0);
+    dawlaCard = `<a class="wfeature" href="#/tv"><img src="${ytThumb(e.id, "hqdefault")}" alt="" decoding="async">
+      <span class="wf-in"><span class="dh-k">${icSm("star", 12)} ${esc(s.title)} يُعرض الآن</span><b>دولة التلاوة</b><small>الموسمين كاملين · ${n2a(n)} حلقة</small>
+      <span class="feature-go">شاهد الحلقات ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></span></a>`;
+  } catch {}
+  const keys = Object.keys(lists).filter((k) => lists[k].length);
+  const order = (k) => { const i = RECITERS.findIndex((r) => r[0] === +k.slice(1)); return i < 0 ? 999 : i; };
+  let body = "", total = 0;
+  for (const [title, pick] of WATCH_GROUPS) {
+    const ks = keys.filter(pick).sort((a, b) => order(a) - order(b));
+    if (!ks.length) continue;
+    body += `<h2 class="wgroup">${esc(title)}</h2>`;
+    for (const k of ks) {
+      const who = ytWho(k), vt = ytRowsToTracks(lists[k], who), L = reg(vt);
+      total += vt.length;
+      body += `<section class="wrow"><div class="wrow-h"><a href="${who.href}">${avatar(who.pid, who.name)}<b>${esc(who.name)}</b></a>
+        <a class="wrow-all" href="#/watch/${k}">عرض الكل · ${n2a(vt.length)}</a></div>
+        <div class="vrow">${vt.slice(0, 10).map((t, i) => ytCard(t, L, i)).join("")}</div></section>`;
+    }
+  }
+  return `${dawlaCard}<p class="lead">مختارات بالصوت والصورة لأعلام التلاوة المصرية والشعراوي وكشك والمبتهلين${total ? ` · ${n2a(total)} فيديو` : ""}، بتشتغل هنا على طول من غير ما تفتح يوتيوب.</p>${body}
+    <p class="yt-src">${icSm("video", 14)} الفيديوهات من يوتيوب، ومختارة من الأكتر مشاهدة لكل شيخ.</p>`;
+}
+function watchOne(key, lists) {
+  const who = ytWho(key);
+  setTop(who.name ? `مرئيات ${who.name}` : "المكتبة المرئية");
+  const rows = lists[key] || [];
+  const vt = ytRowsToTracks(rows, who), L = reg(vt);
+  after(() => {
+    const inp = $("#vq");
+    inp?.addEventListener("input", () => {
+      const v = norm(inp.value);
+      $$(".vgrid .vcard").forEach((c) => { c.hidden = v && !norm(c.textContent).includes(v); });
+    });
+  });
+  return `<section class="rhead k-mujawwad">${avatar(who.pid, who.name)}<div><span class="kind">المكتبة المرئية</span><h2>${esc(who.name)}</h2>
+      <p>${n2a(vt.length)} فيديو · <a href="${who.href}">صفحة الشيخ</a></p></div></section>
+    ${vt.length > 8 ? `<label class="search">${ic("search")}<input id="vq" type="search" placeholder="ابحث في الفيديوهات" autocomplete="off"></label>` : ""}
+    <div class="vgrid">${vt.map((t, i) => ytCard(t, L, i, { sub: true })).join("")}</div>`;
 }
 
 /* ---------------- RADIO ---------------- */
@@ -1033,6 +1225,7 @@ async function lib(parts) {
         <div class="vgrid">${vt.map((t, n) => videoCard(t, L, n, { thumb: unique ? thumbOf(t.id) : "", label: (t.t.match(/الآيا?ت?\s*([\d–\-]+)/) || [])[1] || n2a(n + 1) })).join("")}</div>`;
     }
   }
+  if (node === root && sec === "1") body = ytSection("s1", (await ytLists()).s1) + body;
   if (node === root) return pageWithSide(head, root.bio || null, body);
   return head + body;
 }
@@ -2191,6 +2384,8 @@ document.addEventListener("click", async (e) => {
     case "fwd": seekBy(15); break;
     case "rew": seekBy(-15); break;
     case "closeSheet": closeSheet(); break;
+    case "vPrev": stepVideo(-1); break;
+    case "vNext": stepVideo(1); break;
     case "stopPlayer": closePlayer(); break;
     case "fav": if (t) { toggleFav(t); renderSheet(true); } break;
     case "rate": P.rate = RATES[(RATES.indexOf(P.rate) + 1) % RATES.length]; A.playbackRate = P.rate; renderSheet(true); break;

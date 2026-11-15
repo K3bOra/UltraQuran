@@ -1,0 +1,42 @@
+name: Update Dawlat El Telawa episodes
+
+# كل 3 ساعات بيدوّر على حلقات «دولة التلاوة» الجديدة في القناة الرسمية ويضيفها للموقع والتطبيق.
+# من Run workflow تقدر كمان تعيد تجميع مرئيات المشايخ.
+on:
+  schedule:
+    - cron: "23 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      sheikhs:
+        description: "Rebuild the sheikhs' video picks too"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: youtube-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: New episodes
+        run: python3 tools/youtube/build_youtube.py dawla
+      - name: Sheikhs' video picks
+        if: ${{ inputs.sheikhs }}
+        run: python3 tools/youtube/build_youtube.py sheikhs
+      - name: Commit if anything changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data/yt
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit -m "دولة التلاوة: تحديث تلقائي للحلقات"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done

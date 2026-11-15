@@ -1,7 +1,7 @@
 /* Ultra Quran service worker: app shell offline, data refreshed in the background,
    Mushaf pages and fonts cached after first view. Audio is not intercepted
    (offline audio is read from the "uq-audio" cache by the page itself). */
-const VERSION = "uq-shell-52";
+const VERSION = "uq-shell-53";
 const SHELL = [
   "./", "index.html", "style.css?v=47", "app.js?v=47", "prayer-calc.js?v=47", "style.css", "app.js", "manifest.webmanifest",
   "img/lattice.svg", "img/bg.webp", "img/bg-m.webp", "fonts/Cairo-SemiBold.ttf", "img/star.svg", "icons/icon-192.png?v=2", "icons/icon-512.png?v=2",
@@ -52,6 +52,8 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET" || req.headers.has("range")) return;
   const url = new URL(req.url);
   if (url.origin === location.origin) {
+    // دولة التلاوة: new episodes should show up right away when online
+    if (url.pathname.includes("/data/yt/")) return e.respondWith(networkFirst(req, "uq-data"));
     if (url.pathname.includes("/data/")) return e.respondWith(staleWhileRevalidate(req, "uq-data"));
     if (url.pathname.includes("/img/p/")) return e.respondWith(cacheFirst(req, "uq-img"));
     if (req.mode === "navigate") {

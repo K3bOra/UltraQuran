@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" href="fonts/Cairo-SemiBold.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Aref+Ruqaa:wght@700&family=Cairo:wght@400;700&display=swap">
-<link rel="stylesheet" href="style.css?v=52">
+<link rel="stylesheet" href="style.css?v=53">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -74,6 +74,7 @@
   <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2.8" y="6.2" width="18.4" height="13" rx="3"/><path d="M8.5 2.8 12 6.2l3.5-3.4M10.4 10.2v5l4.3-2.5z"/></symbol>
   <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10.5 5-3v9l-5-3"/></symbol>
   <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 6h14M5 10h14M5 14h14M8 18h8"/></symbol>
   <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4M8 7.5 12 3.5l4 4M6 11v8.5h12V11"/></symbol>
@@ -107,8 +108,15 @@
 <section class="sheet" id="sheet" aria-label="المشغّل" aria-hidden="true"></section>
 
 <div class="video" id="video" aria-hidden="true">
-  <div class="vbar"><button id="vClose" aria-label="إغلاق الفيديو"><svg class="icon"><use href="#i-x"/></svg></button><b id="vTitle"></b></div>
+  <div class="vbar"><button id="vClose" aria-label="إغلاق الفيديو"><svg class="icon"><use href="#i-x"/></svg></button><span class="vbar-t"><b id="vTitle"></b><small id="vSub"></small></span><span class="vcount" id="vCount"></span></div>
   <video id="vEl" controls playsinline preload="metadata"></video>
+  <div class="vyt" id="vYt" hidden>
+    <div class="vyt-frame" id="vFrame"></div>
+    <div class="vyt-nav">
+      <button class="vnav prev" id="vPrev" data-act="vPrev" hidden><svg class="icon"><use href="#i-next"/></svg>السابق</button>
+      <button class="vnav next" id="vNext" data-act="vNext" hidden><span><small>التالي</small><b id="vNextT"></b></span><svg class="icon"><use href="#i-prev"/></svg></button>
+    </div>
+  </div>
 </div>
 
 <nav class="tabs" id="tabs" aria-label="التنقل الرئيسي">
@@ -118,6 +126,8 @@
   <a href="#/quran"><svg class="icon"><use href="#i-people"/></svg>القراء</a>
   <a href="#/prayer"><svg class="icon"><use href="#i-dome"/></svg>الصلاة</a>
   <a class="rail-only rail-live" href="#" role="button" data-act="playCairo" aria-label="تشغيل إذاعة القرآن الكريم من القاهرة"><span class="rl-ic"><svg class="icon"><use href="#i-radio"/></svg></span><span class="rl-t">إذاعة القرآن · مصر<small><i class="rl-dot"></i>بث مباشر من القاهرة</small></span><i class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></i></a>
+  <a class="rail-only rail-dawla" href="#/tv"><svg class="icon"><use href="#i-tv"/></svg>دولة التلاوة<i class="rd-new">جديد</i></a>
+  <a class="rail-only" href="#/watch"><svg class="icon"><use href="#i-video"/></svg>المكتبة المرئية</a>
   <a class="rail-only" href="#/radio"><svg class="icon"><use href="#i-radio"/></svg>الإذاعات</a>
   <a class="rail-only" href="#/lib/1"><svg class="icon"><use href="#i-mic"/></svg>الشيخ الشعراوي</a>
   <a class="rail-only" href="#/lib/8"><svg class="icon"><use href="#i-beads"/></svg>الأذكار والرقية</a>
@@ -128,7 +138,7 @@
 </nav>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="prayer-calc.js?v=52" defer></script>
-<script src="app.js?v=52" defer></script>
+<script src="prayer-calc.js?v=53" defer></script>
+<script src="app.js?v=53" defer></script>
 </body>
 </html>

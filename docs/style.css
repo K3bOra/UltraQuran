@@ -1910,3 +1910,140 @@ body.immersive .follow-bar { bottom: calc(env(safe-area-inset-bottom) + 16px); }
   .rmd-segs span { min-width: 30px; }
 }
 @keyframes rmdFlicker { from { opacity: .5; } to { opacity: .78; } }
+
+/* =====================================================================
+   v53: دولة التلاوة + المكتبة المرئية + مشغّل يوتيوب جوه الموقع
+   ===================================================================== */
+/* video overlay (YouTube) */
+.video.yt { background: radial-gradient(120% 70% at 50% 0%, #15463f 0%, #082423 55%, #031210 100%); }
+.video .vbar-t { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.35; }
+.video .vbar-t b { font: 600 15px/1.4 var(--kufi); color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.video .vbar-t small { font-size: 12px; color: var(--mist); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.video .vbar-t small:empty { display: none; }
+.video .vcount { flex: none; font-size: 12px; color: var(--gold); padding: 4px 10px; border-radius: 99px; box-shadow: inset 0 0 0 1px #d9b36c55; }
+.video .vcount:empty { display: none; }
+.video.yt .vbar { padding: 10px 14px; border-bottom: 1px solid #d9b36c26; background: linear-gradient(180deg, #0824239e, transparent); }
+.video.yt .vbar #vClose { border-radius: 50%; background: #ffffff0f; box-shadow: inset 0 0 0 1px #d9b36c44; color: #f8dca0; }
+.vyt { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 12px 12px calc(16px + env(safe-area-inset-bottom)); }
+.vyt-frame { position: relative; width: min(100%, 1280px, calc((100dvh - 190px) * 16 / 9)); aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; background: #000;
+  box-shadow: 0 0 0 1px #d9b36c66, 0 0 0 6px #d9b36c12, 0 30px 70px #000c; }
+.vyt-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.vyt-nav { width: min(100%, 1280px, calc((100dvh - 190px) * 16 / 9)); display: flex; justify-content: space-between; gap: 10px; }
+.vnav { display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 6px 16px; border-radius: 99px; color: var(--paper); font-size: 14px;
+  background: linear-gradient(180deg, #ffffff12, #ffffff04), #0824239e; box-shadow: inset 0 0 0 1px #d9b36c4d; max-width: 70%; }
+.vnav[hidden] { display: none; }
+.vnav .icon { width: 18px; height: 18px; color: var(--gold); flex: none; }
+.vnav.next { margin-inline-start: auto; text-align: start; }
+.vnav.next span { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.vnav.next small { font-size: 11px; color: var(--gold); }
+.vnav.next b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vnav:hover { box-shadow: inset 0 0 0 1px #d9b36caa; }
+@media (max-width: 720px) and (orientation: portrait) { .vyt { justify-content: flex-start; padding-top: 18vh; } .vyt-frame { border-radius: 12px; } }
+
+/* cards */
+.vcard .vs { font-size: 11.5px; color: var(--mist); margin-top: -4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vcard .vt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; font-size: 13.5px; }
+.vseen { position: absolute; z-index: 1; top: 7px; inset-inline-end: 7px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px;
+  font-size: 11px; color: #082423; background: #f0cf86e6; }
+.vseen .icon { stroke-width: 3; }
+.vcard.seen .vthumb img, .epcard.seen .ep-thumb img { filter: saturate(.7) brightness(.8); }
+.vcard.yt .vthumb { box-shadow: 0 0 0 1px #d9b36c33, 0 8px 18px #0005; }
+.vcard.yt:hover .vthumb { box-shadow: 0 0 0 1px #d9b36c88, 0 10px 22px #0006; }
+
+/* دولة التلاوة hero */
+.dhero { position: relative; isolation: isolate; overflow: hidden; margin-top: 14px; padding: 22px 18px; border-radius: 26px;
+  background: radial-gradient(120% 90% at 85% 0%, #2a6b5e 0%, #154a43 40%, #0c2e2b 100%); border: 1px solid #d9b36c59;
+  box-shadow: inset 0 1px 0 #ffffff1f, 0 20px 40px #0005; display: grid; gap: 18px; }
+.dhero::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .08; background: url("img/lattice.svg") center/64px repeat; }
+.dhero::after { content: ""; position: absolute; inset: 7px; z-index: -1; border-radius: 20px; border: 1px solid #d9b36c26; pointer-events: none; }
+.dhero-bg { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .16; filter: blur(14px) saturate(.6); transform: scale(1.15); }
+.dhero-in { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.dh-k { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 99px; font-size: 12.5px; color: #082423;
+  background: linear-gradient(170deg, #fff1c9, #f0cf86 50%, #c99a4e); box-shadow: 0 6px 16px #d9b36c44; }
+.dh-k .icon { fill: currentColor; }
+.dh-t { margin: 4px 0 0; font: 400 46px/1.25 var(--quran); background: linear-gradient(90deg, #fff4d6, #f8dca0 45%, #d9b36c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.dh-s { margin: 0; max-width: 46ch; color: #cfe0d8; font-size: 14px; line-height: 1.7; }
+.dh-stats { display: flex; gap: 8px; margin: 6px 0 4px; }
+.dh-stats span { display: flex; flex-direction: column; align-items: center; min-width: 74px; padding: 8px 10px 7px; border-radius: 50% 50% 14px 14px / 22px 22px 14px 14px;
+  background: linear-gradient(180deg, #ffffff0f, #ffffff03 60%), #082423b3; box-shadow: inset 0 0 0 1px #d9b36c33; font-size: 12px; color: var(--mist); }
+.dh-stats b { font: 700 21px/1.2 var(--ui); color: #fff6da; }
+.dh-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.dh-feature { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; background: #000;
+  box-shadow: 0 0 0 1px #d9b36c66, 0 0 0 6px #d9b36c12, 0 18px 40px #0007; }
+.dh-feature img { width: 100%; height: 100%; object-fit: cover; }
+.dh-feature::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, #000c); }
+.dh-feature .vplay { width: 62px; height: 62px; background: linear-gradient(170deg, #fff1c9, #f0cf86 50%, #c99a4e); color: #082423; box-shadow: 0 0 0 8px #f0cf8633, 0 10px 30px #0008; }
+.dh-feat-cap { position: absolute; z-index: 1; inset-inline: 16px; bottom: 12px; display: flex; flex-direction: column; text-align: start; line-height: 1.35; }
+.dh-feat-cap small { font-size: 12px; color: #f0cf86; }
+.dh-feat-cap b { font: 600 19px/1.4 var(--kufi); color: #fff; }
+@media (min-width: 1024px) {
+  .dhero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: center; padding: 34px 36px; gap: 34px; margin-top: 24px; }
+  .dh-t { font-size: 64px; }
+  .dh-s { font-size: 15.5px; }
+}
+.season-chips { margin-top: 18px; }
+
+/* episodes */
+.epgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; margin-top: 12px; }
+@media (min-width: 700px) { .epgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .epgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 18px; } }
+.epcard { display: flex; flex-direction: column; gap: 9px; text-align: start; }
+.ep-thumb { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: linear-gradient(140deg, #1d5a6b, #082423);
+  box-shadow: 0 0 0 1px #d9b36c33, 0 8px 18px #0005; transition: transform .2s ease, box-shadow .2s ease; }
+.ep-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ep-thumb::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, #000b); }
+.epcard:hover .ep-thumb { transform: translateY(-3px); box-shadow: 0 0 0 1px #d9b36c99, 0 14px 26px #0007; }
+.ep-no { position: absolute; z-index: 1; top: 8px; inset-inline-start: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 42px; height: 46px;
+  padding: 4px 6px 3px; border-radius: 50% 50% 10px 10px / 16px 16px 10px 10px; font: 700 18px/1 var(--ui); color: #082423;
+  background: linear-gradient(170deg, #fff1c9, #f0cf86 50%, #c99a4e); box-shadow: 0 6px 14px #0006, inset 0 1px 0 #fff8; }
+.ep-no small { font: 600 9px/1.2 var(--ui); opacity: .8; }
+.ep-no .icon { fill: currentColor; }
+.epcard .vplay { opacity: 0; transform: scale(.85); transition: .2s; }
+.epcard:hover .vplay, .epcard:focus-visible .vplay { opacity: 1; transform: none; }
+@media (hover: none) { .epcard .vplay { opacity: .92; transform: scale(.85); } }
+.ep-txt { display: flex; flex-direction: column; gap: 2px; line-height: 1.4; }
+.ep-txt b { font: 600 15px/1.4 var(--kufi); color: var(--paper); }
+.ep-txt small { font-size: 12.5px; color: var(--mist); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.epcard.final .ep-thumb { box-shadow: 0 0 0 1px #f0cf86, 0 0 0 5px #f0cf8622, 0 10px 24px #0006; }
+.epcard.final .ep-txt b { color: #f8dca0; }
+.yt-src { display: flex; align-items: center; gap: 6px; justify-content: center; margin: 26px 0 8px; font-size: 12.5px; color: #a9c2b6aa; text-align: center; }
+
+/* المكتبة المرئية */
+.wfeature { position: relative; isolation: isolate; display: block; overflow: hidden; margin-top: 14px; border-radius: 24px; min-height: 190px;
+  border: 1px solid #d9b36c59; box-shadow: 0 18px 36px #0005; background: #0c2e2b; }
+.wfeature img { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; }
+.wfeature::before { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(270deg, #0c2e2bf2 0%, #0c2e2bcc 45%, #0c2e2b33 100%); }
+.wf-in { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 22px 20px; max-width: 520px; }
+.wf-in b { font: 400 42px/1.25 var(--quran); background: linear-gradient(90deg, #fff4d6, #f8dca0 45%, #d9b36c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.wf-in small { color: #cfe0d8; font-size: 13.5px; }
+.wf-in .feature-go { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 99px; color: #082423; font-weight: 600; font-size: 14px;
+  background: linear-gradient(170deg, #fff1c9, #f0cf86 50%, #c99a4e); }
+.wgroup { margin: 30px 0 4px; font: 600 21px/1.4 var(--kufi); color: var(--parchment); display: flex; align-items: center; gap: 10px; }
+.wgroup::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, #d9b36c55, transparent); }
+[dir="rtl"] .wgroup::after { background: linear-gradient(270deg, #d9b36c55, transparent); }
+.wrow { margin-top: 16px; }
+.wrow-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.wrow-h > a:first-child { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.wrow-h .avatar { width: 38px; height: 38px; font-size: 15px; flex: none; box-shadow: 0 0 0 1px #d9b36c66; }
+.wrow-h b { font: 600 16px/1.4 var(--kufi); color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wrow-all { flex: none; font-size: 13px; color: var(--gold); }
+@media (min-width: 1024px) {
+  .vrow .vcard.yt { flex-basis: 260px; }
+  .wfeature { min-height: 260px; }
+  .wf-in { padding: 36px 40px; }
+  .wf-in b { font-size: 58px; }
+}
+
+/* home tile + rail link */
+.tile.dawla { position: relative; isolation: isolate; overflow: hidden; border-color: #d9b36c66;
+  background: radial-gradient(120% 120% at 0% 0%, #d9b36c2e, transparent 55%), linear-gradient(150deg, #1d5a52, #0c2e2b 75%); }
+.tile.dawla .ic { background: linear-gradient(170deg, #fff1c9, #f0cf86 50%, #c99a4e); color: #082423; }
+.tile.dawla b { color: #f8dca0; }
+.dawla-art { position: absolute; z-index: -1; inset-inline-end: -10px; bottom: -6px; width: 62%; color: #d9b36c; opacity: .22; }
+.dawla-art svg { width: 100%; height: auto; display: block; }
+.tabs a.rail-dawla { position: relative; }
+.tabs a.rail-dawla .rd-new { margin-inline-start: auto; font-style: normal; font-size: 10.5px; font-weight: 700; padding: 1px 8px; border-radius: 99px; color: #082423;
+  background: linear-gradient(170deg, #fff1c9, #f0cf86 50%, #c99a4e); }
+.dh-t, .wf-in b { font-family: "Aref Ruqaa", var(--quran) !important; font-weight: 700 !important; background: none !important; color: #f3d58f !important;
+  -webkit-text-fill-color: currentColor; text-shadow: 0 2px 14px #d9b36c55, 0 1px 0 #00000055; letter-spacing: 0; }
+.dh-t { line-height: 1.35 !important; }
