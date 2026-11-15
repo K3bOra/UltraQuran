@@ -841,7 +841,7 @@ function recTracks(d, rec, img) {
       if (/مجود/.test(rec.name)) dur *= 1.45; else if (/المعلم/.test(rec.name)) dur *= 1.6;
     }
     const info = custom ? `${word} ${n2a(ch)} من ${n2a(rec.ch.length)}` : `${META.madani.includes(ch) ? "مدنية" : "مكية"} · ${n2a(META.verses[ch - 1])} آية`;
-    return { t: title, s: d.name, d: recTitle(rec), u: audioUrl(rec, ch), img, info, dur, ch, custom };
+    return { t: title, s: d.name, d: recTitle(rec), u: audioUrl(rec, ch), img, info, dur, ch, custom, rid: d.id, mj: /مجود/.test(rec.name) };
   });
 }
 
@@ -1406,7 +1406,8 @@ async function mushaf(parts) {
   setTop(`سورة ${META.chapters[surahOfPage(page)]}`);
   const riw = S.riwaya;
   const mr = MUSHAF_RECITERS.find((x) => x[0] === S.mReciter) || MUSHAF_RECITERS[0];
-  const leaves = Array.from({ length: 604 }, (_, i) => `<div class="leaf" data-p="${i + 1}"><div class="leaf-in ${S.mode === "text" ? "txt" : ""}"></div></div>`).join("");
+  const mode = mushafMode();
+  const leaves = Array.from({ length: 604 }, (_, i) => `<div class="leaf" data-p="${i + 1}"><div class="leaf-in ${mode === "text" ? "txt" : mode === "qpc" ? "qpc" : ""}"></div></div>`).join("");
   after(() => setupBook(page));
   return `
   <div class="mushaf-bar">
@@ -1415,14 +1416,14 @@ async function mushaf(parts) {
     <button class="navbtn" data-act="pgNext" aria-label="الصفحة التالية">${ic("chev").replace('class="icon"', 'class="icon flip"')}</button>
   </div>
   <div class="chips" role="group" aria-label="خيارات المصحف">
-    <button class="chip" data-act="listenSurah" aria-pressed="false">${icSm("play", 15)} استمع · ${esc(mr[2])}</button>
+    <button class="chip" data-act="listenSurah" aria-pressed="false">${icSm("play", 15)} ${hasWords(mr[0]) && mode === "qpc" ? "اقرأ مع" : "استمع ·"} ${esc(mr[2])}</button>
     <button class="chip" data-act="pickMReciter" aria-pressed="false" aria-label="تغيير القارئ">${icSm("people", 15)}</button>
     <a class="chip" href="#/index" aria-pressed="false">${icSm("list", 15)} الفهرس</a>
     <a class="chip" href="#/search?in=quran" aria-pressed="false">${icSm("search", 15)} بحث في الآيات</a>
     <button class="chip" data-act="bookmark" id="bmChip" aria-pressed="${S.bookmark === page}">${icSm("bookmark", 15)} علامة</button>
     <button class="chip" data-act="immersive" aria-pressed="false">${icSm("expand", 15)} ملء الشاشة</button>
     <button class="chip" data-act="riwaya" aria-pressed="${riw === "warsh"}">رواية ورش</button>
-    <button class="chip" data-act="mode" aria-pressed="${S.mode === "text"}">نص بدل الصورة</button>
+    <button class="chip" data-act="mode" aria-pressed="false">${icSm("book", 15)} ${{ qpc: "المصحف التفاعلي", img: "صور المصحف", text: "نص عادي" }[mode]}</button>
     <button class="chip" data-act="tafsirT" aria-pressed="${S.tafsir}">التفسير الميسّر</button>
     <button class="chip" data-act="saveMushaf" aria-pressed="false">حفظ بدون نت</button>
   </div>
@@ -1431,11 +1432,15 @@ async function mushaf(parts) {
   <section class="tafsir" id="tafsir" ${S.tafsir ? "" : "hidden"}></section>`;
 }
 
+// [key, our recording id (for sheikhs without word timing), name]. Keys in QDC_IDS / QDC_EXTRA light up word by word.
 const MUSHAF_RECITERS = [
-  [118, 118, "الحصري"], [112, 112, "المنشاوي"], [51, 53, "عبد الباسط"], [125, 125, "مصطفى إسماعيل"],
-  [121, 121, "البنا"], [106, 106, "الطبلاوي"], [123, 123, "العفاسي"], [102, 102, "المعيقلي"],
-  [54, 54, "السديس"], [31, 31, "الشريم"], [92, 92, "ياسر الدوسري"],
+  [118, 118, "الحصري"], [112, 112, "المنشاوي"], [51, 53, "عبد الباسط"], ["51j", 53, "عبد الباسط · مجوّد"], ["112j", 112, "المنشاوي · مجوّد"],
+  ["118l", 118, "الحصري · المعلّم"], [123, 123, "العفاسي"], [54, 54, "السديس"], [31, 31, "الشريم"], [92, 92, "ياسر الدوسري"],
+  [4, 4, "الشاطري"], [89, 89, "هاني الرفاعي"], [24, 24, "خليفة الطنيجي"],
+  [125, 125, "مصطفى إسماعيل"], [121, 121, "البنا"], [106, 106, "الطبلاوي"], [102, 102, "المعيقلي"],
 ];
+const hasWords = (key) => !!(QDC_IDS[key] || QDC_EXTRA[key]);
+const ridOfKey = (key) => (QDC_EXTRA[key] ? QDC_EXTRA[key][0] : +key);
 let BOOK = null;
 function setupBook(page) {
   const book = $("#book");
@@ -1471,7 +1476,19 @@ function setupBook(page) {
     if (S.tafsir) drawTafsir(p);
   };
   book.addEventListener("scroll", () => { clearTimeout(t); t = setTimeout(settle, 90); }, { passive: true });
-  book.addEventListener("click", () => { if (document.body.classList.contains("immersive")) toggleImmersive(); });
+  book.addEventListener("click", (e) => {
+    const w = e.target.closest(".mw,.me");
+    if (w && cur()?.qdc && FOLLOW.on) { const [a, b, pos] = w.dataset.k.split(":"); playFromWord(`${a}:${b}`, +pos); return; }
+    if (e.target.closest(".leaf-in")) toggleImmersive();
+  });
+  // long press (or right click) on a word: the mushaf reciter reads from it
+  book.addEventListener("contextmenu", (e) => {
+    const w = e.target.closest(".mw,.me");
+    if (!w) return;
+    e.preventDefault();
+    const [a, b, pos] = w.dataset.k.split(":");
+    playFromWord(`${a}:${b}`, +pos).then((ok) => { if (ok === false) toast("اختار قارئ من اللي الكلمات بتنوّر معاهم"); });
+  });
   window.addEventListener("resize", () => { if (BOOK?.el === book) goTo(BOOK.page, false); });
   if (!S.swipeHint) { S.swipeHint = 1; save(); toast("اسحب الصفحة يمين وشمال عشان تقلّب زي المصحف", 3500); }
 }
@@ -1480,7 +1497,9 @@ function fillLeaf(leaf, p) {
   leaf.dataset.done = "1";
   const box = leaf.firstElementChild;
   box.innerHTML = `<div class="loading">صفحة ${n2a(p)}…</div>`;
-  if (S.mode === "text") return fillText(box, p);
+  const mode = mushafMode();
+  if (mode === "text") return fillText(box, p);
+  if (mode === "qpc") return fillQpc(box, p);
   const srcs = PAGE_SRC[S.riwaya];
   let k = 0;
   const img = new Image();
@@ -1510,16 +1529,208 @@ async function fillText(box, p) {
     delete box.parentElement.dataset.done;
   }
 }
+/* ---------------- المصحف التفاعلي ----------------
+   Each page is drawn with the King Fahd Complex page font (QPC V1, the same as the printed Madinah mushaf),
+   so every word is its own element: it can light up while the sheikh recites it, and a tap can jump to it. */
+// S.mmode: "qpc" (default) / "img" / "text". The old S.mode only remembers a choice of plain text.
+const mushafMode = () => {
+  const m = S.mmode || (S.mode === "text" ? "text" : "qpc");
+  return S.riwaya === "hafs" ? m : m === "text" ? "text" : "img";
+};
+const QPC_FONT = (p) => `https://static.qurancdn.com/fonts/quran/hafs/v1/woff2/p${p}.woff2`;
+const QPC_FONTS = {};
+function qpcFont(p) {
+  if (!QPC_FONTS[p]) {
+    const f = new FontFace(`qpc${p}`, `url(${QPC_FONT(p)}) format("woff2")`, { display: "block" });
+    QPC_FONTS[p] = f.load().then((ff) => { document.fonts.add(ff); return ff; }).catch((e) => { delete QPC_FONTS[p]; throw e; });
+  }
+  return QPC_FONTS[p];
+}
+// the basmala drawn with the Fatiha page's own glyphs (verse 1:1), exactly as in the printed mushaf
+const BASMALA = `<span class="qbs" style="font-family:qpc1">ﭑﭒﭓﭔ</span>`;
+async function fillQpc(box, p) {
+  box.classList.add("qpc");
+  let d;
+  try { [d] = await Promise.all([getJSON(`data/qpc/${p}.json`), qpcFont(p), qpcFont(1)]); }
+  catch {
+    // offline and never opened before: fall back to the page image
+    box.classList.remove("qpc");
+    const img = new Image(); img.alt = `صفحة ${p}`; img.draggable = false;
+    img.onload = () => { box.innerHTML = ""; box.appendChild(img); };
+    img.onerror = () => { box.innerHTML = `<div class="loading">الصفحة دي محتاجة نت أول مرة</div>`; delete box.parentElement.dataset.done; };
+    img.src = PAGE_SRC.hafs[0](p);
+    return;
+  }
+  const lines = {};
+  d.w.forEach((w) => (lines[w[0]] ||= []).push(w));
+  const heads = {};
+  d.v.forEach((vk, i) => {
+    const [ch, a] = vk.split(":").map(Number);
+    if (a !== 1) return;
+    const first = d.w.find((w) => w[1] === i);
+    if (!first) return;
+    if (ch === 1 || ch === 9) heads[first[0] - 1] = ["h", ch];
+    else { heads[first[0] - 1] = ["b", ch]; heads[first[0] - 2] = ["h", ch]; }
+  });
+  const n = p <= 2 ? 8 : 15;
+  let html = "";
+  for (let L = p <= 2 ? 1 : 1; L <= n; L++) {
+    if (lines[L]) {
+      html += `<div class="ql">${lines[L].map((w) => `<span class="${w[4] ? "me" : "mw"}" data-k="${d.v[w[1]]}:${w[2]}" data-v="${d.v[w[1]]}">${w[3]}</span>`).join("")}</div>`;
+    } else if (heads[L]?.[0] === "h") {
+      html += `<div class="ql qh"><span class="qh-in"><i></i>سورة ${esc(META.chapters[heads[L][1] - 1])}<i></i></span></div>`;
+    } else if (heads[L]?.[0] === "b") {
+      html += `<div class="ql qb">${BASMALA}</div>`;
+    } else if (p > 2) html += `<div class="ql"></div>`;
+  }
+  const s0 = +d.v[0].split(":")[0];
+  box.innerHTML = `<div class="qframe"><div class="qtop"><span>${esc(META.chapters[s0 - 1])}</span><span>الجزء ${n2a(juzOfPage(p))}</span></div>
+    <div class="qpage ${p <= 2 ? "opening" : ""}" style="font-family:qpc${p}" data-p="${p}">${html}</div>
+    <div class="qnum">${n2a(p)}</div></div>`;
+  fitQpc(box);
+  if (WS.k) markWord(box);
+}
+// font size so the longest line fills the page width (and 15 lines fit its height)
+function fitQpc(box) {
+  const pg = box.querySelector(".qpage");
+  if (!pg) return;
+  const W = pg.clientWidth, H = pg.clientHeight;
+  if (!W || !H) return;
+  pg.style.fontSize = "100px";
+  pg.classList.add("measure");
+  const ls = [...pg.querySelectorAll(".ql")].filter((l) => l.querySelector(".mw,.me"));
+  const ws = ls.map((l) => l.scrollWidth);
+  pg.classList.remove("measure");
+  const max = Math.max(...ws, 1);
+  const rows = pg.classList.contains("opening") ? 8 : 15;
+  // the page glyphs draw about 1.9em tall; 1.55em per line keeps them apart like the printed page
+  const f = Math.min((100 * W) / max * 0.985, H / (rows === 8 ? 15 : rows) / 1.55);
+  pg.style.fontSize = `${f.toFixed(2)}px`;
+  // short lines (end of a surah, the opening pages) sit in the middle instead of stretching
+  ls.forEach((l, i) => l.classList.toggle("short", ws[i] < max * 0.8));
+}
+function refitQpc() { $$(".leaf-in.qpc").forEach(fitQpc); }
+window.addEventListener("resize", () => { clearTimeout(refitQpc.t); refitQpc.t = setTimeout(refitQpc, 120); });
+
+/* word-by-word sync: quran.com has the time of every word for these recordings */
+const QDC_IDS = { 118: 6, 112: 9, 51: 2, 123: 7, 54: 3, 31: 10, 4: 4, 89: 5, 92: 174, 24: 161 };
+const QDC_EXTRA = { "51j": [51, 1, "عبد الباسط · مجوّد"], "112j": [112, 8, "المنشاوي · مجوّد"], "118l": [118, 12, "الحصري · المصحف المعلّم"] };
+const WS = { k: "", v: "", raf: 0, seg: null, segKey: "" };
+async function qdcSegments(rec, ch) {
+  const d = await getJSON(`https://api.quran.com/api/v4/chapter_recitations/${rec}/${ch}?segments=true`);
+  return d.audio_file.timestamps.map((t) => [t.verse_key, t.timestamp_from, t.timestamp_to, t.segments || []]);
+}
+async function qdcTracks(rid, rec, label) {
+  const d = await getJSON(`https://api.quran.com/api/v4/chapter_recitations/${rec}`);
+  const name = RECITERS.find((r) => r[0] === rid)?.[1] || label;
+  const img = portrait(rid);
+  return d.audio_files.sort((a, b) => a.chapter_id - b.chapter_id).map((f) => ({
+    t: `سورة ${META.chapters[f.chapter_id - 1]}`, s: name, d: `${label || name} · الكلمات بتنوّر مع الشيخ`, u: f.audio_url, img, ch: f.chapter_id,
+    info: `${META.madani.includes(f.chapter_id) ? "مدنية" : "مكية"} · ${n2a(META.verses[f.chapter_id - 1])} آية`, qdc: rec, dur: META.durations[f.chapter_id - 1],
+  }));
+}
+async function ensureSeg(t) {
+  const key = `${t.qdc}:${t.ch}`;
+  if (WS.segKey === key) return WS.seg;
+  WS.segKey = key; WS.seg = null;
+  try { const seg = await qdcSegments(t.qdc, t.ch); if (WS.segKey === key) WS.seg = seg; } catch { WS.segKey = ""; }
+  return WS.seg;
+}
+function wordAt(seg, ms) {
+  let lo = 0, hi = seg.length - 1, v = -1;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (seg[m][1] <= ms) { v = m; lo = m + 1; } else hi = m - 1; }
+  if (v < 0) return null;
+  const [vk, , , ws] = seg[v];
+  let pos = 0;
+  for (const w of ws) { if (w[1] <= ms) pos = w[0]; else break; }
+  return { vk, pos };
+}
+function markWord(root = document) {
+  $$(".mw.on, .me.on, .mw.av, .me.av", root).forEach((e) => e.classList.remove("on", "av"));
+  if (!WS.v) return;
+  $$(`[data-v="${WS.v}"]`, root).forEach((e) => e.classList.add("av"));
+  if (WS.k) $$(`[data-k="${WS.k}"]`, root).forEach((e) => e.classList.add("on"));
+}
+// verse -> page of the Madinah mushaf, from the same data the pages are drawn with
+async function pageOfVerse(vk) {
+  const m = await getJSON("data/qpc/vpages.json");
+  const [s, a] = vk.split(":").map(Number);
+  let p = 0;
+  for (const [first, page] of m[s] || []) { if (first <= a) p = page; else break; }
+  return p || META.spages[s - 1];
+}
+function syncLoop() {
+  cancelAnimationFrame(WS.raf);
+  const t = cur();
+  if (!t?.qdc || !location.hash.startsWith("#/mushaf") || mushafMode() !== "qpc") { if (WS.k) { WS.k = WS.v = ""; markWord(); } return; }
+  const step = async () => {
+    const tt = cur();
+    if (!tt?.qdc || !location.hash.startsWith("#/mushaf")) return;
+    const seg = await ensureSeg(tt);
+    if (seg) {
+      const w = wordAt(seg, A.currentTime * 1000);
+      const k = w && w.pos ? `${w.vk}:${w.pos}` : "", v = w ? w.vk : "";
+      if (k !== WS.k || v !== WS.v) {
+        const newVerse = v !== WS.v;
+        WS.k = k; WS.v = v; markWord();
+        if (newVerse && v && FOLLOW.on && !FOLLOW.paused && BOOK && document.body.contains(BOOK.el)) {
+          const p = await pageOfVerse(v);
+          const shown = (BOOK.step?.() || 1) === 2 && p % 2 === 0 ? p - 1 : p;
+          if (p && BOOK.page !== shown) { FOLLOW.auto = shown; BOOK.goTo(p, true); }
+        }
+        if (WS.k && !$(`[data-k="${WS.k}"]`)) { /* page not drawn yet */ }
+      }
+    }
+    if (!A.paused) WS.raf = requestAnimationFrame(step);
+  };
+  step();
+}
+A.addEventListener("play", syncLoop);
+A.addEventListener("seeked", syncLoop);
+A.addEventListener("pause", () => cancelAnimationFrame(WS.raf));
+// play the mushaf reciter from a verse (and word) of the page in view
+async function playFromWord(vk, pos, forceKey) {
+  const [ch] = vk.split(":").map(Number);
+  let t = cur();
+  if (forceKey || !(t?.qdc && t.ch === ch)) {
+    const key = forceKey || S.mReciter || 118;
+    const ex = QDC_EXTRA[key];
+    const rid = ex ? ex[0] : key, rec = ex ? ex[1] : QDC_IDS[key];
+    if (!rec) return false;
+    const tracks = await qdcTracks(rid, rec, ex?.[2]);
+    playList(tracks, ch - 1);
+    t = cur();
+  }
+  const seg = await ensureSeg(t);
+  const row = seg?.find((r) => r[0] === vk);
+  if (!row) return true;
+  const w = row[3].find((x) => x[0] === pos);
+  const ms = w ? w[1] : row[1];
+  const go = () => { A.currentTime = ms / 1000; A.play().catch(() => {}); };
+  if (A.readyState >= 1) go(); else A.addEventListener("loadedmetadata", go, { once: true });
+  FOLLOW.on = true; FOLLOW.paused = false; FOLLOW.auto = BOOK?.page || 0;
+  drawFollowBar();
+  return true;
+}
+
 function goPage(p) {
   if (p < 1 || p > 604) return;
   if (BOOK && document.body.contains(BOOK.el)) return BOOK.goTo(p, true);
   location.hash = `#/mushaf/${p}`;
 }
-function toggleImmersive() {
-  const on = document.body.classList.toggle("immersive");
-  if (on && !S.immHint) { S.immHint = 1; save(); toast("دوس على الصفحة عشان تخرج من ملء الشاشة", 3000); }
-  if (BOOK) setTimeout(() => BOOK.goTo(BOOK.page, false), 60);
+function toggleImmersive(force) {
+  const on = document.body.classList.toggle("immersive", force);
+  if (on && !S.immHint) { S.immHint = 1; save(); toast("قلّب يمين وشمال، ودوس على الصفحة تاني عشان تخرج", 3000); }
+  // real full screen where the browser allows it (the Android app is already full screen)
+  try {
+    if (!NATIVE && on && !document.fullscreenElement) document.documentElement.requestFullscreen?.({ navigationUI: "hide" }).catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  } catch {}
+  const p = BOOK?.page;
+  const fix = () => { refitQpc(); if (BOOK && p) BOOK.goTo(p, false); };
+  setTimeout(fix, 60); setTimeout(fix, 350);
 }
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("immersive")) toggleImmersive(false); });
 /* ---------------- READ ALONG: the mushaf follows the reciter ----------------
    Recordings carry no per-ayah timings, so the position in the surah is estimated from how far the
    recitation has gone, weighted by each ayah's length. Pages turn on their own; if the reader turns a
@@ -1547,6 +1758,7 @@ async function followTick() {
   if (!FOLLOW.on || !location.hash.startsWith("#/mushaf")) return;
   const t = cur();
   if (!isSurahTrack(t)) return drawFollowBar();
+  if (t.qdc && mushafMode() === "qpc") { drawFollowBar(); if (A.paused) return; if (!WS.raf) syncLoop(); return; }
   if (FOLLOW.ch !== t.ch) { FOLLOW.ch = t.ch; FOLLOW.weights = await surahWeights(t.ch); FOLLOW.paused = false; }
   const p = followPage();
   drawFollowBar();
@@ -1564,13 +1776,37 @@ function drawFollowBar() {
   if (!bar) { bar = document.createElement("div"); bar.id = "followBar"; bar.className = "follow-bar"; document.body.appendChild(bar); }
   const t = cur();
   const name = isSurahTrack(t) ? `سورة ${META.chapters[t.ch - 1]} · ${t.s || ""}` : "شغّل سورة عشان المصحف يمشي معاها";
-  bar.innerHTML = `<span class="fb-dot ${FOLLOW.paused ? "off" : ""}"></span><span class="fb-t"><b>${FOLLOW.paused ? "المتابعة واقفة" : "المصحف ماشي مع القارئ"}</b><small>${esc(name)}</small></span>
+  const words = t?.qdc && mushafMode() === "qpc";
+  bar.innerHTML = `<span class="fb-dot ${FOLLOW.paused ? "off" : ""}"></span><span class="fb-t"><b>${FOLLOW.paused ? "المتابعة واقفة" : words ? "الكلمات بتنوّر مع الشيخ" : "المصحف ماشي مع القارئ"}</b><small>${esc(name)}</small></span>
     ${FOLLOW.paused ? `<button data-act="followResume">${icSm("book", 15)} رجوع للآية</button>` : ""}
     <button class="fb-x" data-act="followStop" aria-label="إيقاف المتابعة">${icSm("x", 15)}</button>`;
 }
 async function readAlong() {
   const t = cur();
   if (!isSurahTrack(t)) return;
+  const key = t.qdc ? null : t.rid === 51 && t.mj ? "51j" : t.rid === 112 && t.mj ? "112j" : QDC_IDS[t.rid] ? t.rid : null;
+  if ((t.qdc || key) && S.riwaya === "hafs" && mushafMode() === "qpc") {
+    // same sheikh, the Madinah recording that has the time of every word; continue from the verse he's on
+    let vk = `${t.ch}:1`;
+    if (!t.qdc) {
+      const w = await surahWeights(t.ch);
+      const dd = A.duration && isFinite(A.duration) ? A.duration : t.dur || 0;
+      const x = dd ? Math.max(0, Math.min(1, A.currentTime / dd)) * w.total : 0;
+      const m = w.marks.find((k) => x < k[1]);
+      if (m) vk = `${t.ch}:${m[3]}`;
+    } else if (WS.v) vk = WS.v;
+    const page = (await pageOfVerse(vk)) || META.spages[t.ch - 1];
+    closeSheet();
+    FOLLOW.on = true; FOLLOW.paused = false; FOLLOW.ch = t.ch;
+    clearInterval(FOLLOW.timer); FOLLOW.timer = setInterval(followTick, 1500);
+    setTimeout(async () => {
+      location.hash = `#/mushaf/${page}`;
+      if (!t.qdc) await playFromWord(vk, 1, key);
+      setTimeout(() => { FOLLOW.auto = BOOK?.page || page; syncLoop(); drawFollowBar(); }, 500);
+      toast(t.qdc ? "الكلمة اللي الشيخ بيقولها بتنوّر، ودوس على أي كلمة يقرأ من عندها" : "اتحوّلت لتسجيل مصحف المدينة لنفس الشيخ عشان كل كلمة تنوّر وهو بيقولها", 4500);
+    }, 60);
+    return;
+  }
   FOLLOW.on = true; FOLLOW.paused = false; FOLLOW.ch = t.ch; FOLLOW.auto = 0;
   FOLLOW.weights = await surahWeights(t.ch);
   const p = followPage() || FOLLOW.weights.first;
@@ -1586,18 +1822,29 @@ async function readAlong() {
 function stopFollow() { FOLLOW.on = false; clearInterval(FOLLOW.timer); FOLLOW.timer = 0; drawFollowBar(); }
 
 async function listenSurah() {
-  const mr = MUSHAF_RECITERS.find((x) => x[0] === S.mReciter) || MUSHAF_RECITERS[0];
-  const d = await getJSON(`data/r/${mr[0]}.json`);
-  const rec = d.recs.find((r) => r.id === mr[1]) || d.recs[0];
+  const mr = MUSHAF_RECITERS.find((x) => String(x[0]) === String(S.mReciter)) || MUSHAF_RECITERS[0];
   const s = surahOfPage(BOOK?.page || S.page) + 1;
-  const tracks = recTracks(d, rec, portrait(mr[0]));
+  if (hasWords(mr[0]) && mushafMode() === "qpc") {
+    // start at the first verse on the page in view
+    const d = await getJSON(`data/qpc/${BOOK?.page || S.page}.json`).catch(() => null);
+    const vk = d?.v.find((k) => +k.split(":")[0] === s) || `${s}:1`;
+    await playFromWord(vk, 1);
+    toast(`سورة ${META.chapters[s - 1]} بصوت ${mr[2]} · الكلمات بتنوّر معاه`);
+    return;
+  }
+  const d = await getJSON(`data/r/${ridOfKey(mr[0])}.json`);
+  const rec = d.recs.find((r) => r.id === mr[1]) || d.recs[0];
+  const tracks = recTracks(d, rec, portrait(ridOfKey(mr[0])));
   const i = Math.max(0, tracks.findIndex((t) => t.ch === s));
   playList(tracks, i);
   toast(`سورة ${META.chapters[s - 1]} بصوت ${d.name}`);
 }
 function pickMReciter() {
-  openModal(`<h2>قارئ المصحف</h2><p class="note" style="margin:0 0 10px">زرار «استمع» هيشغّل السورة اللي انت فيها بصوت القارئ ده، ويكمل اللي بعدها.</p>
-    <div class="mpick">${MUSHAF_RECITERS.map((r) => `<button class="mpick-i ${r[0] === (S.mReciter || 118) ? "on" : ""}" data-act="setMReciter" data-id="${r[0]}">${avatar(r[0], r[2])}<span>${esc(r[2])}</span></button>`).join("")}</div>`);
+  const on = String(S.mReciter || 118);
+  const btn = (r) => `<button class="mpick-i ${String(r[0]) === on ? "on" : ""}" data-act="setMReciter" data-id="${r[0]}">${avatar(ridOfKey(r[0]), r[2])}<span>${esc(r[2])}</span></button>`;
+  openModal(`<h2>قارئ المصحف</h2><p class="note" style="margin:0 0 10px">زرار «استمع» بيشغّل السورة اللي انت فيها. مع المشايخ اللي في الأول، الكلمة اللي الشيخ بيقولها بتنوّر في المصحف، وتقدر تدوس على أي كلمة يقرأ من عندها.</p>
+    <h3 class="mpick-h">${icSm("star", 14)} الكلمات بتنوّر مع الشيخ</h3><div class="mpick">${MUSHAF_RECITERS.filter((r) => hasWords(r[0])).map(btn).join("")}</div>
+    <h3 class="mpick-h">المصحف بيقلّب مع الشيخ</h3><div class="mpick">${MUSHAF_RECITERS.filter((r) => !hasWords(r[0])).map(btn).join("")}</div>`);
 }
 async function drawTafsir(p) {
   const box = $("#tafsir");
@@ -1618,9 +1865,12 @@ async function saveMushaf() {
   const worker = async () => {
     while (i <= 604) {
       const p = i++;
-      const url = PAGE_SRC[riw][0](p);
+      const urls = mushafMode() === "qpc" ? [QPC_FONT(p), new URL(`data/qpc/${p}.json`, location.href).href] : [PAGE_SRC[riw][0](p)];
       try {
-        if (!(await cache.match(url))) { const r = await fetch(url, { mode: "cors" }); if (!r.ok) throw 0; await cache.put(url, r); }
+        for (const url of urls) {
+          const c = url.includes("/data/") ? await caches.open("uq-data") : cache;
+          if (!(await c.match(url))) { const r = await fetch(url, { mode: "cors" }); if (!r.ok) throw 0; await c.put(url, r); }
+        }
         done++;
       } catch { fail++; }
       if ((done + fail) % 8 === 0) toast(`جاري حفظ المصحف ${n2a(done + fail)} / ${n2a(604)}`, 600000);
@@ -2465,7 +2715,12 @@ document.addEventListener("click", async (e) => {
     }
     case "pg": goPage(+el.dataset.p); break;
     case "riwaya": S.riwaya = S.riwaya === "hafs" ? "warsh" : "hafs"; save(); sessionStorage.setItem("keep-scroll", "1"); route(); break;
-    case "mode": S.mode = S.mode === "img" ? "text" : "img"; save(); sessionStorage.setItem("keep-scroll", "1"); route(); break;
+    case "mode": {
+      const order = S.riwaya === "hafs" ? ["qpc", "img", "text"] : ["img", "text"];
+      S.mmode = order[(order.indexOf(mushafMode()) + 1) % order.length]; S.mode = S.mmode === "text" ? "text" : "img"; save();
+      toast({ qpc: "المصحف التفاعلي: خط مصحف المدينة، والكلمات بتنوّر مع الشيخ", img: "صور صفحات المصحف", text: "نص عادي" }[S.mmode], 2600);
+      sessionStorage.setItem("keep-scroll", "1"); route(); break;
+    }
     case "tafsirT": S.tafsir = !S.tafsir; save(); el.setAttribute("aria-pressed", S.tafsir); $("#tafsir").hidden = !S.tafsir; if (S.tafsir) drawTafsir(S.page); break;
     case "saveMushaf": saveMushaf(); break;
     case "playCairo": e.preventDefault(); playCairo(); break;
@@ -2477,9 +2732,14 @@ document.addEventListener("click", async (e) => {
     case "promoGot": setTimeout(() => toast(IS_IOS ? "ملف التطبيق للأندرويد بس، ابعته لصاحبك اللي معاه أندرويد" : "التطبيق بيتحمل. افتحه من الإشعارات أو من التنزيلات وثبّته", 5000), 300); break;
     case "promoHide": S.promoOff = 1; save(true); el.closest(".promo-pill")?.remove(); toast("اتخفى"); break;
     case "followStop": stopFollow(); toast("وقفت متابعة المصحف"); break;
-    case "followResume": FOLLOW.paused = false; FOLLOW.auto = 0; followTick(); break;
+    case "followResume": {
+      FOLLOW.paused = false; FOLLOW.auto = 0;
+      if (cur()?.qdc && WS.v) pageOfVerse(WS.v).then((p) => { if (p && BOOK) { BOOK.goTo(p, true); FOLLOW.auto = (BOOK.step?.() || 1) === 2 && p % 2 === 0 ? p - 1 : p; } drawFollowBar(); });
+      else followTick();
+      break;
+    }
     case "pickMReciter": pickMReciter(); break;
-    case "setMReciter": S.mReciter = +el.dataset.id; save(true); $("#modal").classList.remove("open"); sessionStorage.setItem("keep-scroll", "1"); route(); setTimeout(listenSurah, 300); break;
+    case "setMReciter": S.mReciter = isNaN(+el.dataset.id) ? el.dataset.id : +el.dataset.id; save(true); $("#modal").classList.remove("open"); sessionStorage.setItem("keep-scroll", "1"); route(); setTimeout(listenSurah, 300); break;
     case "bookmark": { const p = BOOK?.page || S.page; S.bookmark = S.bookmark === p ? null : p; save(true); el.setAttribute("aria-pressed", String(S.bookmark === p)); toast(S.bookmark ? `اتحطت علامة على صفحة ${n2a(p)}` : "اتشالت العلامة"); break; }
     case "immersive": toggleImmersive(); break;
     case "compass": { const c = prayerCfg(); startCompass(qiblaBearing(c.lat, c.lng)); break; }
