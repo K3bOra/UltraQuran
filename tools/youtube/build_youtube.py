@@ -247,6 +247,21 @@ SHEIKHS = [
     ["q", 912, "الشيخ حمدي الزامل", "الزامل", []],
     ["q", 911, "الشيخ محمد عمران تلاوة", "محمد عمران", ["محمد عمران سورة"]],
     ["q", 915, "الشيخ عنتر سعيد مسلم", "عنتر", []],
+    ["q", 913, "الشيخ محمود صديق المنشاوي", "محمود صديق المنشاو", []],
+    ["q", 278, "الشيخ أحمد عيسى المعصراوي", "المعصراوي|المعصراوى", []],
+    ["q", 111, "الشيخ محمد جبريل", "محمد جبريل", ["محمد جبريل دعاء ختم القرآن", "محمد جبريل تراويح عمرو بن العاص"]],
+    ["q", 39, "الشيخ صابر عبد الحكم", "صابر عبد ?الحكم", []],
+    ["q", 277, "الشيخ محمود عبد الحكم", "محمود عبد ?الحكم", []],
+    ["q", 11, "الشيخ الحسيني العزازي", "العزازي|العزازى", []],
+    ["q", 15, "الشيخ العشري عمران", "العشري عمران|العشرى عمران", []],
+    ["q", 151, "الشيخ محمود الشيمي", "الشيمي|الشيمى", []],
+    ["q", 152, "الشيخ ياسر سلامة", "ياسر سلامة", []],
+    ["q", 36, "الشيخ سيد رمضان", "سيد رمضان", []],
+    ["q", 37, "الشيخ شعبان الصياد", "شعبان الصياد", []],
+    ["q", 287, "الشيخ عبد الرحمن الشحات", "عبد ?الرحمن الشحات", []],
+    ["q", 126, "الشيخ مصطفى اللاهوني", "اللاهوني|اللاهونى", []],
+    ["q", 253, "الشيخ إسلام صبحي", "(إ|ا)سلام صبحي|(إ|ا)سلام صبحى", []],
+    ["q", 267, "الشيخ عبدالله كامل", "عبد ?الله كامل", []],
     ["k", 950, "الشيخ عبد الحميد كشك خطبة", "كشك", ["الشيخ كشك خطبة نادرة", "الشيخ كشك قصة", "الشيخ كشك يبكي", "عبد الحميد كشك فيديو"]],
     ["s", 1, "الشيخ محمد متولي الشعراوي", "الشعراوي|الشعراوى", ["الشعراوي خواطر سورة", "الشعراوي تفسير", "الشعراوي يبكي", "الشعراوي لقاء نادر",
                                                               "الشعراوي من الألف إلى الياء", "الشيخ الشعراوي معجزة القرآن", "الشعراوي قصص الأنبياء"]],
@@ -265,9 +280,91 @@ SHEIKHS = [
     ["m", 963, "الشيخ إبراهيم الإسكندراني", "(إ|ا)لاسكندراني|الإسكندراني", []],
     ["m", 964, "الشيخ ممدوح عبد الجليل", r"ممدوح عبد ?الجليل", []],
 ]
-SUFFIX = {"q": ["تلاوة نادرة فيديو", "تلاوة خارجية حفلة", "فيديو نادر"], "k": ["", "خطبة كاملة", "فيديو"],
-          "s": ["خواطر", "فيديو نادر", "حلقة كاملة"], "m": ["", "فيديو نادر", "ابتهالات قديمة"]}
-CAP = {"q": 45, "k": 60, "s": 80, "m": 45}
+SUFFIX = {"q": ["تلاوة نادرة فيديو", "تلاوة خارجية حفلة", "فيديو نادر", "سورة", "تلاوة", "محفل", "قرآن الفجر", "تلاوة مسجد", "مجود"],
+          "k": ["", "خطبة كاملة", "فيديو", "خطبة الجمعة", "قصة", "درس", "خطب مؤثرة", "يوم القيامة", "الصحابة"],
+          "s": ["خواطر", "فيديو نادر", "حلقة كاملة", "خواطر سورة", "تفسير", "لقاء", "قصة", "الشعراوي يتحدث عن", "خاطرة"],
+          "m": ["", "فيديو نادر", "ابتهالات قديمة", "ابتهال", "تواشيح", "ابتهالات رمضان", "ابتهالات الفجر"]}
+CAP = {"q": 120, "k": 200, "s": 250, "m": 100}
+PLAYLISTS = {"q": 5, "k": 6, "s": 8, "m": 4}   # كام قايمة تشغيل كاملة نجيبها لكل شيخ
+
+
+# كل شيخ حاجته متقسمة فولدرات جوه صفحته
+GROUPS = {
+    "q": [("نوادر ومحافل", r"نادر|نوادر|حفل|محفل|خارجي|خارجى|مسجد|عام \d|19\d\d|20[01]\d|مأتم|السهرة|سهرة|قرآن الفجر|قران الفجر|قرآن المغرب|قران المغرب|الإذاعة|الاذاعة|التلفزيون|ماسبيرو"),
+          ("مصاحف وسور كاملة", r"مرتل|مُرتَّل|مجود|كاملة|كامله|ختمة"),
+          ("تلاوات مختارة", r"")],
+    "s": [("تفسير وخواطر", r"تفسير|خواطر|خاطرة|سورة|الآي|آية|الاية"),
+          ("قصص وعبر", r"قصة|قصص|عبرة|حكاية"),
+          ("لقاءات وأحاديث", r"لقاء|حوار|حديث|برنامج|الألف إلى الياء|يتحدث|يرد|سؤال|أسئلة"),
+          ("دروس ومواعظ", r"")],
+    "k": [("قصص", r"قصة|قصص|حكاية"), ("دروس", r"درس|دروس|محاضرة"), ("خطب", r"")],
+    "m": [("تواشيح", r"تواشيح|توشيح|موشح|بطانة|بطانته"), ("ابتهالات", r"")],
+}
+
+
+def group_of(kind, v):
+    if kind == "m" and v["d"] >= 20 * 60:
+        return "مجموعات وسهرات"
+    for name, rx in GROUPS[kind]:
+        if not rx or re.search(rx, v["t"]):
+            return name
+    return GROUPS[kind][-1][0]
+
+
+def playlists_for(q):
+    _, html = get("https://www.youtube.com/results?search_query=" + urllib.parse.quote(q) + "&sp=EgIQAw%253D%253D&hl=en&gl=EG")
+    out = []
+
+    def walk(o):
+        if isinstance(o, list):
+            for x in o:
+                walk(x)
+            return
+        if not isinstance(o, dict):
+            return
+        l = o.get("lockupViewModel")
+        if l and l.get("contentType") != "LOCKUP_CONTENT_TYPE_VIDEO" and str(l.get("contentId", "")).startswith("PL"):
+            n = re.search(r'"text": ?"([\d,]+) videos?"', json.dumps(l.get("contentImage", {})))
+            out.append((l["contentId"], l.get("metadata", {}).get("lockupMetadataViewModel", {}).get("title", {}).get("content", ""),
+                        int(n.group(1).replace(",", "")) if n else 0))
+            return
+        pr = o.get("playlistRenderer")
+        if pr:
+            out.append((pr.get("playlistId"), pr.get("title", {}).get("simpleText", ""), int(str(pr.get("videoCount", "0")).replace(",", "") or 0)))
+            return
+        for v in o.values():
+            walk(v)
+
+    walk(initial_data(html))
+    return out
+
+
+def playlist_videos(pid):
+    _, html = get("https://www.youtube.com/playlist?list=" + pid + "&hl=en")
+    d = initial_data(html)
+    vids = videos(d)
+    # views live in videoInfo for playlist items
+    info = {}
+
+    def walk(o):
+        if isinstance(o, list):
+            for x in o:
+                walk(x)
+            return
+        if not isinstance(o, dict):
+            return
+        v = o.get("playlistVideoRenderer")
+        if v:
+            txt = "".join(r.get("text", "") for r in v.get("videoInfo", {}).get("runs", []))
+            info[v.get("videoId")] = to_num(txt.split("•")[0]) if "view" in txt else 0
+            return
+        for x in o.values():
+            walk(x)
+
+    walk(d)
+    for v in vids:
+        v["v"] = v["v"] or info.get(v["id"], 0)
+    return vids
 # مقاطع ذكاء اصطناعي، تقليد، شورتس، حالات واتس، ريمكسات... كلها برا
 BAD = re.compile(r"\bAI\b|ذكاء|اصطناعي|shorts|#short|حالات|ريمكس|remix|تقليد|يقلد|مقلد|تقلد|كاريوكي|ستوري|\bstory\b|status|بدون موسيقى|مباشر 24"
                  r"|طفل|الطفلة|صدى صوت|بصدى|يشبه|شبيه|مثل صوت|طبق الأصل|خليفة|بعد النقشبندي|يبدع في|منى الشاذلي|حلمي بكر"
@@ -276,6 +373,20 @@ BAD = re.compile(r"\bAI\b|ذكاء|اصطناعي|shorts|#short|حالات|ري�
 ABOUT = re.compile(r"عبد ?الله الشريف|القصة و ?ما ?فيها|رد ناري|مصطفى محمود|عمر عبد الكافي|الجزيرة|Jazeera|وثائقي|قصة وفاة|وفاة الشيخ|جنازة"
                    r"|مبارك|السادات|عبد ?الناصر|القذافي|الملك فيصل|السيسي|الرئيس|رئيس مصر|الحكام|الطاغية|سفاح|معتقل|سجن|سجون|تعذيب"
                    r"|اليهود|إسرائيل|اسرائيل|فلسطين|الكنيسة|الإخوان|الاخوان|ممنوع|الممنوعة|الخطوط الحمراء|يتنبأ|مقـ|سجـ", re.I)
+ABOUT_EN = re.compile(r"Nasser|Gaddafi|Qaddafi|Sadat|Mubarak|Banned|Imprison|Prison|Israel|Jews|Zion|Shia|Rulers|سياسي|السياسية|فياجيرة|فياجرا|البحيري|البحيرى|البجيرى|الشيعة|شيعي|الحويني|ابن عثيمين|بن عثيمين", re.I)
+
+
+def keep_row(tre, title, author, from_playlist):
+    """فيديو من قايمة تشغيل من غير اسم الشيخ في عنوانه: بس لو جاي من قناة الشيخ نفسه."""
+    if ABOUT.search(title) or ABOUT_EN.search(title) or BAD.search(title):
+        return False
+    if tre.pattern.startswith("الشعراوي") and re.search(r"كشك", title):
+        return False
+    if tre.pattern == "كشك" and re.search(r"الشعراوي|الشعراوى", title):
+        return False
+    return bool(tre.search(title) or tre.search(author or ""))
+
+
 TILAWA = re.compile(r"سور|تلاو|قرآن|قران|ما تيسر|آي|الآية|مقام|محفل|حفل|المغرب|الفجر|السهرة|مرتل|مجود|ختمة")
 
 
@@ -285,16 +396,34 @@ def search(q):
 
 
 def build_sheikhs():
-    out = {}
+    only = set(filter(None, os.environ.get("ONLY", "").split(",")))
+    out = {} if not only else load_sheikhs()
     for kind, pid, name, tok, extra in SHEIKHS:
+        if only and f"{kind}{pid}" not in only:
+            continue
         tre = re.compile(tok)
+        others = [re.compile(t) for k2, p2, n2, t, e2 in SHEIKHS if t != tok and p2 != pid]
         seen = {}
         queries = [(name + " " + s).strip() for s in SUFFIX[kind]] + extra
+        base = re.sub(r"\s+(تلاوة|ابتهالات|ابتهال|خطبة)$", "", name)
+        pls = {}
+        for q in (base, base + (" تلاوات نادرة" if kind == "q" else " فيديو")):
+            for plid, ptitle, n in playlists_for(q):
+                if plid and tre.search(ptitle) and not ABOUT.search(ptitle) and not BAD.search(ptitle) and n >= 3:
+                    pls[plid] = (ptitle, n)
+        top = sorted(pls, key=lambda k: -pls[k][1])[:PLAYLISTS[kind]]
         with ThreadPoolExecutor(4) as ex:
-            for res in ex.map(search, queries):
+            batches = list(ex.map(search, queries))
+            # a playlist about the sheikh: its items count even when the title skips his name
+            batches += [[dict(v, pl=1) for v in r] for r in ex.map(playlist_videos, top)]
+        for res in batches:
                 for v in res:
-                    if v["id"] in seen or not tre.search(v["t"]) or BAD.search(v["t"]):
+                    if v["id"] in seen or BAD.search(v["t"]):
                         continue
+                    if not tre.search(v["t"]):
+                        # playlist items may skip his name, but never take one that names another sheikh
+                        if not v.get("pl") or any(o.search(v["t"]) for o in others):
+                            continue
                     if v["d"] < 180 or v["d"] > 3 * 3600:
                         continue
                     if kind == "q" and (re.search(r"أذان|اذان|ابتهال", v["t"]) or not TILAWA.search(v["t"])):
@@ -307,15 +436,37 @@ def build_sheikhs():
         lst = sorted(seen.values(), key=lambda v: -v["v"])[:CAP[kind]]
         with ThreadPoolExecutor(10) as ex:
             authors = list(ex.map(oembed, [v["id"] for v in lst]))
-        rows = [[v["id"], clean_title(v["t"]), v["d"], v["v"], a] for v, a in zip(lst, authors) if a is not None]
+        rows = [[v["id"], clean_title(v["t"]), v["d"], v["v"], a, group_of(kind, v)] for v, a in zip(lst, authors)
+                if a is not None and keep_row(tre, v["t"], a, v.get("pl"))]
         out[f"{kind}{pid}"] = rows
-        print(kind, pid, name, len(rows), flush=True)
-    old = sum(len(v) for v in load("sheikhs.json", {}).get("lists", {}).values())
+        print(kind, pid, name, len(rows), "playlists:", len(top), flush=True)
+    old = sum(v[0] for v in load("index.json", {}).get("keys", {}).values())
     new = sum(len(v) for v in out.values())
-    if old and new < old * 0.7:
-        print(f"sheikhs: only {new} videos this time (was {old}), keeping the old file")
+    if old and new < old * 0.7 and not only:
+        print(f"sheikhs: only {new} videos this time (was {old}), keeping the old files")
         return
-    save("sheikhs.json", {"updated": datetime.now(timezone.utc).strftime("%Y-%m-%d"), "lists": out})
+    save_sheikhs(out)
+
+
+def load_sheikhs():
+    idx = load("index.json", {}).get("keys", {})
+    return {k: load(f"s/{k}.json", []) for k in idx}
+
+
+def save_sheikhs(lists):
+    """فهرس صغير لكل الفولدرات + ملف لكل شيخ، عشان كل صفحة تحمّل شيخها بس."""
+    os.makedirs(os.path.join(OUT, "s"), exist_ok=True)
+    keys = {}
+    for k, rows in lists.items():
+        if not rows:
+            continue
+        save(f"s/{k}.json", rows)
+        groups = list(dict.fromkeys(r[5] for r in rows if len(r) > 5 and r[5]))
+        keys[k] = [len(rows), [r[0] for r in rows[:3]], groups]
+    for f in os.listdir(os.path.join(OUT, "s")):
+        if f[:-5] not in keys:
+            os.remove(os.path.join(OUT, "s", f))
+    save("index.json", {"updated": datetime.now(timezone.utc).strftime("%Y-%m-%d"), "keys": keys})
 
 
 if __name__ == "__main__":

@@ -515,7 +515,7 @@ const TILES = [
 function setTop(title, opts = {}) {
   const top = $("#top");
   if (opts.home) {
-    top.innerHTML = `<span class="brand"><svg aria-hidden="true"><use href="#i-star"/></svg><h1 data-t="ألترا قرآن">ألترا قرآن</h1></span>
+    top.innerHTML = `<span class="brand"><svg aria-hidden="true"><use href="#i-logo"/></svg><h1 data-t="ألترا قرآن">ألترا قرآن</h1></span>
       <span class="credit"><small>تصميم وتطوير</small><b data-t="أحمد الحضري">أحمد الحضري</b></span>
       <button class="btn-icon" data-go="#/search" aria-label="بحث">${ic("search")}</button>`;
   } else {
@@ -771,11 +771,12 @@ async function reciter(parts) {
   // one queue per recording so the play buttons on the cards start it straight away
   const playable = (rec) => recTracks(d, rec, img);
   const yk = ytKeyOf(d.group, id);
-  const ytRows = (await ytLists())[yk] || [];
+  const ytRows = await ytRowsOf(yk);
   if (ytRows.length) stats.push([n2a(ytRows.length), "مرئي"]);
   let body = "";
   if (d.recs.length === 1 && !d.videos.length) {
-    return pageWithSide(heroHTML({ id, name: d.name, facts, stats }), d.bio, ytSection(yk, ytRows, 8) + trackList(playable(d.recs[0]), d.recs[0], word));
+    const yv = d.group === "q" ? ytSection(yk, ytRows, 8) : ytFolder(yk, ytRows);
+    return pageWithSide(heroHTML({ id, name: d.name, facts, stats }), d.bio, yv + (ytRows.length && d.group !== "q" ? `<div class="sec-h"><h2>${d.group === "m" ? "الابتهالات" : "الصوتيات"}</h2></div>` : "") + trackList(playable(d.recs[0]), d.recs[0], word));
   }
   const cardFor = (rec) => {
     const kind = d.group === "q" ? kindOf(rec) : "rare";
@@ -813,7 +814,7 @@ async function reciter(parts) {
     body += `<section><div class="sec-h"><h2>الفيديوهات</h2>${vt.length > 6 ? `<a href="#/r/${id}/v">عرض الكل · ${n2a(vt.length)}</a>` : ""}</div>
       <div class="vrow">${vt.slice(0, 12).map((t, i) => videoCard(t, VL, i, { thumb: t.th })).join("")}</div></section>`;
   }
-  if (ytRows.length) body = ytSection(yk, ytRows) + body;
+  if (ytRows.length) body = d.group === "q" ? ytSection(yk, ytRows) + body : ytFolder(yk, ytRows) + body;
   after(() => {
     const f = $("#riwF");
     if (!f) return;
@@ -919,25 +920,41 @@ function ytWho(key) {
   const r = RECITERS.find((x) => x[0] === id);
   return { name: r ? r[1] : "", pid: id, href: `#/r/${id}` };
 }
-async function ytLists() {
-  try { return (await getJSON("data/yt/sheikhs.json")).lists || {}; } catch { return {}; }
+// index.json: {key: [count, [first 3 video ids], [folders]]}; s/<key>.json: that sheikh's videos
+async function ytIndex() {
+  try { return (await getJSON("data/yt/index.json")).keys || {}; } catch { return {}; }
+}
+async function ytRowsOf(key) {
+  if (!(await ytIndex())[key]) return [];
+  try { return await getJSON(`data/yt/s/${key}.json`); } catch { return []; }
 }
 function ytCard(t, L, i, opts = {}) {
-  return `<button class="vcard yt ${ytSeen(t.yt) ? "seen" : ""}" data-play="${L}:${i}" data-yt="${t.yt}">
+  return `<button class="vcard yt ${ytSeen(t.yt) ? "seen" : ""}" data-play="${L}:${i}" data-yt="${t.yt}" data-g="${esc(t.g || "")}">
     <span class="vthumb"><img src="${esc(t.th)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
       <span class="vplay">${icSm("play", 20)}</span>${t.dur ? `<span class="vdur">${esc(t.dur)}</span>` : ""}${ytSeen(t.yt) ? `<span class="vseen">${icSm("check", 12)} شاهدتها</span>` : ""}</span>
     <span class="vt">${esc(t.t)}</span>${opts.sub && t.ch ? `<span class="vs">${esc(t.ch)}</span>` : ""}</button>`;
 }
 function ytRowsToTracks(rows, who) {
-  return rows.map((r) => ytTrack(r[0], r[1], who.name, r[2], { ch: r[4], img: portrait(who.pid) }));
+  return rows.map((r) => ytTrack(r[0], r[1], who.name, r[2], { ch: r[4], g: r[5] || "", img: portrait(who.pid) }));
 }
 function ytSection(key, rows, limit = 12) {
   if (!rows || !rows.length) return "";
   const who = ytWho(key);
   const vt = ytRowsToTracks(rows, who);
   const L = reg(vt);
-  return `<section class="ytsec"><div class="sec-h"><h2>مرئيات مختارة</h2>${vt.length > limit ? `<a href="#/watch/${key}">عرض الكل · ${n2a(vt.length)}</a>` : `<span class="count">${n2a(vt.length)}</span>`}</div>
+  return `<section class="ytsec"><div class="sec-h"><h2>مرئيات مختارة</h2><a href="#/watch/${key}">فولدر المرئيات · ${n2a(vt.length)}</a></div>
     <div class="vrow">${vt.slice(0, limit).map((t, i) => ytCard(t, L, i, { sub: true })).join("")}</div></section>`;
+}
+
+// a folder that opens the sheikh's videos (for Shaarawy, Kishk and the munshids, next to their other folders)
+function ytFolder(key, rows) {
+  if (!rows || !rows.length) return "";
+  const groups = [...new Set(rows.map((r) => r[5]).filter(Boolean))];
+  return `<a class="ytfolder" href="#/watch/${key}">
+    <span class="wf-thumbs">${rows.slice(0, 3).map((r) => `<img src="${ytThumb(r[0])}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">`).join("")}
+      <span class="wf-count">${icSm("video", 13)} ${n2a(rows.length)}</span></span>
+    <span class="ytf-t"><span class="rcard-ic">${icSm("video", 20)}</span><b>المرئيات</b><small>${n2a(rows.length)} فيديو بالصوت والصورة${groups.length > 1 ? ` · ${esc(groups.join(" · "))}` : ""}</small>
+      <span class="ytf-go">افتح الفولدر ${icSm("chev", 15).replace('class="icon"', 'class="icon flip"')}</span></span></a>`;
 }
 
 /* دولة التلاوة */
@@ -1002,8 +1019,8 @@ const WATCH_GROUPS = [
   ["المبتهلون", (k) => k[0] === "m"],
 ];
 async function watch(parts) {
-  const lists = await ytLists();
-  if (parts[0]) return watchOne(parts[0], lists);
+  if (parts[0]) return watchOne(parts[0], await ytRowsOf(parts[0]));
+  const idx = await ytIndex();
   setTop("المكتبة المرئية");
   let dawlaCard = "";
   try {
@@ -1014,40 +1031,58 @@ async function watch(parts) {
       <span class="wf-in"><span class="dh-k">${icSm("star", 12)} ${esc(s.title)} يُعرض الآن</span><b>دولة التلاوة</b><small>الموسمين كاملين · ${n2a(n)} حلقة</small>
       <span class="feature-go">شاهد الحلقات ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></span></a>`;
   } catch {}
-  const keys = Object.keys(lists).filter((k) => lists[k].length);
+  const keys = Object.keys(idx).filter((k) => idx[k][0]);
   const order = (k) => { const i = RECITERS.findIndex((r) => r[0] === +k.slice(1)); return i < 0 ? 999 : i; };
   let body = "", total = 0;
   for (const [title, pick] of WATCH_GROUPS) {
     const ks = keys.filter(pick).sort((a, b) => order(a) - order(b));
     if (!ks.length) continue;
-    body += `<h2 class="wgroup">${esc(title)}</h2>`;
-    for (const k of ks) {
-      const who = ytWho(k), vt = ytRowsToTracks(lists[k], who), L = reg(vt);
-      total += vt.length;
-      body += `<section class="wrow"><div class="wrow-h"><a href="${who.href}">${avatar(who.pid, who.name)}<b>${esc(who.name)}</b></a>
-        <a class="wrow-all" href="#/watch/${k}">عرض الكل · ${n2a(vt.length)}</a></div>
-        <div class="vrow">${vt.slice(0, 10).map((t, i) => ytCard(t, L, i)).join("")}</div></section>`;
-    }
+    const n = ks.reduce((a, k) => a + idx[k][0], 0);
+    total += n;
+    body += `<div class="sec-h wgroup-h"><h2>${esc(title)}</h2><span class="count">${ks.length > 1 ? `${n2a(ks.length)} فولدر · ` : ""}${n2a(n)} فيديو</span></div>
+      <div class="wfolders ${ks.length === 1 ? "one" : ""}">${ks.map((k) => {
+        const who = ytWho(k), [count, ids, groups] = idx[k];
+        return `<a class="wfold" href="#/watch/${k}">
+          <span class="wf-thumbs">${ids.map((id) => `<img src="${ytThumb(id)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">`).join("")}
+            <span class="wf-count">${icSm("video", 13)} ${n2a(count)}</span></span>
+          <span class="wf-who">${avatar(who.pid, who.name)}<span><b>${esc(who.name)}</b><small>${esc(groups.slice(0, 3).join(" · ") || "مرئيات مختارة")}</small></span></span></a>`;
+      }).join("")}</div>`;
   }
-  return `${dawlaCard}<p class="lead">مختارات بالصوت والصورة لأعلام التلاوة المصرية والشعراوي وكشك والمبتهلين${total ? ` · ${n2a(total)} فيديو` : ""}، بتشتغل هنا على طول من غير ما تفتح يوتيوب.</p>${body}
-    <p class="yt-src">${icSm("video", 14)} الفيديوهات من يوتيوب، ومختارة من الأكتر مشاهدة لكل شيخ.</p>`;
+  return `${dawlaCard}<p class="lead">مختارات بالصوت والصورة لأعلام التلاوة المصرية والشعراوي وكشك والمبتهلين${total ? ` · ${n2a(total)} فيديو` : ""}. كل شيخ ليه فولدر، وجوه الفولدر حاجته متقسمة.</p>${body}
+    <p class="yt-src">${icSm("video", 14)} الفيديوهات من يوتيوب، ومختارة من الأكتر مشاهدة لكل شيخ، وبتشتغل هنا على طول.</p>`;
 }
-function watchOne(key, lists) {
+function watchOne(key, rows) {
   const who = ytWho(key);
   setTop(who.name ? `مرئيات ${who.name}` : "المكتبة المرئية");
-  const rows = lists[key] || [];
   const vt = ytRowsToTracks(rows, who), L = reg(vt);
+  const groups = [...new Set(vt.map((t) => t.g).filter(Boolean))];
+  const cnt = (g) => vt.filter((t) => t.g === g).length;
   after(() => {
-    const inp = $("#vq");
-    inp?.addEventListener("input", () => {
-      const v = norm(inp.value);
-      $$(".vgrid .vcard").forEach((c) => { c.hidden = v && !norm(c.textContent).includes(v); });
+    const inp = $("#vq"), chips = $("#gF");
+    let g = "";
+    const apply = () => {
+      const v = norm(inp?.value || "");
+      let shown = 0;
+      $$(".vgrid .vcard").forEach((c) => { const ok = (!g || c.dataset.g === g) && (!v || norm(c.textContent).includes(v)); c.hidden = !ok; shown += ok; });
+      $("#none").hidden = shown > 0;
+    };
+    inp?.addEventListener("input", apply);
+    chips?.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-gf]");
+      if (!b) return;
+      g = b.dataset.gf;
+      $$("[data-gf]", chips).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      apply();
     });
   });
   return `<section class="rhead k-mujawwad">${avatar(who.pid, who.name)}<div><span class="kind">المكتبة المرئية</span><h2>${esc(who.name)}</h2>
       <p>${n2a(vt.length)} فيديو · <a href="${who.href}">صفحة الشيخ</a></p></div></section>
+    ${groups.length > 1 ? `<div class="chips sticky-chips" role="group" aria-label="الأقسام" id="gF">
+      <button class="chip" aria-pressed="true" data-gf="">الكل · ${n2a(vt.length)}</button>
+      ${groups.map((g) => `<button class="chip" aria-pressed="false" data-gf="${esc(g)}">${esc(g)} · ${n2a(cnt(g))}</button>`).join("")}</div>` : ""}
     ${vt.length > 8 ? `<label class="search">${ic("search")}<input id="vq" type="search" placeholder="ابحث في الفيديوهات" autocomplete="off"></label>` : ""}
-    <div class="vgrid">${vt.map((t, i) => ytCard(t, L, i, { sub: true })).join("")}</div>`;
+    <div class="vgrid">${vt.map((t, i) => ytCard(t, L, i, { sub: true })).join("")}</div>
+    <div class="empty" id="none" hidden><b>مفيش نتيجة</b>جرّب كلمة تانية أو قسم تاني.</div>`;
 }
 
 /* ---------------- RADIO ---------------- */
@@ -1225,7 +1260,16 @@ async function lib(parts) {
         <div class="vgrid">${vt.map((t, n) => videoCard(t, L, n, { thumb: unique ? thumbOf(t.id) : "", label: (t.t.match(/الآيا?ت?\s*([\d–\-]+)/) || [])[1] || n2a(n + 1) })).join("")}</div>`;
     }
   }
-  if (node === root && sec === "1") body = ytSection("s1", (await ytLists()).s1) + body;
+  if (node === root && sec === "1") {
+    const rows = await ytRowsOf("s1");
+    if (rows.length && body.includes('<div class="poster-grid">')) {
+      body = body.replace(/(<div class="poster-grid">[\s\S]*?)(<\/div>)(?![\s\S]*poster-grid)/, (m0, a, b) => a + `<a class="poster k-video" href="#/watch/s1">
+          <span class="poster-bg" style="background-image:url('${ytThumb(rows[0][0], "hqdefault")}')"></span>
+          <span class="poster-ic">${icSm("video", 30)}</span><span class="poster-t">المرئيات</span>
+          <span class="poster-m">${n2a(rows.length)} فيديو من يوتيوب</span><span class="poster-s">تفسير وخواطر · لقاءات · قصص · دروس</span>
+          <span class="poster-go">افتح ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></a>` + b);
+    } else body = ytFolder("s1", rows) + body;
+  }
   if (node === root) return pageWithSide(head, root.bio || null, body);
   return head + body;
 }
