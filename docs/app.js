@@ -1590,6 +1590,104 @@ function refreshHomePrayer() {
   const ring = $("#hring");
   if (ring) ring.style.strokeDashoffset = String(100 - Math.max(0, Math.min(100, ((Date.now() - n.prev.t) / (n.t - n.prev.t)) * 100)));
   if ($("#hnext").dataset.k !== n.k) route();
+  refreshRamadan();
+}
+
+/* --- Ramadan card on the home prayer panel --- */
+function hijriParts(date, tz) {
+  const o = {};
+  try {
+    for (const p of new Intl.DateTimeFormat("en-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "numeric", year: "numeric", timeZone: tz }).formatToParts(date))
+      if (p.type !== "literal") o[p.type] = parseInt(p.value, 10);
+  } catch {}
+  return { d: o.day, m: o.month, y: o.year || o.relatedYear };
+}
+let RMD = null;
+function ramadanPlan() {
+  const c = prayerCfg();
+  const tz = c.tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const key = [ymdIn(tz).join("-"), c.lat, c.lng, c.method, c.asr].join("|");
+  if (RMD && RMD.key === key) return RMD;
+  const h = hijriParts(new Date(), tz);
+  if (!h.m) return (RMD = { key, ok: false });
+  let i = 0, p = null;
+  for (; i < 400; i++) { p = hijriParts(new Date(Date.now() + i * 864e5), tz); if (p.m === 9 && p.d === 1) break; }
+  if (i >= 400) return (RMD = { key, ok: false });
+  const eve = dayTimes(i - 1).maghrib;           // the night of 1 Ramadan starts at this maghrib
+  const firstDay = new Date(Date.now() + i * 864e5);
+  let date = "";
+  try { date = new Intl.DateTimeFormat("ar-EG-u-nu-latn", { weekday: "long", day: "numeric", month: "long", timeZone: tz }).format(firstDay); } catch {}
+  return (RMD = { key, ok: true, h, year: p.y, eve: eve.getTime(), date, tz });
+}
+function ramadanState() {
+  const r = ramadanPlan();
+  if (!r.ok) return null;
+  const now = Date.now();
+  const inMonth = r.h.m === 9;
+  const eveNight = !inMonth && now >= r.eve;
+  if (inMonth || eveNight) {
+    const t0 = dayTimes(0), t1 = dayTimes(1);
+    const day = inMonth ? r.h.d : 1;
+    let label, target;
+    if (eveNight) { label = "باقي على الإمساك"; target = t1.fajr.getTime(); }
+    else if (now < t0.fajr.getTime()) { label = "باقي على الإمساك"; target = t0.fajr.getTime(); }
+    else if (now < t0.maghrib.getTime()) { label = "باقي على الإفطار"; target = t0.maghrib.getTime(); }
+    else { label = "باقي على الإمساك"; target = t1.fajr.getTime(); }
+    return { mode: "in", day, label, ms: target - now, pct: Math.min(100, (day / 30) * 100),
+      title: "رمضان كريم", sub: eveNight ? "ليلة أول رمضان" : `اليوم ${day} من رمضان` };
+  }
+  const ms = r.eve - now;
+  const eid = r.h.m === 10 && r.h.d <= 3;
+  return { mode: "wait", ms, days: Math.floor(ms / 864e5), pct: Math.max(2, Math.min(100, 100 - (ms / (354 * 864e5)) * 100)),
+    kicker: eid ? "عيد فطر مبارك" : "باقي على رمضان", title: `رمضان ${r.year}`, sub: r.date ? `أول أيام الصيام · ${r.date}` : "" };
+}
+const RMD_ART = `<svg class="rmd-art" viewBox="0 0 120 150" aria-hidden="true">
+  <defs><radialGradient id="rmdGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffe2a0"/><stop offset=".6" stop-color="#f1b85a"/><stop offset="1" stop-color="#c47f2a"/></radialGradient></defs>
+  <mask id="rmdM"><rect width="120" height="150" fill="#fff"/><circle cx="101" cy="22" r="16" fill="#000"/></mask>
+  <circle class="rmd-moon" cx="93" cy="30" r="19" mask="url(#rmdM)"/>
+  <g class="rmd-lan l1"><line x1="38" y1="0" x2="38" y2="40"/><circle cx="38" cy="43" r="3"/>
+    <path class="cap" d="M27 56 L38 46 L49 56 Z"/><path class="body" d="M28 57 h20 l5 12 v22 l-5 12 h-20 l-5 -12 v-22 Z"/>
+    <path class="win" d="M31 66 h14 v28 h-14 Z"/><path class="rib" d="M38 57 v46 M23 80 h30"/><path class="cap" d="M30 103 h16 l-3 7 h-10 Z"/><line x1="38" y1="110" x2="38" y2="116"/></g>
+  <g class="rmd-lan l2"><line x1="70" y1="0" x2="70" y2="72"/><circle cx="70" cy="75" r="2.4"/>
+    <path class="cap" d="M62 85 L70 78 L78 85 Z"/><path class="body" d="M62.5 86 h15 l4 9 v16 l-4 9 h-15 l-4 -9 v-16 Z"/>
+    <path class="win" d="M65 93 h10 v20 h-10 Z"/><path class="rib" d="M70 86 v34 M58.5 103 h23"/><path class="cap" d="M64 120 h12 l-2 5 h-8 Z"/></g>
+  <g class="rmd-stars"><circle cx="12" cy="22" r="1.6"/><circle cx="104" cy="70" r="1.4"/><circle cx="16" cy="96" r="1.2"/><circle cx="96" cy="118" r="1.6"/></g>
+</svg>`;
+function rmdSegs(ms) {
+  ms = Math.max(0, ms % 864e5);
+  const p = (x) => String(x).padStart(2, "0");
+  const seg = (v, l) => `<span><b>${p(v)}</b><i>${l}</i></span>`;
+  return seg(Math.floor(ms / 3600e3), "ساعة") + seg(Math.floor((ms % 3600e3) / 60e3), "دقيقة") + seg(Math.floor((ms % 60e3) / 1000), "ثانية");
+}
+const dayWord = (n) => (n === 2 ? "يومين" : n >= 3 && n <= 10 ? "أيام" : "يوم");
+function ramadanCard() {
+  const s = ramadanState();
+  if (!s) return "";
+  const head = s.mode === "in"
+    ? `<span class="rmd-k">${s.sub}</span><b class="rmd-t">${s.title}</b>`
+    : `<span class="rmd-k">${s.kicker}</span><b class="rmd-t">${s.title}</b>`;
+  const big = s.mode === "in"
+    ? `<span class="rmd-lbl" id="rmdL">${s.label}</span><span class="rmd-clock big" id="rmdC">${countdown(s.ms)}</span>`
+    : `<span class="rmd-big"><b id="rmdD">${s.days}</b><i>${dayWord(s.days)}</i></span><span class="rmd-segs" id="rmdC">${rmdSegs(s.ms)}</span>`;
+  return `<div class="rmd ${s.mode}" id="rmd" data-mode="${s.mode}">
+    ${RMD_ART}
+    <span class="rmd-txt">${head}</span>
+    <span class="rmd-num">${big}</span>
+    <span class="rmd-bar" aria-hidden="true"><i id="rmdP" style="width:${s.pct.toFixed(1)}%"></i></span>
+    ${s.sub && s.mode === "wait" ? `<small class="rmd-date">${esc(s.sub)}</small>` : ""}
+  </div>`;
+}
+function refreshRamadan() {
+  const el = $("#rmd");
+  if (!el) return;
+  const s = ramadanState();
+  if (!s || s.mode !== el.dataset.mode) return route();
+  if (s.mode === "in") { $("#rmdC").textContent = countdown(s.ms); $("#rmdL").textContent = s.label; }
+  else {
+    const d = $("#rmdD");
+    if (d.textContent !== String(s.days)) { d.textContent = s.days; d.nextElementSibling.textContent = dayWord(s.days); }
+    $("#rmdC").innerHTML = rmdSegs(s.ms);
+  }
 }
 function autoCity() {
   const c = prayerCfg();
@@ -1626,6 +1724,7 @@ function homePrayerPanel() {
   try { hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "long", timeZone: c.tz || undefined }).format(new Date()); } catch {}
   return `<section class="ppanel lux">
     <span class="pl-corner tl"></span><span class="pl-corner tr"></span><span class="pl-corner bl"></span><span class="pl-corner br"></span>
+    <div class="pl-top">
     <a class="pl-head" href="#/prayer">
       <span class="pl-ring">
         <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="52"/><circle class="arc" id="hring" cx="60" cy="60" r="52" pathLength="100" style="stroke-dashoffset:${100 - pct}"/></svg>
@@ -1638,6 +1737,8 @@ function homePrayerPanel() {
         <span class="pl-at">الأذان ${fmtClock(n.t)}</span>
       </span>
     </a>
+    ${ramadanCard()}
+    </div>
     <div class="pq-row">${cells}</div>
     <div class="pl-foot">
       <a href="#/prayer">${icSm("pin", 14)} ${esc(c.name || "")}${c.auto ? " · أكّد مدينتك" : ""}${hijri ? ` · ${esc(hijri)}` : ""}</a>
