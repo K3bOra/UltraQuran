@@ -572,7 +572,7 @@ async function home() {
   }
   if (!NATIVE && !IS_ANDROID && !isStandalone() && !S.installHidden) {
     cont.push(card({ k: "install", act: "install", btn: "dl", cap: "على موبايلك", t: "ثبّت التطبيق", s: "أيقونة على الشاشة الرئيسية",
-      art: `<img src="icons/icon-192.png" alt="">`, extra: `<span class="cont-x" data-act="installHide" role="button" aria-label="إخفاء">${icSm("x", 13)}</span>` }));
+      art: `<img src="icons/icon-192.png?v=2" alt="">`, extra: `<span class="cont-x" data-act="installHide" role="button" aria-label="إخفاء">${icSm("x", 13)}</span>` }));
   }
   const tile = (x) => `<a class="tile ${x.p ? "has-p" : ""}" href="${x.go}">${x.p && portrait(x.p) ? `<span class="tile-bg" style="background-image:url('${portrait(x.p)}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`;
   const faces = RECITERS.filter((r) => r[5] && (r[2] === "q" || r[2] === "k")).slice(0, 72).map((r) => r[0]);
@@ -607,7 +607,7 @@ function appPromo() {
   if (NATIVE || S.promoOff || S.appInstalled || !IS_PHONE) return "";
   return `<div class="promo-pill">
     <a class="pp-main" href="${APK_URL}" download="UltraQuran.apk" type="application/vnd.android.package-archive" data-act="promoGot">
-      <span class="pp-ic"><img src="icons/icon-192.png" alt=""></span>
+      <span class="pp-ic"><img src="icons/icon-192.png?v=2" alt=""></span>
       <span class="pp-t">تطبيق أندرويد<small>الأذان حتى والتطبيق مقفول · مجاناً</small></span>
       <span class="pp-dl">${icSm("dl", 17)}</span>
     </a>
@@ -1567,8 +1567,8 @@ async function notifyPrayer(k, at) {
   const body = `حان الآن موعد أذان ${PNAME[k]} · ${fmtClock(at)}`;
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
-    if (reg) reg.showNotification(`صلاة ${PNAME[k]}`, { body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "adhan", renotify: true, vibrate: [300, 120, 300] });
-    else new Notification(`صلاة ${PNAME[k]}`, { body, icon: "icons/icon-192.png" });
+    if (reg) reg.showNotification(`صلاة ${PNAME[k]}`, { body, icon: "icons/icon-192.png?v=2", badge: "icons/icon-192.png?v=2", tag: "adhan", renotify: true, vibrate: [300, 120, 300] });
+    else new Notification(`صلاة ${PNAME[k]}`, { body, icon: "icons/icon-192.png?v=2" });
   } catch {}
 }
 setInterval(adhanTick, 1000);
@@ -1914,11 +1914,11 @@ window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); inst
 window.addEventListener("appinstalled", () => { installEvt = null; toast("اتثبت ✓ هتلاقي ألترا قرآن على الشاشة الرئيسية"); $$(".install-card").forEach((x) => x.remove()); });
 function installCard(force) {
   if (NATIVE) return "";
-  if (IS_ANDROID) return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png" alt=""></span>
+  if (IS_ANDROID) return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png?v=2" alt=""></span>
     <span class="grow"><b>تطبيق ألترا قرآن لأندرويد</b><small>كل محتوى الموقع، والأذان بصوت الشيخ في ميعاده حتى والتطبيق مقفول</small></span>
     <span class="install-btns"><a class="btn" style="height:38px;padding:0 16px" href="${APK_URL}" download>تحميل</a></span></div>`;
   if (isStandalone() || (!force && S.installHidden)) return "";
-  return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png" alt=""></span>
+  return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png?v=2" alt=""></span>
     <span class="grow"><b>ثبّت ألترا قرآن كتطبيق</b><small>أيقونة على الشاشة الرئيسية، يفتح ملء الشاشة، والأذان والإشعارات يشتغلوا أحسن</small></span>
     <span class="install-btns"><button class="btn" style="height:38px;padding:0 16px" data-act="install">تثبيت</button>
     ${force ? "" : `<button class="xbtn" data-act="installHide" aria-label="إخفاء">${icSm("x", 16)}</button>`}</span></div>`;
