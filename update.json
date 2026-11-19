@@ -1,20 +1,20 @@
 {
-  "version": "1.2",
-  "name": "Ultra Quran 1.2",
-  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.2/UltraQuran_Open.ipk",
-  "ipk_sha256": "0e92f89c91983f7767f83540aeb53a847f22dfb40b8323078c6a406b4d54776d",
-  "ipk_size": 31516136,
-  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.2/UltraQuran_DreamOS.deb",
-  "deb_sha256": "0e92f89c91983f7767f83540aeb53a847f22dfb40b8323078c6a406b4d54776d",
-  "deb_size": 31516136,
+  "version": "1.3",
+  "name": "Ultra Quran 1.3",
+  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.3/UltraQuran_Open.ipk",
+  "ipk_sha256": "ab2a70f191b739569bf3e8057c8c138a2001ce67ed8ebf4bb1486fa6855aa9a1",
+  "ipk_size": 34311186,
+  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.3/UltraQuran_DreamOS.deb",
+  "deb_sha256": "36bd1ce73f3533b6a6f204dd2051e1038051b14f04fb3681eb2f880143912d77",
+  "deb_size": 34311158,
   "notes": [
-    "Added Sheikh Muhammad Al-Mukhtar Al-Shanqiti to the Islamic library, with recordings and a short biography.",
-    "Added a daily Ramadan countdown to the home screen.",
-    "Added offline English and French translations of the Quran in the Mushaf reader for Hafs and Warsh."
+    "Dr. Mostafa Mahmoud’s collection in the Islamic Library, with his biography, audio recordings and Science and Faith videos.",
+    "An Islamic Visuals section on the home screen with 627 entries across 16 categories.",
+    "Listen to the current Mushaf page with the green key, with 22 recitation options for Hafs and Warsh."
   ],
   "notes_ar": [
-    "إضافة الشيخ محمد المختار الشنقيطي إلى المكتبة الإسلامية، مع تسجيلاته ونبذة عنه.",
-    "إضافة عدّاد رمضان في الشاشة الرئيسية.",
-    "إضافة الترجمة الإنجليزية والفرنسية لمعاني القرآن داخل المصحف لروايتي حفص وورش، وتعمل بدون إنترنت."
+    "مكتبة الدكتور مصطفى محمود داخل المكتبة الإسلامية، مع السيرة الذاتية والصوتيات وفيديوهات العلم والإيمان.",
+    "قسم المرئيات الإسلامية على الرئيسية، ويضم 627 مادة في 16 قسماً.",
+    "تلاوة الوجه داخل المصحف بالزر الأخضر، مع 22 اختيار تلاوة بحفص وورش."
   ]
 }
