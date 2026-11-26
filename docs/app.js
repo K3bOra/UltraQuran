@@ -1488,7 +1488,7 @@ async function mushaf(parts) {
 
 // [key, our recording id (for sheikhs without word timing), name]. Keys in QDC_IDS / QDC_EXTRA light up word by word.
 const MUSHAF_RECITERS = [
-  [118, 118, "الحصري"], [112, 112, "المنشاوي"], [51, 53, "عبد الباسط"], ["51j", 53, "عبد الباسط · مجوّد"], ["112j", 112, "المنشاوي · مجوّد"],
+  [118, 118, "الحصري"], [112, 112, "المنشاوي"], [51, 53, "عبد الباسط"], ["51j", 53, "عبد الباسط · مجوّد"],
   ["118l", 118, "الحصري · المعلّم"], [123, 123, "العفاسي"], [54, 54, "السديس"], [31, 31, "الشريم"], [92, 92, "ياسر الدوسري"],
   [4, 4, "الشاطري"], [89, 89, "هاني الرفاعي"], [24, 24, "خليفة الطنيجي"],
   [125, 125, "مصطفى إسماعيل"], [121, 121, "البنا"], [106, 106, "الطبلاوي"], [102, 102, "المعيقلي"],
@@ -1668,7 +1668,10 @@ window.addEventListener("resize", () => { clearTimeout(refitQpc.t); refitQpc.t =
 
 /* word-by-word sync: quran.com has the time of every word for these recordings */
 const QDC_IDS = { 118: 6, 112: 9, 51: 2, 123: 7, 54: 3, 31: 10, 4: 4, 89: 5, 92: 174, 24: 161 };
-const QDC_EXTRA = { "51j": [51, 1, "عبد الباسط · مجوّد"], "112j": [112, 8, "المنشاوي · مجوّد"], "118l": [118, 12, "الحصري · المصحف المعلّم"] };
+// Minshawi mujawwad (Madinah recording 8) was removed from its server (every file 404, Nov 2026): it is
+// no longer offered; a saved choice falls back to Minshawi murattal, which still lights word by word
+const QDC_EXTRA = { "51j": [51, 1, "عبد الباسط · مجوّد"], "118l": [118, 12, "الحصري · المصحف المعلّم"] };
+if (S.mReciter === "112j") S.mReciter = 112;
 const WS = { k: "", v: "", raf: 0, seg: null, segKey: "" };
 async function qdcSegments(rec, ch) {
   const d = await getJSON(`https://api.quran.com/api/v4/chapter_recitations/${rec}/${ch}?segments=true`);
@@ -1840,7 +1843,7 @@ function drawFollowBar() {
 async function readAlong() {
   const t = cur();
   if (!isSurahTrack(t)) return;
-  const key = t.qdc ? null : t.rid === 51 && t.mj ? "51j" : t.rid === 112 && t.mj ? "112j" : QDC_IDS[t.rid] ? t.rid : null;
+  const key = t.qdc ? null : t.rid === 51 && t.mj ? "51j" : t.rid === 112 && t.mj ? null : QDC_IDS[t.rid] ? t.rid : null;
   if ((t.qdc || key) && S.riwaya === "hafs" && mushafMode() === "qpc") {
     // same sheikh, the Madinah recording that has the time of every word; continue from the verse he's on
     let vk = `${t.ch}:1`;
