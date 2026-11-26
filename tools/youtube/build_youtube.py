@@ -111,6 +111,18 @@ def oembed(vid):
         return None
 
 
+def oembed_full(vid):
+    """(القناة، العنوان الأصلي) لو الفيديو مسموح يتشغل خارج يوتيوب، و None لو ممنوع."""
+    code, body = get("https://www.youtube.com/oembed?format=json&url=" + urllib.parse.quote("https://www.youtube.com/watch?v=" + vid))
+    if code != 200:
+        return None
+    try:
+        j = json.loads(body)
+        return j.get("author_name", ""), j.get("title", "")
+    except Exception:
+        return None
+
+
 EMOJI = re.compile("[\U0001F000-\U0001FAFF☀-➿️‍⭐⬆↔-⇿←-↓]")
 
 
@@ -476,15 +488,15 @@ def save_sheikhs(lists):
 # ---------------------------------------------------------------- الدعاة (المرئيات الإسلامية)
 # [مفتاح، اسم البحث، كلمة لازم تبقى في العنوان أو اسم القناة، فولدره في المكتبة، صورة المعرض]
 PREACHERS = [
-    ["p1", "د. طارق السويدان", "السويدان", "9/1", "l9-1"],
+    ["p1", "د. طارق السويدان", "طارق السويدان|Suwaidan", "9/1", "l9-1"],
     ["p2", "فهد الكندري", "فهد الكندري|فهد الكندرى|Fahad Al.?Kandari", "9/2", "l9-2"],
     ["p3", "د. عمر عبد الكافي", "عمر عبد ?الكافي|عبد ?الكافي", "9/3", "l9-3"],
-    ["p4", "الشيخ نبيل العوضي", "العوضي", "9/4", "l9-4"],
-    ["p5", "د. محمد راتب النابلسي", "النابلسي|راتب", "9/5", "l9-5"],
-    ["p6", "د. زغلول النجار", "زغلول", "9/6", "l9-6"],
+    ["p4", "الشيخ نبيل العوضي", "نبيل العوضي|نبيل العوضى|Nabil Al.?Awadi", "9/4", "l9-4"],
+    ["p5", "د. محمد راتب النابلسي", "النابلسي|النابلسى|محمد راتب|Nabulsi", "9/5", "l9-5"],
+    ["p6", "د. زغلول النجار", "زغلول النجار|زغلول النجّار|Zaghloul", "9/6", "l9-6"],
     ["p7", "الشيخ محمد العريفي", "العريفي", "9/7", "l9-7"],
     ["p8", "الشيخ محمد حسان", "محمد حسان|محمد حسّان", "9/8", "l9-8"],
-    ["p9", "الشيخ محمود المصري", "محمود المصري|محمود المصرى|أبو عمار", "9/9", "l9-9"],
+    ["p9", "الشيخ محمود المصري", "محمود المصري|محمود المصرى", "9/9", "l9-9"],
     ["p10", "الشيخ أحمد ديدات", "ديدات", "9/10", "l9-10"],
     ["p11", "الشيخ منصور السالمي", "السالمي|نايف الصحفي", "9/11", "l9-11"],
     ["p14", "د. علي الشبيلي", "الشبيلي", "9/14", "l9-14"],
@@ -520,7 +532,7 @@ POLITICS = re.compile(r"محكمة|المحكمة|شهادة|القضية|قضي
                       r"|يرد على|رد على|يهاجم|هجوم|فضيحة|فضائح|الحويني|الشيعة|شيعي|اليهود|يهود|إسرائيل|اسرائيل|السياسة|سياسي|مناظرة مع شيعي"
                       r"|\bJews?\b|Jewish|Israel|Zion|Crusade|الحجاب إثم|خلع الحجاب|الوطن|الجيش|الشرطة|الانتخابات|انتخابات|البرلمان", re.I)
 # family news, gossip, click-bait and charms: not lessons
-GOSSIP = re.compile(r"مسلسل|Drama|دراما|محمود عبد ?العزيز|بصوت القارئ|القارئ|تلاوة|تلاوه|Surah|مكتوبة|بحيري|البحيري|طلاق|زواج|زوجة|زوجته|ابن الشيخ|إبن الشيخ|ابنه|بنت الشيخ|ابنة|والدة|والده|اتصال|جلب|حبيب|سحر|عشق|غرام|صدمة|صادم|قبل الحذف"
+GOSSIP = re.compile(r"مسلسل|Drama|دراما|محمود عبد ?العزيز|بصوت القارئ|القارئ|تلاوة|تلاوه|Surah|مكتوبة|بحيري|البحيري|طلاق الشيخ|زواج الشيخ|زوجة الشيخ|زوجته|ابن الشيخ|إبن الشيخ|ابنه|بنت الشيخ|ابنة|والدة|والده|اتصال|جلب|حبيب|سحر|عشق|غرام|صدمة|صادم|قبل الحذف"
                     r"|لن تصدق|مفاج|عاجل|يكشف|يفضح|كشف حقيقة|حقيقة الشيخ|على الهواء|مذيع|تريند|ترند|مرض الشيخ|وفاة|جنازة|أموال|ثروة"
                     r"|معاوية|الجمل|صفين|كربلاء|الحسين|يبكي على|ينهار|تحدي|مقلب|ضحك|مضحك|نكت", re.I)
 # channels of the preachers themselves and of the Islamic TV stations they appear on
@@ -529,6 +541,9 @@ TRUSTED = re.compile(r"الرسمية|الرسمي|Official|قناة الرحم�
                      r"السويدان|الكندري|عبد ?الكافي|العوضي|النابلسي|زغلول|العريفي|محمد حسان|محمود المصري|ديدات|السالمي|الشبيلي|"
                      r"مصطفى حسني|خالد الجندي|علي جمعة|عبد ?المعز|مبروك عطية|عمر هاشم|الغزالي|عمرو خالد|هداية|الورداني|الجفري|المغامسي|المشاري|Zakir|ذاكر", re.I)
 PREACH_CAP = 400
+# films and shows that share a preacher's family name, and videos made against him
+MOVIE = re.compile(r"\bmovie\b|\bfilm\b|فيلم|افلام|أفلام|starring|بطولة|برومو|\btrailer\b|اعلان|إعلان|كليب|أغنية|اغنية|غناء|كوميدي|comedy|مسرحية|كرتون", re.I)
+CRITIC = r"(?:رد|الرد|ردود|مناصحة|نقد|ينتقد|انتقاد|أخطاء|اخطاء|أكاذيب|اكاذيب|كذب|تكذيب|ضلالات|بدع|يفضح|حقيقة|شبهات|افتراءات|الأخ وحيد|الاخ وحيد)\S*\s+(?:\S+\s+){0,3}"
 
 
 def build_preachers():
@@ -563,27 +578,211 @@ def build_preachers():
                     continue
                 seen[v["id"]] = v
         lst = sorted(seen.values(), key=lambda v: -v["v"])[:PREACH_CAP + 60]
-        with ThreadPoolExecutor(8) as ex:
-            authors = list(ex.map(oembed, [v["id"] for v in lst]))
-        rows = []
-        # the preacher's own channel and the Islamic stations first, then the rest by views
-        pairs = sorted(zip(lst, authors), key=lambda p: (0 if p[1] and TRUSTED.search(p[1]) else 1, -p[0]["v"]))
-        for v, a in pairs:
-            if a is None or POLITICS.search(a or "") or (excl and excl.search(a or "")):
-                continue
-            if not (tre.search(v["t"]) or tre.search(a or "")):
-                continue
-            g = next(n for n, rx in PREACH_GROUPS if not rx or re.search(rx, v["t"]))
-            rows.append([v["id"], clean_title(v["t"]), v["d"], v["v"], a, g])
-        rows = rows[:PREACH_CAP]
+        rows, series = finish_preacher(key, [(v["id"], v["t"], v["d"], v["v"]) for v in lst])
         if not rows:
             print(key, name, "nothing found")
             continue
         save(f"s/{key}.json", rows)
-        groups = list(dict.fromkeys(r[5] for r in rows))
-        keys[key] = [len(rows), [r[0] for r in rows[:3]], groups, name, path, poster]
+        keys[key] = preacher_entry(key, rows, series)
         print(key, name, len(rows), "playlists:", len(top), flush=True)
     idx["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    save("index.json", idx)
+
+
+# ---- what each preacher is known for (shown under his name) ----
+PREACH_ABOUT = {
+    "p1": "التاريخ الإسلامي والقيادة والسيرة", "p2": "رحلات إيمانية وبرامج للشباب",
+    "p3": "الرقائق والسيرة والدار الآخرة", "p4": "قصص الأنبياء والصحابة والمواعظ",
+    "p5": "التفسير وأسماء الله الحسنى والإيمان", "p6": "الإعجاز العلمي في القرآن والسنة",
+    "p7": "المواعظ والسيرة وقصص الصحابة", "p8": "التفسير وخطب الجمعة والسيرة",
+    "p9": "قصص الصحابة والتابعين والرقائق", "p10": "مقارنة الأديان والمناظرات",
+    "p11": "المواعظ والقصص المؤثرة", "p14": "الرقائق وقصص القرآن",
+    "p20": "تزكية النفس وبرامج رمضان", "p21": "التفسير والفقه والفتاوى",
+    "p22": "الفقه والتزكية والفتاوى", "p23": "الفتاوى والرقائق وقصص القرآن",
+    "p24": "الفقه والأسرة والفتاوى", "p25": "الحديث والسيرة النبوية",
+    "p26": "الفكر الإسلامي والدعوة", "p27": "قصص الأنبياء والسيرة والأخلاق",
+    "p29": "الفتاوى والأسرة وقضايا الشباب", "p30": "التزكية والمحبة والسيرة",
+    "p31": "التفسير والسيرة والتأملات القرآنية", "p32": "المواعظ والقصص والدار الآخرة",
+    "p33": "مقارنة الأديان والرد على الشبهات",
+}
+
+def _n(t):
+    t = re.sub("[\u064B-\u0652\u0640]", "", t)
+    t = re.sub("[أإٱ]", "ا", t)
+    return t.replace("ة", "ه").replace("ى", "ي").replace("ـ", "")
+
+_PROPHETS = "ادم|نوح|ابراهيم|موسي|عيسي|يوسف|يونس|ايوب|سليمان|داود|هود|صالح|لوط|شعيب|زكريا|يحيي|اسماعيل|ادريس|الياس|يعقوب|اسحاق"
+# first match wins, so the narrow topics come before the wide ones
+TOPICS = [
+    ("خطب الجمعة", r"خطبه|خطب الجمعه|\bخطب\b"),
+    ("مقارنة الأديان", r"المسيح عيسي|المسيحي|النصار|النصراني|الانجيل|الاناجيل|الكتاب المقدس|\bالقس|القسيس|البابا|مناظر|الثالوث|الصلب|التوراه|ملحد|الحاد|الالحاد|بوذ|هندوس|\bBible|Jesus|Christ|atheis|Hindu|debate"),
+    ("الإعجاز العلمي", r"اعجاز|الاعجاز|العلم الحديث|الكون|الفلك|النجوم|الجبال|البحار|الاجنه|الجنين|Miracle|scien"),
+    ("قصص الأنبياء", r"قصص الانبياء|الانبياء|نبي الله|سيدنا (" + _PROPHETS + r")|قصه (" + _PROPHETS + r")|\b(" + _PROPHETS + r") عليه السلام|ذو القرنين|اهل الكهف|اصحاب الكهف|الخضر"),
+    ("الصحابة وآل البيت", r"الصحابه|الصحابي|صحابي|ابو بكر|ابي بكر|الصديق|عمر بن الخطاب|الفاروق|عثمان بن عفان|علي بن ابي طالب|خالد بن الوليد|ابو عبيده|سعد بن|بلال بن|عائشه|خديجه|فاطمه الزهراء|زينب بنت|امهات المؤمنين|ال البيت|التابعين|عمر بن عبد العزيز|ابو هريره|حمزه|مصعب|سلمان الفارسي|Companion|Abu Bakr|Umar ibn|Uthman|Khalid ibn"),
+    ("السيرة النبوية", r"السيره|سيره الرسول|سيره النبي|سيره المصطفي|المصطفي|الرسول|رسول الله|النبي محمد|ﷺ|صلي الله عليه وسلم|غزوه|بدر|الخندق|الهجره|المولد النبوي|الاسراء|المعراج|Seerah|Prophet Muhammad"),
+    ("التاريخ الإسلامي", r"التاريخ|تاريخ|الاندلس|فتح |الفتوحات|الخلافه|صلاح الدين|القدس|الاقصي|العثماني|المماليك|القسطنطينيه|اليرموك|القادسيه|حطين|المغول|التتار|قطز|الفاتح|History|Conquest|Andalus"),
+    ("الدار الآخرة", r"القبر|الموت|الميت|يوم القيامه|القيامه|الجنه|النار|جهنم|الاخره|الآخره|الحساب|الصراط|الميزان|علامات الساعه|قيام الساعه|الدجال|الحشر|المحشر|البرزخ|سكرات|حسن الخاتمه|سوء الخاتمه|الشفاعه|الحوض|Paradise|Hell|Hereafter|grave|Judgment"),
+    ("رمضان والصيام", r"رمضان|الصيام|الصوم|صائم|العشر الاواخر|ليله القدر|الافطار|السحور|الاعتكاف|Ramadan"),
+    ("القرآن وتفسيره", r"تفسير|التفسير|تدبر|سوره|آيه|آيات|الآيه|قوله تعالي|القران|القرآن|خواطر قرانيه|Quran"),
+    ("العبادات", r"الصلاه|صلاه|الوضوء|الحج|العمره|الزكاه|الطهاره|الغسل|الاستخاره|قيام الليل|السنن|الاضحيه|عرفه|ذي الحجه|الاذان|السجود|الخشوع في"),
+    ("فتاوى وأحكام", r"\bحكم\b|احكام|يجوز|فتوي|فتاوي|حلال|حرام|سؤال|السائل|سائل|متصل|متصله|الفقه|فقه|شرعا|ما رايك|اسال"),
+    ("الأسرة والمرأة والتربية", r"الزوج|الزوجه|الزواج|زواج|طلاق|الاسره|المراه|النساء|البنات|\bالام\b|الاب\b|الابناء|الاولاد|الاطفال|تربيه|البيت|الحجاب|الوالدين|بر الوالدين|العائله|الحماه|الخطوبه|marriage|wife|husband|parents"),
+    ("العقيدة والإيمان", r"اسماء الله|الحسني|التوحيد|العقيده|الايمان|الشرك|القدر|الغيب|الملائكه|\bالجن\b|معرفه الله|صفات الله|اليقين بالله|وجود الله|Allah"),
+    ("الرقائق والتزكية", r"التوبه|توبه|الذنوب|ذنوب|المعاصي|معصيه|القلب|القلوب|الاخلاص|التوكل|الصبر|الرضا|الاستغفار|الدعاء|دعاء|ذكر الله|الذكر|البكاء|الحزن|الهم|الفرج|الابتلاء|البلاء|النفس|نفسك|اليقين|حب الله|محبه الله|القرب من الله|السكينه|الطمانينه|الخوف|الرجاء|حسن الظن|الشكر|الغفله|الدنيا|زهد|ربنا|الله"),
+    ("الأخلاق والحياة", r"الاخلاق|اخلاق|الصدق|الكذب|الامانه|الغيبه|النميمه|الحسد|الحقد|الظلم|الرزق|المال|الغني|الفقر|الجار|الصداقه|الشباب|النجاح|العمل|الوقت|السعاده|التفاؤل|الامل|الغضب|الكبر|التواضع|الحياء|الادب|الناس|life|success"),
+]
+_TOPICS = [(n, re.compile(rx, re.I)) for n, rx in TOPICS]
+TOPIC_ORDER = [n for n, _ in TOPICS] + ["مترجمة ومدبلجة بالعربي", "محاضرات بالإنجليزية", "مواعظ متنوعة"]
+
+def _fz(rx):
+    """regex مكتوب بالحروف الموحدة → يقبل الهمزات والتاء المربوطة والألف المقصورة."""
+    return rx.replace("ا", "[اأإٱ]").replace("ه", "[هة]").replace("ي", "[يى]")
+
+
+_HONOR = re.compile(_fz(r"(?:لفضيله|فضيله|للشيخ|الشيخ|شيخ|للدكتور|الدكتور|دكتور|الداعيه|الامام|الاستاذ|العلامه|الحبيب|د\s*[./]|أ\.د|ا\.د|\bمع\b|\bDr\.?|Sheikh|\bد\b)\s*"), re.I)
+_EPISODE = re.compile(_fz(r"(?:الحلقه|حلقه|الحلقات|Episode|\bEps?\b|لقاء|الجزء|جزء|\bج\b|\bPart|المجلس|الدرس|درس)\s*[:#\-]?\s*[\d٠-٩]*|[\d٠-٩]+\s*(?:هـ|م\b)?|\bح\s*[\d٠-٩]+|والاخيره|الاخيره|الاولي|الثانيه|الثالثه|الرابعه|الخامسه"), re.I)
+_SPLIT = re.compile(r"\s*(?:·|\|\||[|•–—«»\"“”{}\[\]()]|\s-\s|-(?=\S)|(?<=\S)-)\s*")
+_GENERIC = set(map(_n, "برنامج سلسلة قصة قصه قصص رقم حلقة حلقات الحلقة مقطع مقاطع روعة جميل جميلة اسمع شاهد استمع لايف مباشر بث فيديو كلمة كلمه موعظة موعظه خاطرة خاطره الله يا الله سبحان الله ماشاء الله مؤثرة التفسير تفسير خطبة الجمعة خطبه الجمعه خطبة جمعة مترجم محاضرة محاضره درس دروس مقطع رائع مؤثر جديد كامل كاملة كاملة رمضان مهم جدا English Subtitle حصريا قناة الرحمة القناة الرسمية HD لا تفوتك قصة مؤثرة روائع".split(" ") + ["خطبة الجمعة", "قناة الرحمة", "القناة الرسمية", "English Subtitle", "مقطع مؤثر", "مقطع رائع"]))
+# names that are not a program: sermons, dates, TV hosts, other preachers, filler phrases
+_NOTPROG = re.compile(_fz(r"^(?:و|بن|ابن|ابو|ال)\s|خطب|بتاريخ|بعنوان|يناير|فبراير|مارس|ابريل|مايو|يونيو|يوليو|اغسطس|سبتمبر|اكتوبر|نوفمبر|ديسمبر"
+                          r"|محرم|صفر|ربيع|جمادي|رجب|شعبان|شوال|القعده|الحجه|رحمه الله|تعالي|والله اعلم|رائع|مؤثر|الكامل|كامله|مترجم|مدبلج|بالعربي|dmc|قناه|\bTV\b|تي في"
+                          r"|الليثي|اديب|لميس|الدمرداش|خيري رمضان|الابراشي|ابو عمار|^الرسول$|^الحديث$|يرويها|^اقرا$|^الحلقه|^حلقه")
+                      + "|" + "|".join(_fz(_n(t)) for k, n, t, p, l in PREACHERS), re.I)
+_PROGRAM = re.compile(r"(?:برنامج|سلسله|سلسلة)\s+[\"«“']?([^·|()\"«»“”{}\[\]\d٠-٩\-–]{2,40})")
+_PSTOP = re.compile(_fz(r"\s(?:مع|لفضيله|للشيخ|الشيخ|للدكتور|الدكتور|د\s*[./]|الحلقه|حلقه|رمضان|الجزء|من|في)\b.*$"))
+_AR_DIG = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
+
+
+def _ep_no(t):
+    m = re.search(r"(?:الحلقة|الحلقه|حلقة|حلقه|Episode|\bEps?\b|لقاء|الجزء|\bح)\s*[:#\-]?\s*([\d٠-٩]+)", t, re.I)
+    return int(m.group(1).translate(_AR_DIG)) if m else 10 ** 6
+
+
+def _labels(title, tre, chan):
+    """أسماء البرامج والسلاسل اللي ممكن الفيديو يكون منها."""
+    t = tre.sub(" ", re.sub("[\u064B-\u0652\u0640]", "", title))
+    out = {}
+    def put(lab):
+        lab = re.sub("[\u064B-\u0652\u0640]", "", lab)
+        lab = re.sub(r"[!؟?.,:،…#_*/\\+=~]+", " ", lab)
+        lab = re.sub(r"\s+", " ", lab).strip()
+        lab = re.sub(r"^(?:في|فى|من برنامج|من سلسلة|برنامج|سلسلة|سلسله|المحاضرة|محاضرة|محاضره)\s+", "", lab)
+        lab = re.sub(_fz(r"\s*(?:الموسم\s*)?(?:الاول|الثاني|الثالث|الرابع|الخامس)$"), "", lab)
+        lab = re.sub(r"^\S\s+|\s+\S$", "", lab).strip()
+        k = _n(lab)
+        if (3 <= len(lab) <= 30 and k not in _GENERIC and k != _n(chan or "") and re.search(r"[؀-ۿ]{3}", lab)
+                and not _NOTPROG.search(k)):
+            out.setdefault(k, lab)
+    for m in re.finditer(_fz(r"(?:برنامج|سلسله)\s+[\"«“']?([^·|()\"«»“”{}\[\]\d٠-٩\-–]{2,40})"), t):
+        put(_PSTOP.sub("", m.group(1)))
+    for seg in _SPLIT.split(t):
+        put(_EPISODE.sub(" ", _HONOR.sub(" ", seg)))
+    return out
+
+
+def classify_preacher(key, rows):
+    """بيقسم فيديوهات الداعية: برامجه وسلاسله كل واحدة في فولدر، والباقي على حسب الموضوع."""
+    tok, name = next((t, n) for k, n, t, p, l in PREACHERS if k == key)
+    # his name (every part of it) is never a folder name
+    words = [w for w in re.sub(r"^(الشيخ|د\.|الحبيب)\s+", "", name).split() if len(w) > 2]
+    tre = re.compile(tok + "".join("|" + _fz(_n(w)) for w in words), re.I)
+    raw = [_labels(r[1], tre, r[4]) for r in rows]
+    labs = [set(d) for d in raw]
+    freq, shown = {}, {}
+    for d in raw:
+        for k, l in d.items():
+            freq[k] = freq.get(k, 0) + 1
+            shown.setdefault(k, {}).setdefault(l, 0)
+            shown[k][l] += 1
+    # a program is a name that comes back in 5 titles or more (but not in almost all of them)
+    progs = sorted([l for l, c in freq.items() if c >= 5 and c <= 0.7 * len(rows)], key=lambda l: -freq[l])
+    # drop a name that is only part of a longer program name
+    keep = []
+    for l in progs:
+        if not any(l != o and (l in o or o in l) and freq[o] >= freq[l] * 0.8 for o in keep):
+            keep.append(l)
+    progs = keep[:10]
+    name_of = {k: max(shown[k], key=shown[k].get) for k in progs}
+    for r, ls in zip(rows, labs):
+        hit = [l for l in progs if l in ls]
+        if hit:
+            r[5] = name_of[hit[0]]
+            continue
+        t = _n(tre.sub(" ", r[1]))
+        if not re.search(r"[؀-ۿ]", r[1]):
+            r[5] = "محاضرات بالإنجليزية"
+            continue
+        if re.search("مدبلج|بالعربي|مترجم", t):
+            r[5] = "مترجمة ومدبلجة بالعربي"
+            continue
+        r[5] = next((n for n, rx in _TOPICS if rx.search(t)), "مواعظ متنوعة")
+    # tiny topic folders go to the mixed one
+    series = set(name_of.values())
+    cnt = {}
+    for r in rows:
+        cnt[r[5]] = cnt.get(r[5], 0) + 1
+    for r in rows:
+        if cnt[r[5]] < 4:
+            r[5] = "مواعظ متنوعة"
+    cnt = {}
+    for r in rows:
+        cnt[r[5]] = cnt.get(r[5], 0) + 1
+    order = sorted(cnt, key=lambda g: (0, -cnt[g]) if g in series else (1, TOPIC_ORDER.index(g)))
+    pos = {g: i for i, g in enumerate(order)}
+    # programs in episode order, topics by views
+    rows.sort(key=lambda r: (pos[r[5]], _ep_no(r[1]) if r[5] in series else 0, -r[3]))
+    return rows, [g for g in order if g in series]
+
+
+def finish_preacher(key, items):
+    """items = [(id, title, seconds, views)] → الصفوف بعد الفلترة والتقسيم."""
+    tok = next(t for k, n, t, p, l in PREACHERS if k == key)
+    tre = re.compile(tok, re.I)
+    excl = re.compile(PREACH_EXCLUDE[key]) if key in PREACH_EXCLUDE else None
+    critic = re.compile(CRITIC + "(?:" + tok + ")", re.I)
+    with ThreadPoolExecutor(12) as ex:
+        info = list(ex.map(oembed_full, [x[0] for x in items]))
+    good = []
+    for (vid, t0, d, v), inf in zip(items, info):
+        if not inf:
+            continue
+        a, t = inf[0] or "", inf[1] or t0
+        if re.search(r"français|francais|\bfrench\b|\bVF\b|en français", t, re.I):
+            continue
+        if any(rx.search(t) for rx in (BAD, POLITICS, GOSSIP, MOVIE, critic)) or POLITICS.search(a) or MOVIE.search(a):
+            continue
+        if excl and (excl.search(t) or excl.search(a)):
+            continue
+        if not (tre.search(t) or tre.search(a)):
+            continue
+        good.append((vid, t, d, v, a))
+    # the preacher's own channel and the Islamic stations first, then the rest by views
+    good.sort(key=lambda x: (0 if TRUSTED.search(x[4]) else 1, -x[3]))
+    rows = [[vid, clean_title(t), d, v, a, ""] for vid, t, d, v, a in good[:PREACH_CAP]]
+    return classify_preacher(key, rows) if rows else (rows, [])
+
+
+def preacher_entry(key, rows, series):
+    name, path, poster = next((n, p, l) for k, n, t, p, l in PREACHERS if k == key)
+    groups = list(dict.fromkeys(r[5] for r in rows))
+    by_views = sorted(rows, key=lambda r: -r[3])
+    # [count, top 3, folders, name, library folder, poster, what he talks about, folders that are programs]
+    return [len(rows), [r[0] for r in by_views[:3]], groups, name, path, poster, PREACH_ABOUT.get(key, ""), series]
+
+
+def regroup_preachers():
+    """من غير بحث جديد: يرجّع العناوين الأصلية، ويفلتر تاني، ويقسم الفيديوهات فولدرات."""
+    only = set(filter(None, os.environ.get("ONLY", "").split(",")))
+    idx = load("index.json", {"keys": {}})
+    keys = idx.setdefault("keys", {})
+    for key, name, tok, path, poster in PREACHERS:
+        if (only and key not in only) or key not in keys:
+            continue
+        old = load(f"s/{key}.json", [])
+        rows, series = finish_preacher(key, [(r[0], r[1], r[2], r[3]) for r in old])
+        save(f"s/{key}.json", rows)
+        keys[key] = preacher_entry(key, rows, series)
+        print(key, name, len(old), "->", len(rows), "|", " / ".join(f"{g}:{sum(1 for r in rows if r[5] == g)}" for g in keys[key][2]), flush=True)
     save("index.json", idx)
 
 
@@ -595,3 +794,5 @@ if __name__ == "__main__":
         build_sheikhs()
     if "preachers" in what:
         build_preachers()
+    if "regroup" in what:
+        regroup_preachers()

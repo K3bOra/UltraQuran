@@ -510,7 +510,7 @@ const TILES = [
   { t: "د. مصطفى محمود", m: "العلم والإيمان · 1973 مادة", ic: "atom", go: "#/lib/15", lp: "l15-mahmoud" },
   { t: "المكتبة المرئية", m: "تلاوات وخواطر وابتهالات نادرة", ic: "video", go: "#/watch" },
   { t: "المسلسلات الإسلامية", m: "43 مسلسلاً · 1611 حلقة", ic: "film", go: "#/lib/17", lp: "l17-0" },
-  { t: "المرئيات الإسلامية", m: "25 داعية وعالِم · 8300+ فيديو", ic: "video", go: "#/lib/9", lp: "l9-0" },
+  { t: "المرئيات الإسلامية", m: "25 داعية وعالِم · 8100+ فيديو", ic: "video", go: "#/lib/9", lp: "l9-0" },
   { t: "المديح", m: "المديح النبوي والإنشاد · 948 فيديو", ic: "daf", go: "#/lib/18", lp: "l18-0" },
   { t: "التفسير وعلومه", m: "الطبري وابن كثير · 1520 مادة", ic: "tafsir", go: "#/lib/2" },
   { t: "الحديث الشريف", m: "شروح وكتب · 924 مادة", ic: "quote", go: "#/lib/3" },
@@ -568,6 +568,7 @@ async function route() {
   const [path, qs] = hash.split("?");
   const parts = path.split("/").filter(Boolean).map(decodeURIComponent);
   const view = $("#view");
+  view.__after = null;
   const tok = ++renderToken;
   LISTS = {}; listN = 0;
   setTab(parts[0] || "");
@@ -593,7 +594,7 @@ async function route() {
     view.innerHTML = `<div class="empty"><b>الصفحة دي مفتحتش</b>غالباً النت فصل. اتأكد من الاتصال وجرّب تاني.<div class="btn-row" style="justify-content:center"><button class="btn" data-act="reload">جرّب تاني</button></div></div>`;
   }
 }
-function after(fn) { $("#view").__after = fn; }
+function after(fn) { const v = $("#view"), prev = v.__after; v.__after = prev ? () => { prev(); fn(); } : fn; }
 
 /* ---------------- HOME ---------------- */
 async function home() {
@@ -959,7 +960,7 @@ function ytCard(t, L, i, opts = {}) {
   return `<button class="vcard yt ${ytSeen(t.yt) ? "seen" : ""}" data-play="${L}:${i}" data-yt="${t.yt}" data-g="${esc(t.g || "")}">
     <span class="vthumb"><img src="${esc(t.th)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
       <span class="vplay">${icSm("play", 20)}</span>${t.dur ? `<span class="vdur">${esc(t.dur)}</span>` : ""}${ytSeen(t.yt) ? `<span class="vseen">${icSm("check", 12)} شاهدتها</span>` : ""}</span>
-    <span class="vt">${esc(t.t)}</span>${opts.sub && t.ch ? `<span class="vs">${esc(t.ch)}</span>` : ""}</button>`;
+    <span class="vt" dir="auto">${esc(t.t)}</span>${opts.sub && t.ch ? `<span class="vs" dir="auto">${esc(t.ch)}</span>` : ""}</button>`;
 }
 function ytRowsToTracks(rows, who) {
   return rows.map((r) => ytTrack(r[0], r[1], who.name, r[2], { ch: r[4], g: r[5] || "", img: portrait(who.pid) || lpImg(who.lp) || ytThumb(r[0]) }));
@@ -982,6 +983,41 @@ function ytFolder(key, rows) {
       <span class="wf-count">${icSm("video", 13)} ${n2a(rows.length)}</span></span>
     <span class="ytf-t"><span class="rcard-ic">${icSm("video", 20)}</span><b>المرئيات</b><small>${n2a(rows.length)} فيديو بالصوت والصورة${groups.length > 1 ? ` · ${esc(groups.join(" · "))}` : ""}</small>
       <span class="ytf-go">افتح الفولدر ${icSm("chev", 15).replace('class="icon"', 'class="icon flip"')}</span></span></a>`;
+}
+
+/* الدعاة: كارت بصورته، وفولدرات برامجه ومواضيعه */
+const PREACH_HON = /^(الشيخ|د\.|الحبيب|الإمام)\s+/;
+const TOPIC_IC = { "خطب الجمعة": "mic", "مقارنة الأديان": "people", "الإعجاز العلمي": "atom", "قصص الأنبياء": "ship", "الصحابة وآل البيت": "shield",
+  "السيرة النبوية": "dome", "التاريخ الإسلامي": "books", "الدار الآخرة": "palm", "رمضان والصيام": "moon", "القرآن وتفسيره": "tafsir", "العبادات": "beads",
+  "فتاوى وأحكام": "quote", "الأسرة والمرأة والتربية": "kid", "العقيدة والإيمان": "star", "الرقائق والتزكية": "heart", "الأخلاق والحياة": "lantern",
+  "مترجمة ومدبلجة بالعربي": "text", "محاضرات بالإنجليزية": "text", "مواعظ متنوعة": "folder" };
+// a drawn cover for a preacher who has no picture in the gallery
+function preachArt(name) {
+  const m = name.match(PREACH_HON), title = m ? (m[1] === "د." ? "الدكتور" : m[1]) : "";
+  return `<span class="lp-art" aria-hidden="true"><svg class="lp-arch" viewBox="0 0 100 150" preserveAspectRatio="none"><path d="M8 150 V62 Q8 24 50 6 Q92 24 92 62 V150"/><path d="M17 150 V64 Q17 33 50 17 Q83 33 83 64 V150"/></svg>
+    <span class="lp-star">${icSm("star", 20)}</span>${title ? `<small>${title}</small>` : ""}<b>${esc(name.replace(PREACH_HON, ""))}</b></span>`;
+}
+function preachCard(k, href) {
+  const [count, , groups, name, , poster, about] = YT_META[k];
+  return `<a class="lpcard pcard ftile" href="${href}" data-n="${esc(name + " " + (about || ""))}">
+    <span class="lp-pic">${poster ? `<img src="${lpImg(poster)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : preachArt(name)}
+      <span class="lp-badge">${icSm("play", 11)} ${n2a(count)}</span></span>
+    <span class="lp-plate"><b>${esc(name)}</b>${about ? `<small class="lp-about">${esc(about)}</small>` : ""}<small>${n2a(count)} فيديو · ${n2a(groups.length)} قسم</small></span></a>`;
+}
+// the folders of one preacher: his programs first, then the topics
+function ytTopicFolders(key, rows) {
+  const series = new Set((YT_META[key] || [])[7] || []);
+  const gs = [...new Set(rows.map((r) => r[5]).filter(Boolean))];
+  const card = (g) => {
+    const gi = gs.indexOf(g), rs = rows.filter((r) => r[5] === g), isS = series.has(g);
+    const top = [...rs].sort((a, b) => b[3] - a[3]).slice(0, 3);
+    return `<a class="wfold tfold ${isS ? "series" : ""}" href="#/watch/${key}/${gi}">
+      <span class="wf-thumbs">${top.map((r) => `<img src="${ytThumb(r[0])}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">`).join("")}
+        <span class="wf-count">${icSm("video", 13)} ${n2a(rs.length)}</span>${isS ? `<span class="tf-tag">برنامج</span>` : ""}</span>
+      <span class="tf-t"><span class="tf-ic">${icSm(isS ? "tv" : TOPIC_IC[g] || "folder", 17)}</span><span><b>${esc(g)}</b><small>${n2a(rs.length)} ${isS ? "حلقة" : "فيديو"}</small></span></span></a>`;
+  };
+  const S = gs.filter((g) => series.has(g)), T = gs.filter((g) => !series.has(g));
+  return { S: S.map(card).join(""), T: T.map(card).join(""), nS: S.length, nT: T.length };
 }
 
 /* دولة التلاوة */
@@ -1047,6 +1083,7 @@ const WATCH_GROUPS = [
   ["الدعاة والعلماء", (k) => k[0] === "p"],
 ];
 async function watch(parts) {
+  if (parts[0]?.[0] === "p") return watchPreacher(parts[0], await ytRowsOf(parts[0]), parts[1]);
   if (parts[0]) return watchOne(parts[0], await ytRowsOf(parts[0]));
   const idx = await ytIndex();
   setTop("المكتبة المرئية");
@@ -1073,15 +1110,15 @@ async function watch(parts) {
         return `<a class="wfold" href="#/watch/${k}">
           <span class="wf-thumbs">${ids.map((id) => `<img src="${ytThumb(id)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">`).join("")}
             <span class="wf-count">${icSm("video", 13)} ${n2a(count)}</span></span>
-          <span class="wf-who">${whoAvatar(who)}<span><b>${esc(who.name)}</b><small>${esc(groups.slice(0, 3).join(" · ") || "مرئيات مختارة")}</small></span></span></a>`;
+          <span class="wf-who">${whoAvatar(who)}<span><b>${esc(who.name)}</b><small>${esc((k[0] === "p" && idx[k][6]) || groups.slice(0, 3).join(" · ") || "مرئيات مختارة")}</small></span></span></a>`;
       }).join("")}</div>`;
   }
   return `${dawlaCard}<p class="lead">مختارات بالصوت والصورة لأعلام التلاوة المصرية والشعراوي وكشك والمبتهلين${total ? ` · ${n2a(total)} فيديو` : ""}. كل شيخ ليه فولدر، وجوه الفولدر حاجته متقسمة.</p>${body}
     <p class="yt-src">${icSm("video", 14)} الفيديوهات من يوتيوب، ومختارة من الأكتر مشاهدة لكل شيخ، وبتشتغل هنا على طول.</p>`;
 }
-function watchOne(key, rows) {
+function watchOne(key, rows, folder) {
   const who = ytWho(key);
-  setTop(who.name ? `مرئيات ${who.name}` : "المكتبة المرئية");
+  setTop(folder || (who.name ? `مرئيات ${who.name}` : "المكتبة المرئية"));
   const vt = ytRowsToTracks(rows, who), L = reg(vt);
   const groups = [...new Set(vt.map((t) => t.g).filter(Boolean))];
   const cnt = (g) => vt.filter((t) => t.g === g).length;
@@ -1108,8 +1145,9 @@ function watchOne(key, rows) {
       apply();
     });
   });
-  return `<section class="rhead k-mujawwad">${whoAvatar(who)}<div><span class="kind">المكتبة المرئية</span><h2>${esc(who.name)}</h2>
-      <p>${n2a(vt.length)} فيديو · <a href="${who.href}">${who.lp || who.pid ? "صفحة الشيخ" : "المرئيات الإسلامية"}</a></p></div></section>
+  const series = folder && ((YT_META[key] || [])[7] || []).includes(folder);
+  return `<section class="rhead k-mujawwad">${whoAvatar(who)}<div><span class="kind">${folder ? esc(who.name) : "المكتبة المرئية"}</span><h2>${esc(folder || who.name)}</h2>
+      <p>${n2a(vt.length)} ${series ? "حلقة" : "فيديو"} · ${folder ? `<a href="#/watch/${key}">كل أقسام الشيخ</a>` : `<a href="${who.href}">${who.lp || who.pid ? "صفحة الشيخ" : "المرئيات الإسلامية"}</a>`}</p></div></section>
     ${groups.length > 1 ? `<div class="chips sticky-chips" role="group" aria-label="الأقسام" id="gF">
       <button class="chip" aria-pressed="true" data-gf="">الكل · ${n2a(vt.length)}</button>
       ${groups.map((g) => `<button class="chip" aria-pressed="false" data-gf="${esc(g)}">${esc(g)} · ${n2a(cnt(g))}</button>`).join("")}</div>` : ""}
@@ -1117,6 +1155,35 @@ function watchOne(key, rows) {
     <div class="vgrid" id="wgrid">${vt.slice(0, PAGE).map((t, i) => ytCard(t, L, i, { sub: true })).join("")}</div>
     <div class="btn-row more-row"><button class="btn ghost" id="wmore" ${vt.length > PAGE ? "" : "hidden"}>اعرض المزيد · فاضل ${n2a(vt.length - PAGE)}</button></div>
     <div class="empty" id="none" hidden><b>مفيش نتيجة</b>جرّب كلمة تانية أو قسم تاني.</div>`;
+}
+
+function watchPreacher(key, rows, gi) {
+  const gs = [...new Set(rows.map((r) => r[5]).filter(Boolean))];
+  if (gi != null && gs[+gi]) return watchOne(key, rows.filter((r) => r[5] === gs[+gi]), gs[+gi]);
+  const who = ytWho(key), m = YT_META[key] || [], f = ytTopicFolders(key, rows);
+  setTop(who.name);
+  const vt = ytRowsToTracks(rows, who), L = reg(vt);
+  after(() => {
+    const inp = $("#vq"), grid = $("#wgrid"), folders = $("#tfs");
+    inp.addEventListener("input", () => {
+      const v = norm(inp.value);
+      const hits = v ? vt.map((t, i) => [t, i]).filter(([t]) => norm(t.t + " " + (t.ch || "") + " " + t.g).includes(v)) : [];
+      folders.hidden = !!v; grid.hidden = !v;
+      grid.innerHTML = hits.slice(0, 90).map(([t, i]) => ytCard(t, L, i, { sub: true })).join("");
+      $("#none").hidden = !v || hits.length > 0;
+    });
+  });
+  return `<section class="rhead k-mujawwad">${whoAvatar(who)}<div><span class="kind">الدعاة والعلماء</span><h2>${esc(who.name)}</h2>
+      <p>${n2a(rows.length)} فيديو${f.nS ? ` · ${n2a(f.nS)} برنامج` : ""} · ${n2a(f.nT)} موضوع${m[4] ? ` · <a href="${who.href}">مكتبته</a>` : ""}</p></div></section>
+    ${m[6] ? `<p class="lead">${esc(m[6])}</p>` : ""}
+    <label class="search">${ic("search")}<input id="vq" type="search" placeholder="ابحث في كل فيديوهات الشيخ" autocomplete="off"></label>
+    <div id="tfs">
+      ${f.nS ? `<div class="sec-h"><h2>البرامج والسلاسل</h2><span class="count">${n2a(f.nS)}</span></div><div class="wfolders">${f.S}</div>` : ""}
+      ${f.nT ? `<div class="sec-h"><h2>حسب الموضوع</h2><span class="count">${n2a(f.nT)}</span></div><div class="wfolders">${f.T}</div>` : ""}
+    </div>
+    <div class="vgrid" id="wgrid" hidden></div>
+    <div class="empty" id="none" hidden><b>مفيش نتيجة</b>جرّب كلمة تانية.</div>
+    <p class="yt-src">${icSm("video", 14)} من قناة الشيخ الرسمية والقنوات الإسلامية على يوتيوب، ومتقسمة على برامجه ومواضيعه.</p>`;
 }
 
 /* ---------------- RADIO ---------------- */
@@ -1211,6 +1278,7 @@ async function lib(parts) {
   const posterId = node.poster_id || (root.bio && sec === "1" ? 999 : null);
   const img = portrait(posterId) || lpImg(node.poster) || lpImg(SEC_ART[sec]);
   const c = countLeaves(node);
+  if (node === root && sec === "9") { const idx = await ytIndex(); c.v += Object.keys(idx).filter((k) => k[0] === "p").reduce((a, k) => a + idx[k][0], 0); }
   const stats = [];
   if (c.a) stats.push([n2a(c.a), "صوتية"]);
   if (c.v) stats.push([n2a(c.v), "فيديو"]);
@@ -1237,14 +1305,38 @@ async function lib(parts) {
   }
 
   // ---- body: folders as cards, leaves as list or video grid
-  const folders = [], leaves = [];
+  let folders = [], leaves = [];
   kids.forEach((k, i) => (kidsOf(k) ? folders : leaves).push([k, i]));
-  let body = "";
+  let body = "", preach = "";
+  if (node === root && sec === "9") {
+    const idx = await ytIndex();
+    const ks = Object.keys(idx).filter((k) => k[0] === "p").sort((a, b) => +a.slice(1) - +b.slice(1));
+    const inLib = new Set();
+    const cards = ks.map((k) => {
+      const m = String(idx[k][4] || "").match(/^9\/(\d+)$/);
+      if (m) inLib.add(+m[1]);
+      return preachCard(k, m ? `${base}/${m[1]}` : `#/watch/${k}`);
+    });
+    if (ks.length) {
+      const n = ks.reduce((a, k) => a + idx[k][0], 0);
+      folders = folders.filter(([, i]) => !inLib.has(i));
+      preach = `<div class="sec-h"><h2>الدعاة والعلماء</h2><span class="count">${n2a(ks.length)} داعية · ${n2a(n)} فيديو</span></div>
+        <label class="search">${ic("search")}<input id="pq" type="search" placeholder="ابحث باسم الشيخ أو الموضوع" autocomplete="off"></label>
+        <div class="lpgrid" id="ptiles">${cards.join("")}</div>`;
+      after(() => {
+        const inp = $("#pq");
+        inp?.addEventListener("input", () => {
+          const v = norm(inp.value);
+          $$("#ptiles .ftile").forEach((t) => { t.hidden = v && !norm(t.dataset.n).includes(v); });
+        });
+      });
+    }
+  }
   if (folders.length) {
     const compact = folders.length > 10;
     const big = folders.length <= 3 && node === root && root.bio;
     const gallery = folders.filter(([k]) => k.poster).length >= Math.max(2, folders.length * 0.6);
-    body += `<div class="sec-h"><h2>${compact && !gallery ? "الفولدرات" : "الأقسام"}</h2><span class="count">${n2a(folders.length)}</span></div>`;
+    body += `<div class="sec-h"><h2>${preach ? "برامج وسلاسل" : compact && !gallery ? "الفولدرات" : "الأقسام"}</h2><span class="count">${n2a(folders.length)}</span></div>`;
     if (gallery) {
       body += `${compact ? `<label class="search">${ic("search")}<input id="fq" type="search" placeholder="ابحث بالاسم" autocomplete="off"></label>` : ""}
         <div class="lpgrid" id="ftiles">${folders.map(([k, i]) => `<a class="lpcard ftile" href="${base}/${i}" data-n="${esc(k.title)}">
@@ -1337,19 +1429,14 @@ async function lib(parts) {
     const idx = await ytIndex();
     const here = trail.length ? `${sec}/${trail.join("/")}` : "";
     const mine = Object.keys(idx).find((k) => k[0] === "p" && idx[k][4] && idx[k][4] === here);
-    if (mine) body = ytFolder(mine, await ytRowsOf(mine)) + body;
-    if (node === root && sec === "9") {
-      const ks = Object.keys(idx).filter((k) => k[0] === "p").sort((a, b) => +a.slice(1) - +b.slice(1));
-      const n = ks.reduce((a, k) => a + idx[k][0], 0);
-      if (ks.length) body = `<div class="sec-h"><h2>الدعاة والعلماء · يوتيوب</h2><span class="count">${n2a(ks.length)} داعية · ${n2a(n)} فيديو</span></div>
-        <div class="wfolders">${ks.map((k) => {
-          const who = ytWho(k), [count, ids, groups] = idx[k];
-          return `<a class="wfold" href="#/watch/${k}">
-            <span class="wf-thumbs">${ids.map((id) => `<img src="${ytThumb(id)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">`).join("")}
-              <span class="wf-count">${icSm("video", 13)} ${n2a(count)}</span></span>
-            <span class="wf-who">${whoAvatar(who)}<span><b>${esc(who.name)}</b><small>${esc(groups.slice(0, 3).join(" · "))}</small></span></span></a>`;
-        }).join("")}</div>` + body;
+    if (mine) {
+      const rows = await ytRowsOf(mine), f = ytTopicFolders(mine, rows);
+      body = `<div class="sec-h"><h2>مرئياته على يوتيوب</h2><a href="#/watch/${mine}">كل الفيديوهات · ${n2a(rows.length)}</a></div>
+        ${f.nS ? `<h3 class="tf-h">${icSm("tv", 16)} البرامج والسلاسل <span>${n2a(f.nS)}</span></h3><div class="wfolders">${f.S}</div>` : ""}
+        ${f.nT ? `<h3 class="tf-h">${icSm("folder", 16)} حسب الموضوع <span>${n2a(f.nT)}</span></h3><div class="wfolders">${f.T}</div>` : ""}
+        ${body ? `<div class="sec-sep"></div>` : ""}` + body;
     }
+    body = preach + body;
   }
   if (node === root && sec === "1") {
     const rows = await ytRowsOf("s1");
