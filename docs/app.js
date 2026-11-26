@@ -641,9 +641,12 @@ async function home() {
   }
   const tile = (x) => { const bg = (x.p && portrait(x.p)) || lpImg(x.lp); return `<a class="tile ${bg ? "has-p" : ""} ${x.cls || ""}" href="${x.go}">${x.cls === "dawla" ? DAWLA_ART : ""}${bg ? `<span class="tile-bg" style="background-image:url('${bg}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`; };
   const faces = RECITERS.filter((r) => r[5] && (r[2] === "q" || r[2] === "k")).slice(0, 72).map((r) => r[0]);
+  const zm = zinaMode();
+  if (zm) after(drawZina);
   return `<div class="home">
   <div class="home-top">
-    <section class="hero">
+    <section class="hero ${zm ? `has-zina z-${zm}` : ""}">
+      ${zm ? `<div class="zina" id="zina" aria-hidden="true"></div><div class="zina-t">${zm === "in" ? "رمضان كريم" : zm === "eid" ? "عيد مبارك" : "أهلاً رمضان"}</div>` : ""}
       <div class="date">${esc(greg)}${hijri ? ` · <b>${esc(hijri)}</b>` : ""}</div>
       <blockquote>﴿${esc(ayah[0])}﴾</blockquote>
       <cite>سورة ${esc(ayah[1])} · الآية ${n2a(ayah[2])}</cite>
@@ -2386,6 +2389,61 @@ function ramadanCard() {
     ${s.sub && s.mode === "wait" ? `<small class="rmd-date">${esc(s.sub)}</small>` : ""}
   </div>`;
 }
+/* زينة رمضان في الرئيسية: حبل زينة خيامية بفوانيس، من 3 شهور قبل رمضان لحد تالت يوم العيد */
+const ZINA_DAYS = 90;
+function zinaMode() {
+  const s = ramadanState();
+  if (!s) return null;
+  if (s.mode === "in") return "in";
+  if (s.kicker === "عيد فطر مبارك") return "eid";
+  return s.days <= ZINA_DAYS ? "wait" : null;
+}
+const ZINA_COLORS = ["#c8432f", "#e9b949", "#1f8a5b", "#2f6fb0", "#efe0bc", "#b8336a", "#e07b2e"];
+const ZINA_GLASS = ["#e0533f", "#2f9d6a", "#3b7fd0", "#e9b949"];
+// the rope is drawn for the real width of the card, so the flags keep their shape on any screen
+function drawZina() {
+  const box = $("#zina");
+  if (!box) return;
+  const W = Math.round(box.clientWidth);
+  const key = W + (matchMedia("(min-width: 1024px)").matches && !!$(".home > .cont-row") ? "c" : "");
+  if (!W || box.dataset.w === key) return;
+  box.dataset.w = key;
+  // on a wide screen the card is one short row when "continue" cards are shown: a flatter rope and the
+  // lanterns at the two sides, away from the ayah
+  const compact = matchMedia("(min-width: 1024px)").matches && !!$(".home > .cont-row");
+  const H = 92, top = 4, sag = compact ? 12 : W < 500 ? 26 : 34;
+  const n = Math.max(3, Math.round(W / (W < 500 ? 130 : 210))), seg = W / n;
+  let rope = "", flags = "", lans = "";
+  for (let i = 0; i < n; i++) {
+    const x0 = i * seg, x1 = x0 + seg, cx = x0 + seg / 2, cy = top + sag * 2;
+    rope += `M${x0.toFixed(1)} ${top}Q${cx.toFixed(1)} ${cy} ${x1.toFixed(1)} ${top}`;
+    const k = Math.max(5, Math.round(seg / 21));
+    for (let j = 1; j < k; j++) {
+      const t = j / k, u = 1 - t;
+      const x = u * u * x0 + 2 * u * t * cx + t * t * x1, y = u * u * top + 2 * u * t * cy + t * t * top;
+      const a = (Math.atan2(2 * u * (cy - top) + 2 * t * (top - cy), 2 * u * (cx - x0) + 2 * t * (x1 - cx)) * 180) / Math.PI;
+      const c = ZINA_COLORS[(i * 3 + j) % ZINA_COLORS.length];
+      flags += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)})"><path d="M-7.5 0H7.5L0 16Z" fill="${c}"/><path d="M-7.5 0H7.5L0 16Z" fill="url(#zDots)"/><path d="M-7.5 0H7.5" stroke="#fff6" stroke-width="1"/></g>`;
+    }
+  }
+  // a lantern hangs where two loops of the rope meet
+  const spots = compact ? [[seg * 0.22, 0], [W - seg * 0.22, 1]] : Array.from({ length: n - 1 }, (_, i) => [(i + 1) * seg, i + 1]);
+  for (const [lx, i] of spots) {
+    const g = ZINA_GLASS[i % ZINA_GLASS.length], len = compact ? 8 + i * 10 : 14 + ((i * 11) % 3) * 9;
+    const tt = (lx % seg) / seg, ly = compact ? top + 2 * tt * (1 - tt) * sag * 2 : top;
+    lans += `<span class="zl" style="left:${lx.toFixed(1)}px;top:${ly.toFixed(1)}px;--d:${(-i * 1.3).toFixed(1)}s;--t:${(4.2 + (i % 3) * 0.7).toFixed(1)}s">
+      <svg viewBox="0 0 26 ${60 + len}" width="26" height="${60 + len}"><line x1="13" y1="0" x2="13" y2="${len}" stroke="#d9b36c" stroke-width="1.2"/>
+      <g transform="translate(0 ${len})"><circle cx="13" cy="2.5" r="2.3" fill="none" stroke="#d9b36c" stroke-width="1.2"/>
+      <path d="M5 13Q13 2 21 13Z" fill="#d9b36c"/><path d="M5 14H21L24 21V36L21 43H5L2 36V21Z" fill="${g}" stroke="#e8c47c" stroke-width="1.1"/>
+      <path d="M7 18H19L21 22V35L19 39H7L5 35V22Z" fill="#fff1c4" opacity=".55"/><path d="M13 19V38M5 28.5H21" stroke="#9a6e2e" stroke-width="1"/>
+      <path d="M6 43H20L17 48H9Z" fill="#d9b36c"/><path d="M13 48L15 51.5 13 55 11 51.5Z" fill="#f3d58f"/></g></svg></span>`;
+  }
+  box.innerHTML = `<svg class="z-rope" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs>
+      <pattern id="zDots" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r=".9" fill="#fff" opacity=".35"/></pattern></defs>
+      <path d="${rope}" fill="none" stroke="#d9b36c" stroke-width="1.5"/>${flags}</svg>${lans}`;
+}
+window.addEventListener("resize", () => { clearTimeout(drawZina.t); drawZina.t = setTimeout(drawZina, 150); });
+
 function refreshRamadan() {
   const el = $("#rmd");
   if (!el) return;

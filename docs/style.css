@@ -2194,3 +2194,22 @@ body.immersive .imm-exit { box-shadow: 0 4px 14px #0004; }
   color: #0b2b27; background: linear-gradient(135deg, #fbe3a8, #d9b36c); }
 .tfold.series .tf-ic { color: #0b2b27; background: linear-gradient(135deg, #fbe3a8, #d9b36c); box-shadow: none; }
 @media (min-width: 960px) { #ptiles { grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); } }
+
+/* ---- Ramadan decoration on the home card ---- */
+.hero.has-zina { padding-top: 92px; }
+@media (min-width: 760px) { .hero.has-zina { padding-top: 104px; } }
+@media (min-width: 1000px) { .home-top .hero.has-zina { padding-top: 104px; justify-content: flex-start; } }
+.zina { position: absolute; z-index: 0; top: 0; inset-inline: 0; height: 92px; pointer-events: none; direction: ltr; }
+.z-rope { position: absolute; top: 0; left: 0; display: block; filter: drop-shadow(0 3px 4px #0006); }
+.zl { position: absolute; top: 4px; margin-left: -13px; transform-origin: 13px 0; will-change: transform;
+  animation: zSwing var(--t, 4.6s) ease-in-out var(--d, 0s) infinite alternate; }
+.zl svg { display: block; overflow: visible; filter: drop-shadow(0 0 6px #f1b85a99) drop-shadow(0 4px 4px #0006); }
+@keyframes zSwing { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+@media (prefers-reduced-motion: reduce) { .zl { animation: none; } }
+.zina-t { position: relative; margin: -6px 0 6px; font: 700 clamp(28px, 8vw, 40px)/1.3 "Aref Ruqaa", var(--quran); color: #f3d58f;
+  text-shadow: 0 0 18px #f1b85a55, 0 2px 6px #0008; }
+.hero.has-zina > *:not(.zina) { position: relative; }
+@media (min-width: 1024px) {
+  .home:has(.cont-row) .hero.has-zina { padding-top: 40px; justify-content: center; }
+  .home:has(.cont-row) .hero.has-zina .zina-t { display: none; }
+}
