@@ -10,6 +10,7 @@ import json
 import os
 import re
 import sys
+import time
 
 from PIL import Image
 
@@ -109,7 +110,69 @@ dump("meta.json", meta)
 dump("radios.json", [[r[1], r[2]] for r in cat["radios"]])
 
 for f in os.listdir(os.path.join(DATA, "lib")):
+    # yt-<id>.json and 19.json (their index) become data/yt/ below; 16 (دولة التلاوة) has its own
+    # auto-updated page on the site (#/tv, data/yt/dawla.json)
+    if f.startswith("yt-") or f in ("16.json.gz", "19.json.gz"):
+        continue
     dump("lib/" + f.replace(".json.gz", ".json"), load("lib/" + f))
+
+
+# ---- the plugin's YouTube library (319 sheikhs) -> data/yt/index.json + data/yt/s/<key>.json ----
+# Rows on the site: [id, title, seconds, views, channel, group]. Rows already on the site (from
+# tools/youtube/build_youtube.py, with view counts) stay first; the plugin's verified rows are added after.
+def seconds(text):
+    total = 0
+    for part in str(text or "").split(":"):
+        if not part.strip().isdigit():
+            return 0
+        total = total * 60 + int(part)
+    return total
+
+
+group_of = {row[0]: row[2] for row in index}
+yt_dir = os.path.join(OUT, "data", "yt")
+yt_index_path = os.path.join(yt_dir, "index.json")
+try:
+    yt_index = json.load(open(yt_index_path, encoding="utf-8"))
+except (IOError, ValueError):
+    yt_index = {"keys": {}}
+keys = yt_index.setdefault("keys", {})
+added = 0
+for f in sorted(os.listdir(os.path.join(DATA, "lib"))):
+    m = re.match(r"yt-(\d+)\.json\.gz$", f)
+    if not m:
+        continue
+    pid = int(m.group(1))
+    if pid not in group_of:
+        continue
+    key = "%s%d" % (group_of[pid], pid)
+    path = os.path.join(yt_dir, "s", key + ".json")
+    try:
+        rows = json.load(open(path, encoding="utf-8"))
+    except (IOError, ValueError):
+        rows = []
+    seen = {r[0] for r in rows}
+    for item in load("lib/" + f):
+        vid = item.get("youtube_id")
+        if not vid or vid in seen:
+            continue
+        seen.add(vid)
+        badge = item.get("badge") or ""
+        channel = DUR_TAIL.sub("", badge).strip() if DUR_TAIL.search(badge) else ""
+        rows.append([vid, item.get("title") or "", seconds(item.get("duration")), 0, channel,
+                     item.get("group") or "تلاوات مختارة"])
+        added += 1
+    if not rows:
+        continue
+    dump("yt/s/%s.json" % key, rows)
+    folders = []
+    for r in rows:
+        if r[5] and r[5] not in folders:
+            folders.append(r[5])
+    keys[key] = [len(rows), [r[0] for r in rows[:3]], folders]
+yt_index["updated"] = time.strftime("%Y-%m-%d")
+dump("yt/index.json", yt_index)
+print("youtube folders", len(keys), "videos", sum(v[0] for v in keys.values()), "added from plugin", added)
 for f in os.listdir(os.path.join(DATA, "tafsir")):
     dump("tafsir/" + f.replace(".json.gz", ".json"), load("tafsir/" + f))
 
@@ -122,7 +185,21 @@ for pid in have_portrait:
     h = round(im.height * w / im.width)
     im.resize((w, h), Image.LANCZOS).save(os.path.join(pdir, "%d.webp" % pid), "WEBP", quality=78, method=6)
 
-print("people", len(index), "portraits", len(have_portrait), "radios", len(cat["radios"]))
+# gallery posters of the encyclopedia (series, preachers, programmes) -> img/lp/<name>.webp
+lp_src = os.path.join(SRC, "posters_src")
+lp_dir = os.path.join(OUT, "img", "lp")
+os.makedirs(lp_dir, exist_ok=True)
+posters = 0
+for f in sorted(os.listdir(lp_src)) if os.path.isdir(lp_src) else []:
+    if not f.endswith(".jpg"):
+        continue
+    im = Image.open(os.path.join(lp_src, f)).convert("RGB")
+    w = min(360, im.width)
+    h = round(im.height * w / im.width)
+    im.resize((w, h), Image.LANCZOS).save(os.path.join(lp_dir, f[:-4] + ".webp"), "WEBP", quality=80, method=6)
+    posters += 1
+
+print("people", len(index), "portraits", len(have_portrait), "radios", len(cat["radios"]), "posters", posters)
 
 # ---- adhan recordings of the legends (short, standalone tracks only) ----
 ADHAN = re.compile(r"(^|\s|-)(ال)?[أا]ذان")

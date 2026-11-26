@@ -494,8 +494,12 @@ const TILES = [
   { t: "الشيخ الشعراوي", m: "خواطر التفسير صوتاً وصورة", ic: "mic", go: "#/lib/1", p: 999 },
   { t: "المصحف والتفسير", m: "604 صفحة بروايتي حفص وورش", ic: "book", go: "#/mushaf" },
   { t: "الشيخ كشك", m: "383 خطبة في 10 أقسام", ic: "mic", go: "#/r/950", p: 950 },
-  { t: "المبتهلون", m: "14 من أعلام الابتهال", ic: "star", go: "#/quran/m", p: 951 },
+  { t: "المبتهلون", m: "19 من أعلام الابتهال", ic: "star", go: "#/quran/m", p: 951 },
+  { t: "د. مصطفى محمود", m: "العلم والإيمان · 1973 مادة", ic: "atom", go: "#/lib/15", lp: "l15-mahmoud" },
   { t: "المكتبة المرئية", m: "تلاوات وخواطر وابتهالات نادرة", ic: "video", go: "#/watch" },
+  { t: "المسلسلات الإسلامية", m: "43 مسلسلاً · 1611 حلقة", ic: "film", go: "#/lib/17", lp: "l17-0" },
+  { t: "المرئيات الإسلامية", m: "برامج الدعاة · 1231 حلقة", ic: "video", go: "#/lib/9", lp: "l9-0" },
+  { t: "المديح", m: "المديح النبوي والإنشاد · 948 فيديو", ic: "daf", go: "#/lib/18", lp: "l18-0" },
   { t: "التفسير وعلومه", m: "الطبري وابن كثير · 1155 درساً", ic: "tafsir", go: "#/lib/2" },
   { t: "الحديث الشريف", m: "شروح صوتية كاملة · 681 مادة", ic: "quote", go: "#/lib/3" },
   { t: "السنة والشمائل", m: "الشمائل والطب النبوي", ic: "lantern", go: "#/lib/4" },
@@ -503,9 +507,13 @@ const TILES = [
   { t: "قصص الأنبياء", m: "كما وردت في القرآن · 108 حلقة", ic: "ship", go: "#/lib/6" },
   { t: "العقيدة والفقه", m: "التوحيد وفقه العبادات", ic: "dome", go: "#/lib/7" },
   { t: "الأذكار والرقية", m: "حصن المسلم والمسبحة", ic: "beads", go: "#/lib/8" },
-  { t: "أسماء الله الحسنى", m: "الأسماء الـ 99 ومعانيها", ic: "star", go: "#/lib/9" },
-  { t: "إذاعات القرآن", m: "173 إذاعة بث مباشر", ic: "radio", go: "#/radio" },
+  { t: "الرقية الشرعية", m: "مسموعة ومرئية · 177 مادة", ic: "shield", go: "#/lib/25" },
+  { t: "أسماء الله الحسنى", m: "الأسماء الـ 99 ومعانيها", ic: "star", go: "#/lib/7/7" },
+  { t: "أحكام التجويد", m: "د. أيمن سويد والمتون · 518 مادة", ic: "wave", go: "#/lib/23" },
+  { t: "د. محمد راتب النابلسي", m: "خطب ودروس وتفسير · 583 مادة", ic: "mic", go: "#/lib/24", lp: "l24-lectures" },
+  { t: "إذاعات القرآن", m: "177 إذاعة بث مباشر", ic: "radio", go: "#/radio" },
   { t: "المكتبة الإسلامية", m: "زاد المعاد والمتون", ic: "books", go: "#/lib/11" },
+  { t: "ميراث الأنبياء", m: "دروس وصوتيات وفتاوى", ic: "books", go: "#/lib/11/7" },
   { t: "عالم الأطفال", m: "المصحف المعلم وجزء عمّ", ic: "kid", go: "#/lib/12" },
   { t: "التقويم الإسلامي", m: "التاريخ الهجري والمواسم", ic: "moon", go: "#/lib/13" },
   { t: "المسابقات", m: "70 سؤالاً بالنتيجة", ic: "q", go: "#/quiz" },
@@ -618,7 +626,7 @@ async function home() {
     cont.push(card({ k: "install", act: "install", btn: "dl", cap: "على موبايلك", t: "ثبّت التطبيق", s: "أيقونة على الشاشة الرئيسية",
       art: `<img src="icons/icon-192.png?v=2" alt="">`, extra: `<span class="cont-x" data-act="installHide" role="button" aria-label="إخفاء">${icSm("x", 13)}</span>` }));
   }
-  const tile = (x) => `<a class="tile ${x.p ? "has-p" : ""} ${x.cls || ""}" href="${x.go}">${x.cls === "dawla" ? DAWLA_ART : ""}${x.p && portrait(x.p) ? `<span class="tile-bg" style="background-image:url('${portrait(x.p)}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`;
+  const tile = (x) => { const bg = (x.p && portrait(x.p)) || lpImg(x.lp); return `<a class="tile ${bg ? "has-p" : ""} ${x.cls || ""}" href="${x.go}">${x.cls === "dawla" ? DAWLA_ART : ""}${bg ? `<span class="tile-bg" style="background-image:url('${bg}')"></span>` : ""}<span class="ic">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.m)}</small></a>`; };
   const faces = RECITERS.filter((r) => r[5] && (r[2] === "q" || r[2] === "k")).slice(0, 72).map((r) => r[0]);
   return `<div class="home">
   <div class="home-top">
@@ -720,12 +728,12 @@ const archiveId = (u) => (String(u).match(/^https:\/\/archive\.org\/download\/([
 const thumbOf = (id) => (id ? `https://archive.org/services/img/${encodeURIComponent(id)}` : "");
 const icSm = (n, px = 18) => `<svg class="icon" aria-hidden="true" style="width:${px}px;height:${px}px"><use href="#i-${n}"/></svg>`;
 
-function heroHTML({ id, name, facts, stats, bg }) {
-  const src = portrait(id);
+function heroHTML({ id, name, facts, stats, bg, src: own }) {
+  const src = own || portrait(id);
   return `<section class="phero">
     ${src ? `<div class="phero-bg" style="background-image:url('${src}')"></div>` : ""}
     <div class="phero-in">
-      ${avatar(id, name)}
+      ${own ? `<span class="avatar"><img src="${own}" alt="" decoding="async"></span>` : avatar(id, name)}
       <h2>${esc(name)}</h2>
       ${facts ? `<p class="facts">${esc(facts)}</p>` : ""}
       ${stats?.length ? `<div class="stats">${stats.map(([v, l]) => `<span><b>${esc(v)}</b>${esc(l)}</span>`).join("")}</div>` : ""}
@@ -1057,20 +1065,25 @@ function watchOne(key, rows) {
   const vt = ytRowsToTracks(rows, who), L = reg(vt);
   const groups = [...new Set(vt.map((t) => t.g).filter(Boolean))];
   const cnt = (g) => vt.filter((t) => t.g === g).length;
+  const PAGE = 60;
   after(() => {
-    const inp = $("#vq"), chips = $("#gF");
-    let g = "";
+    const inp = $("#vq"), chips = $("#gF"), grid = $("#wgrid"), more = $("#wmore");
+    let g = "", limit = PAGE;
     const apply = () => {
       const v = norm(inp?.value || "");
-      let shown = 0;
-      $$(".vgrid .vcard").forEach((c) => { const ok = (!g || c.dataset.g === g) && (!v || norm(c.textContent).includes(v)); c.hidden = !ok; shown += ok; });
-      $("#none").hidden = shown > 0;
+      const hits = [];
+      vt.forEach((t, i) => { if ((!g || t.g === g) && (!v || norm(t.t + " " + (t.ch || "")).includes(v))) hits.push(i); });
+      grid.innerHTML = hits.slice(0, limit).map((i) => ytCard(vt[i], L, i, { sub: true })).join("");
+      $("#none").hidden = hits.length > 0;
+      more.hidden = hits.length <= limit;
+      more.textContent = `اعرض المزيد · فاضل ${n2a(hits.length - limit)}`;
     };
-    inp?.addEventListener("input", apply);
+    more.addEventListener("click", () => { limit += PAGE * 2; apply(); });
+    inp?.addEventListener("input", () => { limit = PAGE; apply(); });
     chips?.addEventListener("click", (e) => {
       const b = e.target.closest("[data-gf]");
       if (!b) return;
-      g = b.dataset.gf;
+      g = b.dataset.gf; limit = PAGE;
       $$("[data-gf]", chips).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
       apply();
     });
@@ -1081,7 +1094,8 @@ function watchOne(key, rows) {
       <button class="chip" aria-pressed="true" data-gf="">الكل · ${n2a(vt.length)}</button>
       ${groups.map((g) => `<button class="chip" aria-pressed="false" data-gf="${esc(g)}">${esc(g)} · ${n2a(cnt(g))}</button>`).join("")}</div>` : ""}
     ${vt.length > 8 ? `<label class="search">${ic("search")}<input id="vq" type="search" placeholder="ابحث في الفيديوهات" autocomplete="off"></label>` : ""}
-    <div class="vgrid">${vt.map((t, i) => ytCard(t, L, i, { sub: true })).join("")}</div>
+    <div class="vgrid" id="wgrid">${vt.slice(0, PAGE).map((t, i) => ytCard(t, L, i, { sub: true })).join("")}</div>
+    <div class="btn-row more-row"><button class="btn ghost" id="wmore" ${vt.length > PAGE ? "" : "hidden"}>اعرض المزيد · فاضل ${n2a(vt.length - PAGE)}</button></div>
     <div class="empty" id="none" hidden><b>مفيش نتيجة</b>جرّب كلمة تانية أو قسم تاني.</div>`;
 }
 
@@ -1140,11 +1154,17 @@ async function radio() {
 /* ---------------- LIBRARY ---------------- */
 const kidsOf = (n) => n && (n.folders || n.items || n.children || null);
 const nodeTitle = (n) => n.title || "";
-const SEC_ICON = { 1: "mic", 2: "tafsir", 3: "quote", 4: "lantern", 5: "palm", 6: "ship", 7: "dome", 8: "beads", 9: "star", 11: "books", 12: "kid", 13: "moon" };
+const SEC_ICON = { 1: "mic", 2: "tafsir", 3: "quote", 4: "lantern", 5: "palm", 6: "ship", 7: "dome", 8: "beads", 9: "video", 11: "books", 12: "kid", 13: "moon",
+  15: "atom", 17: "film", 18: "daf", 23: "wave", 24: "mic", 25: "shield" };
+// cover picture of a whole section (the plugin's gallery posters, img/lp/<name>.webp)
+const SEC_ART = { 15: "l15-mahmoud", 24: "l24-lectures" };
+const lpImg = (name) => (name ? `img/lp/${name}.webp` : null);
+const ytSecs = (d) => { const p = String(d || "").split(":").map(Number); return p.some(isNaN) ? 0 : p.reduce((a, v) => a * 60 + v, 0); };
+const isYt = (k) => !kidsOf(k) && typeof k.youtube_id === "string" && typeof k.audio !== "string";
 
 function countLeaves(n) {
   const k = kidsOf(n);
-  if (!k) return { a: typeof n.audio === "string" && !n.video ? 1 : 0, v: n.video ? 1 : 0, t: !n.audio && n.body ? 1 : 0 };
+  if (!k) return { a: typeof n.audio === "string" && !n.video ? 1 : 0, v: n.video || n.youtube_id ? 1 : 0, t: !n.audio && !n.youtube_id && n.body ? 1 : 0 };
   return k.reduce((acc, c) => { const x = countLeaves(c); acc.a += x.a; acc.v += x.v; acc.t += x.t; return acc; }, { a: 0, v: 0, t: 0 });
 }
 function folderKind(n) {
@@ -1166,8 +1186,8 @@ async function lib(parts) {
   const base = `#/lib/${sec}${trail.length ? "/" + trail.join("/") : ""}`;
   if (!kids) return leafView(node, base, root);
 
-  const posterId = node.poster_id || (root.bio ? 999 : null);
-  const img = portrait(posterId);
+  const posterId = node.poster_id || (root.bio && sec === "1" ? 999 : null);
+  const img = portrait(posterId) || lpImg(node.poster) || lpImg(SEC_ART[sec]);
   const c = countLeaves(node);
   const stats = [];
   if (c.a) stats.push([n2a(c.a), "صوتية"]);
@@ -1178,7 +1198,7 @@ async function lib(parts) {
   let head;
   if (node === root) {
     if (root.bio) {
-      head = heroHTML({ id: 999, name: root.bio.name, facts: [root.bio.born, root.bio.died].filter(Boolean).join(" · "), stats });
+      head = heroHTML({ id: posterId, src: img, name: root.bio.name, facts: [root.bio.born, root.bio.died].filter(Boolean).join(" · "), stats });
     } else {
       head = `<section class="shero"><span class="medal">${icSm(SEC_ICON[sec] || "star", 34)}</span>
         <h2>${esc(root.title)}</h2>${root.sub ? `<p>${esc(root.sub)}</p>` : ""}
@@ -1187,7 +1207,7 @@ async function lib(parts) {
   } else {
     const kind = folderKind(node);
     head = `<section class="rhead k-${kind === "video" ? "mujawwad" : kind === "audio" ? "murattal" : "muallim"}">
-      ${img ? avatar(posterId, "") : `<span class="avatar">${icSm(KIND_IC[kind], 34)}</span>`}
+      ${img ? `<span class="avatar"><img src="${img}" alt="" decoding="async"></span>` : `<span class="avatar">${icSm(KIND_IC[kind], 34)}</span>`}
       <div><span class="kind">${esc(node.type_label || root.title)}</span><h2>${esc(node.title)}</h2>
       <p>${esc(node.badge || node.count_label || "")}</p></div></section>
       ${node.summary || node.body ? `<p class="lead">${esc(node.summary || node.body)}</p>` : ""}`;
@@ -1200,8 +1220,21 @@ async function lib(parts) {
   if (folders.length) {
     const compact = folders.length > 10;
     const big = folders.length <= 3 && node === root && root.bio;
-    body += `<div class="sec-h"><h2>${compact ? "الفولدرات" : "الأقسام"}</h2><span class="count">${n2a(folders.length)}</span></div>`;
-    if (big) {
+    const gallery = folders.filter(([k]) => k.poster).length >= Math.max(2, folders.length * 0.6);
+    body += `<div class="sec-h"><h2>${compact && !gallery ? "الفولدرات" : "الأقسام"}</h2><span class="count">${n2a(folders.length)}</span></div>`;
+    if (gallery) {
+      body += `${compact ? `<label class="search">${ic("search")}<input id="fq" type="search" placeholder="ابحث بالاسم" autocomplete="off"></label>` : ""}
+        <div class="lpgrid" id="ftiles">${folders.map(([k, i]) => `<a class="lpcard ftile" href="${base}/${i}" data-n="${esc(k.title)}">
+          <span class="lp-pic">${k.poster ? `<img src="${lpImg(k.poster)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ""}<span class="lp-ic">${icSm(KIND_IC[folderKind(k)], 26)}</span></span>
+          <span class="lp-plate"><b>${esc(k.title)}</b><small>${esc(k.count_label || k.badge || "")}</small></span></a>`).join("")}</div>`;
+      if (compact) after(() => {
+        const inp = $("#fq");
+        inp.addEventListener("input", () => {
+          const v = norm(inp.value);
+          $$("#ftiles .ftile").forEach((t) => { t.hidden = v && !norm(t.dataset.n).includes(v); });
+        });
+      });
+    } else if (big) {
       body += `<div class="poster-grid">${folders.map(([k, i]) => {
         const kind = folderKind(k);
         return `<a class="poster k-${kind}" href="${base}/${i}">
@@ -1234,10 +1267,11 @@ async function lib(parts) {
       }).join("")}</div>`;
     }
   }
+  const yts = leaves.filter(([k]) => isYt(k));
+  const others = leaves.filter(([k]) => typeof k.audio !== "string" && !isYt(k));
   if (leaves.length) {
     const videos = leaves.filter(([k]) => k.video && typeof k.audio === "string");
     const audios = leaves.filter(([k]) => typeof k.audio === "string" && !k.video);
-    const others = leaves.filter(([k]) => typeof k.audio !== "string");
     if (others.length) {
       body += `<div class="sec-h"><h2>${others.some(([k]) => k.counter) ? "المسبحة والأذكار" : "المواضيع"}</h2><span class="count">${n2a(others.length)}</span></div>
         <div class="fgrid">${others.map(([k, i]) => {
@@ -1259,6 +1293,22 @@ async function lib(parts) {
       body += `${audios.length || folders.length ? `<div class="sec-h"><h2>الفيديو</h2><span class="count">${n2a(vt.length)}</span></div>` : ""}
         <div class="vgrid">${vt.map((t, n) => videoCard(t, L, n, { thumb: unique ? thumbOf(t.id) : "", label: (t.t.match(/الآيا?ت?\s*([\d–\-]+)/) || [])[1] || n2a(n + 1) })).join("")}</div>`;
     }
+  }
+  if (yts.length) {
+    const who = root.bio ? root.bio.name : root.title;
+    const vt = yts.map(([k]) => ytTrack(k.youtube_id, k.title, who, ytSecs(k.duration), { img: img || ytThumb(k.youtube_id), g: k.group || "" }));
+    const L = reg(vt);
+    if (vt.length > 12) after(() => {
+      const inp = $("#yq");
+      inp?.addEventListener("input", () => {
+        const v = norm(inp.value);
+        $$("#ytgrid .vcard").forEach((c) => { c.hidden = v && !norm(c.textContent).includes(v); });
+      });
+    });
+    body += `${folders.length || others.length ? `<div class="sec-h"><h2>الفيديو</h2><span class="count">${n2a(vt.length)}</span></div>` : ""}
+      <div class="btn-row"><button class="btn" data-play="${L}:0">${ic("play")}${vt.length > 1 ? "شغّل من الأول" : "شاهد"}</button></div>
+      ${vt.length > 12 ? `<label class="search">${ic("search")}<input id="yq" type="search" placeholder="ابحث في الحلقات" autocomplete="off"></label>` : ""}
+      <div class="vgrid" id="ytgrid">${vt.map((t, n) => ytCard(t, L, n)).join("")}</div>`;
   }
   if (node === root && sec === "1") {
     const rows = await ytRowsOf("s1");
@@ -1306,6 +1356,10 @@ function leafView(node, base, root) {
     if (typeof k.audio === "string") {
       const t = { t: k.title, s: root.title, d: k.subtitle || k.badge || "", u: k.audio, live: !!k.live, v: !!k.video };
       track = `<div class="btn-row"><button class="btn" data-play="${reg([t])}:0">${ic(t.v ? "video" : "play")}${t.v ? "شاهد الفيديو" : "استمع"}</button></div>`;
+    }
+    else if (isYt(k)) {
+      const t = ytTrack(k.youtube_id, k.title, root.title, ytSecs(k.duration));
+      track = `<div class="btn-row"><button class="btn" data-play="${reg([t])}:0">${ic("video")}شاهد الفيديو</button></div>`;
     }
     const key = `${parentPath}/${i}`;
     const c0 = (S.tasbih && S.tasbih[key]) || 0;
@@ -2526,7 +2580,7 @@ async function saved() {
 let LIBINDEX = null;
 async function buildIndex() {
   if (LIBINDEX) return LIBINDEX;
-  const secs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13];
+  const secs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 17, 18, 23, 24, 25];
   const out = [];
   const roots = await Promise.all(secs.map((s) => getJSON(`data/lib/${s}.json`).catch(() => null)));
   roots.forEach((root, k) => {
@@ -2535,7 +2589,7 @@ async function buildIndex() {
       const kids = kidsOf(n);
       (kids || []).forEach((c, i) => {
         const p = path + "/" + i;
-        out.push({ t: c.title, s: root.title, path: `#/lib/${secs[k]}${p}`, audio: typeof c.audio === "string" ? c.audio : null, v: !!c.video, folder: !!kidsOf(c), d: c.subtitle || c.badge || "", n: norm(c.title) });
+        out.push({ t: c.title, s: root.title, path: `#/lib/${secs[k]}${p}`, audio: typeof c.audio === "string" ? c.audio : null, yt: isYt(c) ? c.youtube_id : null, v: !!c.video, folder: !!kidsOf(c), d: c.subtitle || c.badge || "", n: norm(c.title) });
         walk(c, p);
       });
     };
