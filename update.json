@@ -1,20 +1,15 @@
 {
-  "version": "1.4",
-  "name": "Ultra Quran 1.4",
-  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.4/UltraQuran_Open.ipk",
-  "ipk_sha256": "79075612fca939df75635b718aa41a971e6c3e2bae9c5a4f3df377dc91f03520",
-  "ipk_size": 40665254,
-  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.4/UltraQuran_DreamOS.deb",
-  "deb_sha256": "f405f59ebd3990d1045d33248d83651c822dada830e44c352d85b92218f589eb",
-  "deb_size": 40665258,
-  "notes": [
-    "Added Dawlat Al-Tilawa and Islamic series.",
-    "Added the Madih section and reciters Ezz El-Din Al-Awami and Yassine Al-Jazairi.",
-    "Expanded the YouTube encyclopedia for reciters and religious chanters."
-  ],
+  "version": "1.5",
+  "name": "Ultra Quran 1.5",
   "notes_ar": [
-    "إضافة دولة التلاوة والمسلسلات الإسلامية.",
-    "إضافة قسم المديح والشيخ عز الدين العوامي وياسين الجزائري.",
-    "إضافة موسوعة اليوتيوب للشيوخ والمبتهلين."
-  ]
+    "٢٥ قسمًا على الرئيسية، ٢٩٩ قارئًا، ١٩ مبتهلًا و١٧٧ إذاعة.",
+    "٤٣ مسلسلًا و١٬٦١١ حلقة، أرشيف ميراث الأنبياء ومعارض البوسترات.",
+    "تحميل الصور الأصلية تلقائيًا على الهارد مع نسخة تثبيت أخف."
+  ],
+  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.5/UltraQuran_Open.ipk",
+  "ipk_sha256": "035794db3d80e998037b3f8f0c9aa783668aa1a6a64b7921892d588fddd6d4b5",
+  "ipk_size": 29942540,
+  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.5/UltraQuran_DreamOS.deb",
+  "deb_sha256": "82345d0a7d8a908166903adedc2e8c05d6b079ff939f85e49c04d1d803862951",
+  "deb_size": 29264048
 }
