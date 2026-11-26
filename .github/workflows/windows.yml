@@ -44,3 +44,9 @@ jobs:
               --notes "برنامج ألترا قرآن للكمبيوتر (ويندوز 10 و11): المصحف والقراء والمكتبات، والأذان بكارت فخم في ميعاده حتى والبرنامج جنب الساعة."
           fi
           gh release upload windows UltraQuran-Setup.exe --clobber
+          # the installed programs read this to update themselves online (version + SHA-256 of the installer)
+          ver=$(node -p "require('./desktop/src-tauri/tauri.conf.json').version")
+          sha=$(sha256sum UltraQuran-Setup.exe | cut -d' ' -f1)
+          printf '{"version":"%s","url":"https://github.com/K3bOra/UltraQuran/releases/download/windows/UltraQuran-Setup.exe","sha256":"%s"}\n' "$ver" "$sha" > latest.json
+          cat latest.json
+          gh release upload windows latest.json --clobber

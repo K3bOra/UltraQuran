@@ -36,7 +36,7 @@ const BRIDGE: &str = r#"
   };
   window.UltraQuranNative = {
     desktop: true,
-    version: () => "windows-1.0.3",
+    version: () => "windows-1.0.4",
     schedulePrayers: (json) => { call("schedule_prayers", { json: String(json) }); },
     clearPrayers: () => { call("clear_prayers"); },
     testAdhan: (name, url, seconds) => { call("test_adhan", { name: String(name || ""), url: String(url || ""), seconds: Number(seconds) || 5 }); },
@@ -148,6 +148,18 @@ fn persist(state: &AppState) {
     }
 }
 
+// ---------------------------------------------------------------- downloads (Windows 10/11 ship curl.exe)
+fn curl(url: &str, target: &PathBuf, max_secs: u32) -> bool {
+    let mut cmd = std::process::Command::new("curl.exe");
+    cmd.args(["-s", "-f", "-L", "--max-time", &max_secs.to_string(), "-o"]).arg(target).arg(url);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW: no console flashing on screen
+    }
+    cmd.status().map(|s| s.success()).unwrap_or(false)
+}
+
 // ---------------------------------------------------------------- adhan recordings kept on the computer
 fn cache_name(url: &str) -> String {
     // FNV-1a: a stable file name per recording
@@ -177,19 +189,8 @@ fn cache_recordings(dir: PathBuf, urls: Vec<String>) {
             }
             let target = folder.join(cache_name(&url));
             let part = folder.join(format!("{}.part", cache_name(&url)));
-            // Windows 10/11 ship curl.exe: no TLS library to carry inside the program
             let ok = (|| -> Option<()> {
-                let mut cmd = std::process::Command::new("curl.exe");
-                cmd.args(["-s", "-f", "-L", "--max-time", "180", "--max-filesize", "40000000", "-o"])
-                    .arg(&part)
-                    .arg(&url);
-                #[cfg(windows)]
-                {
-                    use std::os::windows::process::CommandExt;
-                    cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW: no console flashing on screen
-                }
-                let status = cmd.status().ok()?;
-                if !status.success() || fs::metadata(&part).ok()?.len() < 10_000 {
+                if !curl(&url, &part, 180) || fs::metadata(&part).ok()?.len() < 10_000 {
                     return None;
                 }
                 fs::rename(&part, &target).ok()
@@ -245,9 +246,10 @@ fn show_card(app: &AppHandle, k: &str, name: &str, url: &str, at: i64, test: boo
     }
 }
 
-// one set of browser switches for every window (WebView2 needs the same set for all of them):
-// sound may start without a click, and a hidden window keeps its timers
-const BROWSER_ARGS: &str = "--autoplay-policy=no-user-gesture-required --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows";
+// one set of browser switches for every window (WebView2 needs the same set for all of them): sound may
+// start without a click. Nothing else: a hidden window is allowed to rest (the adhan clock is in Rust), which
+// keeps the computer light.
+const BROWSER_ARGS: &str = "--autoplay-policy=no-user-gesture-required";
 
 fn show_main(app: &AppHandle) {
     if let Some(win) = app.get_webview_window("main") {
@@ -339,6 +341,125 @@ fn win_toggle_fullscreen(app: AppHandle) -> bool {
     false
 }
 
+// ---------------------------------------------------------------- online update
+// The "windows" release carries latest.json: {"version": "1.0.4", "url": ".../UltraQuran-Setup.exe",
+// "sha256": "..."}. A newer version is downloaded in the background and checked against its SHA-256.
+// Hidden next to the clock, it installs by itself; with the window open, a gold note in the site offers
+// "restart and update". The installer runs silently (/S) and starts the program again.
+const UPDATE_JSON: &str = "https://github.com/K3bOra/UltraQuran/releases/download/windows/latest.json";
+const UPDATE_PREFIX: &str = "https://github.com/K3bOra/UltraQuran/releases/download/windows/";
+
+struct Pending(Mutex<Option<PathBuf>>);
+
+fn newer(remote: &str, local: &str) -> bool {
+    let parse = |v: &str| v.split('.').map(|p| p.trim().parse::<u64>().unwrap_or(0)).collect::<Vec<_>>();
+    parse(remote) > parse(local)
+}
+
+fn sha256_hex(path: &PathBuf) -> Option<String> {
+    use sha2::{Digest, Sha256};
+    let bytes = fs::read(path).ok()?;
+    Some(Sha256::digest(&bytes).iter().map(|b| format!("{:02x}", b)).collect())
+}
+
+fn check_update(app: &AppHandle) -> Option<PathBuf> {
+    let state = app.state::<AppState>();
+    let folder = state.dir.join("update");
+    let _ = fs::create_dir_all(&folder);
+    let manifest = folder.join("latest.json");
+    let _ = fs::remove_file(&manifest);
+    if !curl(UPDATE_JSON, &manifest, 30) {
+        return None;
+    }
+    let info: serde_json::Value = serde_json::from_str(&fs::read_to_string(&manifest).ok()?).ok()?;
+    let version = info.get("version")?.as_str()?.to_string();
+    let url = info.get("url")?.as_str()?.to_string();
+    let sha = info.get("sha256")?.as_str()?.to_lowercase();
+    if !newer(&version, env!("CARGO_PKG_VERSION")) || !url.starts_with(UPDATE_PREFIX) || sha.len() != 64 {
+        return None;
+    }
+    let target = folder.join(format!("UltraQuran-Setup-{}.exe", version));
+    if sha256_hex(&target).as_deref() != Some(sha.as_str()) {
+        let part = folder.join("download.part");
+        let _ = fs::remove_file(&part);
+        if !curl(&url, &part, 600) || sha256_hex(&part).as_deref() != Some(sha.as_str()) {
+            let _ = fs::remove_file(&part);
+            return None;
+        }
+        let _ = fs::remove_file(&target);
+        fs::rename(&part, &target).ok()?;
+    }
+    Some(target)
+}
+
+fn run_installer(app: &AppHandle, installer: &PathBuf, hidden: bool) {
+    let exe = std::env::current_exe().unwrap_or_default();
+    // wait a moment for the program to close, install silently, then start it again (hidden if it was)
+    let line = format!(
+        "ping -n 3 127.0.0.1 >nul & \"{}\" /S & start \"\" \"{}\" {}",
+        installer.display(),
+        exe.display(),
+        if hidden { "--minimized" } else { "--updated" }
+    );
+    let mut cmd = std::process::Command::new("cmd.exe");
+    cmd.arg("/C").arg(line);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x0800_0000 | 0x0000_0008); // no window, detached from the program
+    }
+    if cmd.spawn().is_ok() {
+        app.exit(0);
+    }
+}
+
+#[tauri::command]
+fn apply_update(app: AppHandle) {
+    let pending = app.state::<Pending>().0.lock().ok().and_then(|p| p.clone());
+    if let Some(path) = pending {
+        run_installer(&app, &path, false);
+    }
+}
+
+fn start_updater(app: AppHandle) {
+    thread::spawn(move || {
+        thread::sleep(Duration::from_secs(40));
+        loop {
+            if let Some(path) = check_update(&app) {
+                if let Ok(mut p) = app.state::<Pending>().0.lock() {
+                    *p = Some(path.clone());
+                }
+                let hidden = app
+                    .get_webview_window("main")
+                    .map(|w| !w.is_visible().unwrap_or(true))
+                    .unwrap_or(true);
+                let adhan_on = app.get_webview_window("adhan").is_some();
+                if hidden && !adhan_on {
+                    run_installer(&app, &path, true);
+                } else if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.eval(UPDATE_NOTE);
+                }
+            }
+            thread::sleep(Duration::from_secs(6 * 3600));
+        }
+    });
+}
+
+// the gold note shown in the site when an update is ready and the window is open
+const UPDATE_NOTE: &str = r#"
+(() => {
+  if (document.getElementById("uqupd")) return;
+  const d = document.createElement("div");
+  d.id = "uqupd";
+  d.style.cssText = "position:fixed;z-index:2147483001;left:50%;bottom:28px;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:12px 14px 12px 18px;border-radius:999px;direction:rtl;font:600 14px Cairo,'Segoe UI',sans-serif;color:#fbf5e6;background:linear-gradient(180deg,#0f3a36f5,#0a2c28f5);box-shadow:inset 0 0 0 1px #d9b36c88,0 14px 34px #000a";
+  d.innerHTML = '<span>✦ نسخة جديدة من البرنامج جاهزة</span><button style="all:unset;cursor:pointer;padding:8px 16px;border-radius:999px;color:#1b140a;background:linear-gradient(180deg,#fff2c8,#d9b36c)">حدّث دلوقتي</button><button aria-label="بعدين" style="all:unset;cursor:pointer;color:#a9c2b6;padding:0 6px">بعدين</button>';
+  const [go, later] = d.querySelectorAll("button");
+  go.onclick = () => { go.textContent = "جاري التحديث…"; window.__TAURI_INTERNALS__.invoke("apply_update").catch(() => {}); };
+  later.onclick = () => d.remove();
+  document.body.appendChild(d);
+})();
+"#;
+
 // ---------------------------------------------------------------- the clock
 fn start_scheduler(app: AppHandle) {
     thread::spawn(move || loop {
@@ -379,7 +500,7 @@ fn main() {
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
         .invoke_handler(tauri::generate_handler![
             schedule_prayers, clear_prayers, test_adhan, stop_adhan, open_main,
-            win_minimize, win_hide, win_is_fullscreen, win_toggle_fullscreen
+            win_minimize, win_hide, win_is_fullscreen, win_toggle_fullscreen, apply_update
         ])
         .setup(|app| {
             let dir = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("UltraQuran"));
@@ -390,6 +511,7 @@ fn main() {
                 .unwrap_or_default();
             let first_run = !dir.join("first-run.done").exists();
             app.manage(AppState { dir: dir.clone(), saved: Mutex::new(saved) });
+            app.manage(Pending(Mutex::new(None)));
 
             // start with Windows (once, on the first run; the user can turn it off from the tray menu)
             if first_run {
@@ -462,6 +584,7 @@ fn main() {
                 .build(app)?;
 
             start_scheduler(app.handle().clone());
+            start_updater(app.handle().clone());
             Ok(())
         })
         .run(tauri::generate_context!())
