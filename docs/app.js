@@ -1826,7 +1826,9 @@ async function followTick() {
 function drawFollowBar() {
   let bar = $("#followBar");
   const onMushaf = location.hash.startsWith("#/mushaf");
-  if (!FOLLOW.on || !onMushaf) { bar?.remove(); return; }
+  // while the Mushaf follows the sheikh nothing covers the page; the bar only comes back when the reader
+  // turned away from the verse, to offer the way back
+  if (!FOLLOW.on || !onMushaf || !FOLLOW.paused) { bar?.remove(); return; }
   if (!bar) { bar = document.createElement("div"); bar.id = "followBar"; bar.className = "follow-bar"; document.body.appendChild(bar); }
   const t = cur();
   const name = isSurahTrack(t) ? `سورة ${META.chapters[t.ch - 1]} · ${t.s || ""}` : "شغّل سورة عشان المصحف يمشي معاها";
