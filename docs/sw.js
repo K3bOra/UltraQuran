@@ -1,7 +1,7 @@
 /* Ultra Quran service worker: app shell offline, data refreshed in the background,
    Mushaf pages and fonts cached after first view. Audio is not intercepted
    (offline audio is read from the "uq-audio" cache by the page itself). */
-const VERSION = "uq-shell-65";
+const VERSION = "uq-shell-66";
 const SHELL = [
   "./", "index.html", "style.css?v=47", "app.js?v=47", "prayer-calc.js?v=47", "style.css", "app.js", "manifest.webmanifest",
   "img/lattice.svg", "img/bg.webp", "img/bg-m.webp", "fonts/Cairo-SemiBold.ttf", "img/star.svg", "icons/icon-192.png?v=2", "icons/icon-512.png?v=2",
@@ -15,7 +15,8 @@ self.addEventListener("install", (e) => {
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => !KEEP.includes(k)).map((k) => caches.delete(k))))
+    // a new version may bring new library data: drop the saved copies so nothing old is shown again
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => !KEEP.includes(k) || k === "uq-data").map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -40,6 +41,15 @@ async function networkFirst(req, name) {
     return (await c.match(req)) || (await caches.match(req)) || Response.error();
   }
 }
+// the newest copy when the network answers within a few seconds, the saved copy otherwise (offline / slow)
+async function freshFirst(req, name, wait = 4000) {
+  const c = await caches.open(name);
+  const net = fetch(req, { cache: "no-cache" }).then((res) => { if (res.ok) c.put(req, res.clone()); return res; });
+  const hit = await c.match(req);
+  if (!hit) return net.catch(() => Response.error());
+  const timer = new Promise((ok) => setTimeout(() => ok(null), wait));
+  return (await Promise.race([net.catch(() => null), timer])) || hit;
+}
 async function staleWhileRevalidate(req, name) {
   const c = await caches.open(name);
   const hit = await c.match(req);
@@ -54,7 +64,8 @@ self.addEventListener("fetch", (e) => {
   if (url.origin === location.origin) {
     // دولة التلاوة: new episodes should show up right away when online
     if (url.pathname.includes("/data/yt/")) return e.respondWith(networkFirst(req, "uq-data"));
-    if (url.pathname.includes("/data/")) return e.respondWith(staleWhileRevalidate(req, "uq-data"));
+    // library data: always the newest when online (it used to show the old copy once after every update)
+    if (url.pathname.includes("/data/")) return e.respondWith(freshFirst(req, "uq-data"));
     if (url.pathname.includes("/img/p/")) return e.respondWith(cacheFirst(req, "uq-img"));
     if (req.mode === "navigate") {
       return e.respondWith(fetch(req, { cache: "no-cache" }).then((res) => {
