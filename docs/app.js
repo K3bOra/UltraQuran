@@ -510,7 +510,7 @@ const TILES = [
   { t: "د. مصطفى محمود", m: "العلم والإيمان · 1973 مادة", ic: "atom", go: "#/lib/15", lp: "l15-mahmoud" },
   { t: "المكتبة المرئية", m: "تلاوات وخواطر وابتهالات نادرة", ic: "video", go: "#/watch" },
   { t: "المسلسلات الإسلامية", m: "43 مسلسلاً · 1611 حلقة", ic: "film", go: "#/lib/17", lp: "l17-0" },
-  { t: "المرئيات الإسلامية", m: "برامج الدعاة · 1231 حلقة", ic: "video", go: "#/lib/9", lp: "l9-0" },
+  { t: "المرئيات الإسلامية", m: "25 داعية وعالِم · 8400+ فيديو", ic: "video", go: "#/lib/9", lp: "l9-0" },
   { t: "المديح", m: "المديح النبوي والإنشاد · 948 فيديو", ic: "daf", go: "#/lib/18", lp: "l18-0" },
   { t: "التفسير وعلومه", m: "الطبري وابن كثير · 1520 مادة", ic: "tafsir", go: "#/lib/2" },
   { t: "الحديث الشريف", m: "شروح وكتب · 924 مادة", ic: "quote", go: "#/lib/3" },
@@ -934,16 +934,23 @@ function ytTrack(id, t, s, dur, extra = {}) {
 }
 const ytSeen = (id) => !!(S.ytSeen && S.ytSeen[id]);
 const ytKeyOf = (group, id) => `${group}${id}`;
+let YT_META = {};   // preachers' folders: [count, ids, groups, name, library path, poster]
 function ytWho(key) {
   if (key === "s1") return { name: "الشيخ محمد متولي الشعراوي", pid: 999, href: "#/lib/1" };
+  if (key[0] === "p") {
+    const m = YT_META[key] || [];
+    return { name: m[3] || "", pid: null, href: m[4] ? `#/lib/${m[4]}` : "#/lib/9", lp: m[5] || "" };
+  }
   const id = +key.slice(1);
   const r = RECITERS.find((x) => x[0] === id);
   return { name: r ? r[1] : "", pid: id, href: `#/r/${id}` };
 }
 // index.json: {key: [count, [first 3 video ids], [folders]]}; s/<key>.json: that sheikh's videos
 async function ytIndex() {
-  try { return (await getJSON("data/yt/index.json")).keys || {}; } catch { return {}; }
+  try { return (YT_META = (await getJSON("data/yt/index.json")).keys || {}); } catch { return {}; }
 }
+// a preacher's picture: his gallery poster when he has one, else the first letter of his name
+const whoAvatar = (who) => (who.lp ? `<span class="avatar"><img src="${lpImg(who.lp)}" alt="" loading="lazy" decoding="async"></span>` : avatar(who.pid, who.name));
 async function ytRowsOf(key) {
   if (!(await ytIndex())[key]) return [];
   try { return await getJSON(`data/yt/s/${key}.json`); } catch { return []; }
@@ -955,7 +962,7 @@ function ytCard(t, L, i, opts = {}) {
     <span class="vt">${esc(t.t)}</span>${opts.sub && t.ch ? `<span class="vs">${esc(t.ch)}</span>` : ""}</button>`;
 }
 function ytRowsToTracks(rows, who) {
-  return rows.map((r) => ytTrack(r[0], r[1], who.name, r[2], { ch: r[4], g: r[5] || "", img: portrait(who.pid) }));
+  return rows.map((r) => ytTrack(r[0], r[1], who.name, r[2], { ch: r[4], g: r[5] || "", img: portrait(who.pid) || lpImg(who.lp) || ytThumb(r[0]) }));
 }
 function ytSection(key, rows, limit = 12) {
   if (!rows || !rows.length) return "";
@@ -1037,6 +1044,7 @@ const WATCH_GROUPS = [
   ["الشيخ محمد متولي الشعراوي", (k) => k === "s1"],
   ["الشيخ عبد الحميد كشك", (k) => k[0] === "k"],
   ["المبتهلون", (k) => k[0] === "m"],
+  ["الدعاة والعلماء", (k) => k[0] === "p"],
 ];
 async function watch(parts) {
   if (parts[0]) return watchOne(parts[0], await ytRowsOf(parts[0]));
@@ -1052,7 +1060,7 @@ async function watch(parts) {
       <span class="feature-go">شاهد الحلقات ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></span></a>`;
   } catch {}
   const keys = Object.keys(idx).filter((k) => idx[k][0]);
-  const order = (k) => { const i = RECITERS.findIndex((r) => r[0] === +k.slice(1)); return i < 0 ? 999 : i; };
+  const order = (k) => { if (k[0] === "p") return +k.slice(1); const i = RECITERS.findIndex((r) => r[0] === +k.slice(1)); return i < 0 ? 999 : i; };
   let body = "", total = 0;
   for (const [title, pick] of WATCH_GROUPS) {
     const ks = keys.filter(pick).sort((a, b) => order(a) - order(b));
@@ -1065,7 +1073,7 @@ async function watch(parts) {
         return `<a class="wfold" href="#/watch/${k}">
           <span class="wf-thumbs">${ids.map((id) => `<img src="${ytThumb(id)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">`).join("")}
             <span class="wf-count">${icSm("video", 13)} ${n2a(count)}</span></span>
-          <span class="wf-who">${avatar(who.pid, who.name)}<span><b>${esc(who.name)}</b><small>${esc(groups.slice(0, 3).join(" · ") || "مرئيات مختارة")}</small></span></span></a>`;
+          <span class="wf-who">${whoAvatar(who)}<span><b>${esc(who.name)}</b><small>${esc(groups.slice(0, 3).join(" · ") || "مرئيات مختارة")}</small></span></span></a>`;
       }).join("")}</div>`;
   }
   return `${dawlaCard}<p class="lead">مختارات بالصوت والصورة لأعلام التلاوة المصرية والشعراوي وكشك والمبتهلين${total ? ` · ${n2a(total)} فيديو` : ""}. كل شيخ ليه فولدر، وجوه الفولدر حاجته متقسمة.</p>${body}
@@ -1100,8 +1108,8 @@ function watchOne(key, rows) {
       apply();
     });
   });
-  return `<section class="rhead k-mujawwad">${avatar(who.pid, who.name)}<div><span class="kind">المكتبة المرئية</span><h2>${esc(who.name)}</h2>
-      <p>${n2a(vt.length)} فيديو · <a href="${who.href}">صفحة الشيخ</a></p></div></section>
+  return `<section class="rhead k-mujawwad">${whoAvatar(who)}<div><span class="kind">المكتبة المرئية</span><h2>${esc(who.name)}</h2>
+      <p>${n2a(vt.length)} فيديو · <a href="${who.href}">${who.lp || who.pid ? "صفحة الشيخ" : "المرئيات الإسلامية"}</a></p></div></section>
     ${groups.length > 1 ? `<div class="chips sticky-chips" role="group" aria-label="الأقسام" id="gF">
       <button class="chip" aria-pressed="true" data-gf="">الكل · ${n2a(vt.length)}</button>
       ${groups.map((g) => `<button class="chip" aria-pressed="false" data-gf="${esc(g)}">${esc(g)} · ${n2a(cnt(g))}</button>`).join("")}</div>` : ""}
@@ -1324,6 +1332,24 @@ async function lib(parts) {
       <div class="btn-row"><button class="btn" data-play="${L}:0">${ic("play")}${vt.length > 1 ? "شغّل من الأول" : "شاهد"}</button></div>
       ${vt.length > 12 ? `<label class="search">${ic("search")}<input id="yq" type="search" placeholder="ابحث في الحلقات" autocomplete="off"></label>` : ""}
       <div class="vgrid" id="ytgrid">${vt.map((t, n) => ytCard(t, L, n)).join("")}</div>`;
+  }
+  {
+    const idx = await ytIndex();
+    const here = trail.length ? `${sec}/${trail.join("/")}` : "";
+    const mine = Object.keys(idx).find((k) => k[0] === "p" && idx[k][4] && idx[k][4] === here);
+    if (mine) body = ytFolder(mine, await ytRowsOf(mine)) + body;
+    if (node === root && sec === "9") {
+      const ks = Object.keys(idx).filter((k) => k[0] === "p").sort((a, b) => +a.slice(1) - +b.slice(1));
+      const n = ks.reduce((a, k) => a + idx[k][0], 0);
+      if (ks.length) body = `<div class="sec-h"><h2>الدعاة والعلماء · يوتيوب</h2><span class="count">${n2a(ks.length)} داعية · ${n2a(n)} فيديو</span></div>
+        <div class="wfolders">${ks.map((k) => {
+          const who = ytWho(k), [count, ids, groups] = idx[k];
+          return `<a class="wfold" href="#/watch/${k}">
+            <span class="wf-thumbs">${ids.map((id) => `<img src="${ytThumb(id)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">`).join("")}
+              <span class="wf-count">${icSm("video", 13)} ${n2a(count)}</span></span>
+            <span class="wf-who">${whoAvatar(who)}<span><b>${esc(who.name)}</b><small>${esc(groups.slice(0, 3).join(" · "))}</small></span></span></a>`;
+        }).join("")}</div>` + body;
+    }
   }
   if (node === root && sec === "1") {
     const rows = await ytRowsOf("s1");

@@ -460,13 +460,131 @@ def save_sheikhs(lists):
     for k, rows in lists.items():
         if not rows:
             continue
+        old_rows = load(f"s/{k}.json", [])
+        have = {r[0] for r in rows}
+        rows = rows + [r for r in old_rows if r[0] not in have]      # never lose videos found before
         save(f"s/{k}.json", rows)
         groups = list(dict.fromkeys(r[5] for r in rows if len(r) > 5 and r[5]))
         keys[k] = [len(rows), [r[0] for r in rows[:3]], groups]
-    for f in os.listdir(os.path.join(OUT, "s")):
-        if f[:-5] not in keys:
-            os.remove(os.path.join(OUT, "s", f))
+    # other folders (the plugin's rows, the preachers) stay as they are
+    old = load("index.json", {}).get("keys", {})
+    for k, v in old.items():
+        keys.setdefault(k, v)
     save("index.json", {"updated": datetime.now(timezone.utc).strftime("%Y-%m-%d"), "keys": keys})
+
+
+# ---------------------------------------------------------------- الدعاة (المرئيات الإسلامية)
+# [مفتاح، اسم البحث، كلمة لازم تبقى في العنوان أو اسم القناة، فولدره في المكتبة، صورة المعرض]
+PREACHERS = [
+    ["p1", "د. طارق السويدان", "السويدان", "9/1", "l9-1"],
+    ["p2", "فهد الكندري", "فهد الكندري|فهد الكندرى|Fahad Al.?Kandari", "9/2", "l9-2"],
+    ["p3", "د. عمر عبد الكافي", "عمر عبد ?الكافي|عبد ?الكافي", "9/3", "l9-3"],
+    ["p4", "الشيخ نبيل العوضي", "العوضي", "9/4", "l9-4"],
+    ["p5", "د. محمد راتب النابلسي", "النابلسي|راتب", "9/5", "l9-5"],
+    ["p6", "د. زغلول النجار", "زغلول", "9/6", "l9-6"],
+    ["p7", "الشيخ محمد العريفي", "العريفي", "9/7", "l9-7"],
+    ["p8", "الشيخ محمد حسان", "محمد حسان|محمد حسّان", "9/8", "l9-8"],
+    ["p9", "الشيخ محمود المصري", "محمود المصري|محمود المصرى|أبو عمار", "9/9", "l9-9"],
+    ["p10", "الشيخ أحمد ديدات", "ديدات", "9/10", "l9-10"],
+    ["p11", "الشيخ منصور السالمي", "السالمي|نايف الصحفي", "9/11", "l9-11"],
+    ["p14", "د. علي الشبيلي", "الشبيلي", "9/14", "l9-14"],
+    # more preachers (Egyptian first) who are only on YouTube in the site
+    ["p20", "الشيخ مصطفى حسني", "مصطفى حسني|مصطفى حسنى", "", ""],
+    ["p21", "الشيخ خالد الجندي", "خالد الجندي|خالد الجندى", "", ""],
+    ["p22", "د. علي جمعة", "(علي|على) جمعة", "", ""],
+    ["p23", "الشيخ رمضان عبد المعز", "رمضان عبد ?المعز", "", ""],
+    ["p24", "د. مبروك عطية", "مبروك عطية|مبروك عطيه", "", ""],
+    ["p25", "د. أحمد عمر هاشم", "(أ|ا)حمد عمر هاشم", "", ""],
+    ["p26", "الشيخ محمد الغزالي", "الشيخ محمد الغزالي|الشيخ محمد الغزالى|الإمام محمد الغزالي|الامام محمد الغزالي", "", ""],
+    ["p27", "د. عمرو خالد", "عمرو خالد", "", ""],
+    ["p29", "د. عمرو الورداني", "الورداني|الوردانى", "", ""],
+    ["p30", "الحبيب علي الجفري", "(علي|على) الجفري|(علي|على) الجفرى|الحبيب الجفري|Al.?Jifri", "", ""],
+    ["p31", "الشيخ صالح المغامسي", "المغامسي|المغامسى", "", ""],
+    ["p32", "الشيخ بدر المشاري", "المشاري|المشارى", "", ""],
+    ["p33", "د. ذاكر نايك", "ذاكر نايك|Zakir Naik", "", ""],
+]
+# people with the same name, and rude call-in clips cut from TV shows
+PREACH_EXCLUDE = {
+    "p22": r"الزير|Grade|Primary|Lecture One|الصف",
+    "p24": r"اشتم|شتم|اتنيل|جاحد|تموت|متص|يهين|إهانة|بهدل|يحرج|يا حمار|غبي|غبية",
+    "p30": r"محمد (علي |على )?الجفري|السيد محمد|السيد/ محمد",
+}
+PREACH_SUFFIX = ["", "درس", "محاضرة", "خطبة", "خطبة الجمعة", "برنامج", "الحلقة", "مواعظ", "قصص", "تفسير", "السيرة النبوية",
+                 "قصص الأنبياء", "رمضان", "الآخرة", "التوبة", "الصحابة"]
+PREACH_GROUPS = [("خطب الجمعة", r"خطبة|خطب|خطبه|الجمعة"),
+                 ("برامج وحلقات", r"برنامج|الحلقة|حلقة|ح \d|الجزء"),
+                 ("دروس ومحاضرات", r"درس|دروس|محاضرة|محاضره|شرح|تفسير|سلسلة"),
+                 ("مقاطع ومواعظ", r"")]
+# no politics, trials or quarrels in the library
+POLITICS = re.compile(r"محكمة|المحكمة|شهادة|القضية|قضية|اعتقال|معتقل|سجن|السيسي|مرسي|الرئيس|الإخوان|الاخوان|ثورة|الثورة|رابعة|انقلاب|داعش"
+                      r"|يرد على|رد على|يهاجم|هجوم|فضيحة|فضائح|الحويني|الشيعة|شيعي|اليهود|يهود|إسرائيل|اسرائيل|السياسة|سياسي|مناظرة مع شيعي"
+                      r"|\bJews?\b|Jewish|Israel|Zion|Crusade|الحجاب إثم|خلع الحجاب|الوطن|الجيش|الشرطة|الانتخابات|انتخابات|البرلمان", re.I)
+# family news, gossip, click-bait and charms: not lessons
+GOSSIP = re.compile(r"مسلسل|Drama|دراما|محمود عبد ?العزيز|بصوت القارئ|القارئ|تلاوة|تلاوه|Surah|مكتوبة|بحيري|البحيري|طلاق|زواج|زوجة|زوجته|ابن الشيخ|إبن الشيخ|ابنه|بنت الشيخ|ابنة|والدة|والده|اتصال|جلب|حبيب|سحر|عشق|غرام|صدمة|صادم|قبل الحذف"
+                    r"|لن تصدق|مفاج|عاجل|يكشف|يفضح|كشف حقيقة|حقيقة الشيخ|على الهواء|مذيع|تريند|ترند|مرض الشيخ|وفاة|جنازة|أموال|ثروة"
+                    r"|معاوية|الجمل|صفين|كربلاء|الحسين|يبكي على|ينهار|تحدي|مقلب|ضحك|مضحك|نكت", re.I)
+# channels of the preachers themselves and of the Islamic TV stations they appear on
+TRUSTED = re.compile(r"الرسمية|الرسمي|Official|قناة الرحمة|Al Rahma|قناة الناس|Al Nas|اقرأ|Iqraa|المجد|Almajd|الرسالة|Alresalah|الفجر|طيبة|"
+                     r"دار الإفتاء|الأزهر|Azhar|CBC|سي بي سي|الحياة|DMC|صدى البلد|ON|"
+                     r"السويدان|الكندري|عبد ?الكافي|العوضي|النابلسي|زغلول|العريفي|محمد حسان|محمود المصري|ديدات|السالمي|الشبيلي|"
+                     r"مصطفى حسني|خالد الجندي|علي جمعة|عبد ?المعز|مبروك عطية|عمر هاشم|الغزالي|عمرو خالد|هداية|الورداني|الجفري|المغامسي|المشاري|Zakir|ذاكر", re.I)
+PREACH_CAP = 400
+
+
+def build_preachers():
+    only = set(filter(None, os.environ.get("ONLY", "").split(",")))
+    idx = load("index.json", {"keys": {}})
+    keys = idx.setdefault("keys", {})
+    for key, name, tok, path, poster in PREACHERS:
+        if only and key not in only:
+            continue
+        tre = re.compile(tok)
+        excl = re.compile(PREACH_EXCLUDE[key]) if key in PREACH_EXCLUDE else None
+        others = [re.compile(t) for k2, n2, t, p2, l2 in PREACHERS if k2 != key]
+        base = re.sub(r"^(الشيخ د\.|الشيخ|د\.|الأستاذ)\s+", "", name)
+        queries = [(base + " " + x).strip() for x in PREACH_SUFFIX]
+        pls = {}
+        for q in (base, base + " سلسلة", base + " برنامج", base + " دروس"):
+            for plid, ptitle, n in playlists_for(q):
+                if plid and tre.search(ptitle) and not POLITICS.search(ptitle) and not BAD.search(ptitle) and n >= 3:
+                    pls[plid] = (ptitle, n)
+        top = sorted(pls, key=lambda k: -pls[k][1])[:12]
+        with ThreadPoolExecutor(3) as ex:
+            batches = list(ex.map(search, queries))
+            batches += [[dict(v, pl=1) for v in r] for r in ex.map(playlist_videos, top)]
+        seen = {}
+        for res in batches:
+            for v in res:
+                if v["id"] in seen or BAD.search(v["t"]) or POLITICS.search(v["t"]) or GOSSIP.search(v["t"]) or (excl and excl.search(v["t"])):
+                    continue
+                if any(o.search(v["t"]) for o in others) and not tre.search(v["t"]):
+                    continue
+                if v["d"] < 120 or v["d"] > 4 * 3600:
+                    continue
+                seen[v["id"]] = v
+        lst = sorted(seen.values(), key=lambda v: -v["v"])[:PREACH_CAP + 60]
+        with ThreadPoolExecutor(8) as ex:
+            authors = list(ex.map(oembed, [v["id"] for v in lst]))
+        rows = []
+        # the preacher's own channel and the Islamic stations first, then the rest by views
+        pairs = sorted(zip(lst, authors), key=lambda p: (0 if p[1] and TRUSTED.search(p[1]) else 1, -p[0]["v"]))
+        for v, a in pairs:
+            if a is None or POLITICS.search(a or "") or (excl and excl.search(a or "")):
+                continue
+            if not (tre.search(v["t"]) or tre.search(a or "")):
+                continue
+            g = next(n for n, rx in PREACH_GROUPS if not rx or re.search(rx, v["t"]))
+            rows.append([v["id"], clean_title(v["t"]), v["d"], v["v"], a, g])
+        rows = rows[:PREACH_CAP]
+        if not rows:
+            print(key, name, "nothing found")
+            continue
+        save(f"s/{key}.json", rows)
+        groups = list(dict.fromkeys(r[5] for r in rows))
+        keys[key] = [len(rows), [r[0] for r in rows[:3]], groups, name, path, poster]
+        print(key, name, len(rows), "playlists:", len(top), flush=True)
+    idx["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    save("index.json", idx)
 
 
 if __name__ == "__main__":
@@ -475,3 +593,5 @@ if __name__ == "__main__":
         build_dawla()
     if "sheikhs" in what:
         build_sheikhs()
+    if "preachers" in what:
+        build_preachers()
