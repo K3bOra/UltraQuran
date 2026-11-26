@@ -2208,7 +2208,10 @@ function ramadanState() {
   return { mode: "wait", ms, days: Math.floor(ms / 864e5), pct: Math.max(2, Math.min(100, 100 - (ms / (354 * 864e5)) * 100)),
     kicker: eid ? "عيد فطر مبارك" : "باقي على رمضان", title: `رمضان ${r.year}`, sub: r.date ? `أول أيام الصيام · ${r.date}` : "" };
 }
-const RMD_ART = `<svg class="rmd-art" viewBox="0 0 120 150" aria-hidden="true">
+// three stacked layers: the swinging lanterns are their own <svg> elements, so the GPU moves them
+// (animating groups inside one SVG repainted and re-laid out the home page every frame)
+const RMD_ART = `<span class="rmd-art" aria-hidden="true">
+<svg class="rmd-base" viewBox="0 0 120 150">
   <defs>
     <linearGradient id="rmdGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1c9"/><stop offset=".5" stop-color="#f0cf86"/><stop offset="1" stop-color="#c99a4e"/></linearGradient>
     <radialGradient id="rmdLight" cx="50%" cy="55%" r="60%"><stop offset="0" stop-color="#fff1c9" stop-opacity=".95"/><stop offset="1" stop-color="#d9b36c" stop-opacity=".15"/></radialGradient>
@@ -2216,15 +2219,16 @@ const RMD_ART = `<svg class="rmd-art" viewBox="0 0 120 150" aria-hidden="true">
   </defs>
   <circle class="rmd-moon" cx="94" cy="31" r="17" mask="url(#rmdM)"/>
   <path class="rmd-spark" d="M106 52l1.6 4 4 1.6-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6z"/>
-  <g class="rmd-lan l1"><line x1="40" y1="0" x2="40" y2="38"/><circle class="ring" cx="40" cy="41" r="3"/>
+</svg>
+<svg class="rmd-sw s1" viewBox="0 0 120 150"><g class="rmd-lan l1"><line x1="40" y1="0" x2="40" y2="38"/><circle class="ring" cx="40" cy="41" r="3"/>
     <path class="cap" d="M29 55 Q40 40 51 55 Z"/><path class="body" d="M29 56 h22 l5 11 v24 l-5 11 h-22 l-5 -11 v-24 Z"/>
     <path class="glass" d="M32 63 h16 l2.5 5 v22 l-2.5 5 h-16 l-2.5 -5 v-22 Z"/><path class="arch" d="M35 88 v-12 a5 5 0 0 1 10 0 v12"/>
-    <path class="cap" d="M31 102 h18 l-4 6 h-10 Z"/><path class="tip" d="M40 108 l2.5 4 -2.5 4 -2.5 -4 Z"/></g>
-  <g class="rmd-lan l2"><line x1="73" y1="0" x2="73" y2="70"/><circle class="ring" cx="73" cy="72.5" r="2.4"/>
+    <path class="cap" d="M31 102 h18 l-4 6 h-10 Z"/><path class="tip" d="M40 108 l2.5 4 -2.5 4 -2.5 -4 Z"/></g></svg>
+<svg class="rmd-sw s2" viewBox="0 0 120 150"><g class="rmd-lan l2"><line x1="73" y1="0" x2="73" y2="70"/><circle class="ring" cx="73" cy="72.5" r="2.4"/>
     <path class="cap" d="M65 83 Q73 72 81 83 Z"/><path class="body" d="M65 84 h16 l3.6 8 v17 l-3.6 8 h-16 l-3.6 -8 v-17 Z"/>
     <path class="glass" d="M67 89 h12 l2 4 v15 l-2 4 h-12 l-2 -4 v-15 Z"/><path class="arch" d="M69.5 107 v-8 a3.5 3.5 0 0 1 7 0 v8"/>
-    <path class="cap" d="M67 117 h12 l-3 4.5 h-6 Z"/><path class="tip" d="M73 121.5 l2 3 -2 3 -2 -3 Z"/></g>
-</svg>`;
+    <path class="cap" d="M67 117 h12 l-3 4.5 h-6 Z"/><path class="tip" d="M73 121.5 l2 3 -2 3 -2 -3 Z"/></g></svg>
+</span>`;
 function rmdSegs(ms) {
   ms = Math.max(0, ms % 864e5);
   const p = (x) => String(x).padStart(2, "0");
