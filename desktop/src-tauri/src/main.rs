@@ -25,8 +25,8 @@ use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
 const SITE: &str = "https://k3bora.github.io/UltraQuran/";
 const LATE_LIMIT_MS: i64 = 4 * 60 * 1000; // an adhan more than 4 minutes late (computer was asleep) is skipped
-const CARD_W: f64 = 620.0;
-const CARD_H: f64 = 330.0;
+const CARD_W: f64 = 610.0;
+const CARD_H: f64 = 340.0;
 
 // window.UltraQuranNative for the site: the same calls as the Android app's bridge
 const BRIDGE: &str = r#"
@@ -36,7 +36,7 @@ const BRIDGE: &str = r#"
   };
   window.UltraQuranNative = {
     desktop: true,
-    version: () => "windows-1.0.4",
+    version: () => "windows-1.0.5",
     schedulePrayers: (json) => { call("schedule_prayers", { json: String(json) }); },
     clearPrayers: () => { call("clear_prayers"); },
     testAdhan: (name, url, seconds) => { call("test_adhan", { name: String(name || ""), url: String(url || ""), seconds: Number(seconds) || 5 }); },
@@ -221,6 +221,7 @@ fn show_card(app: &AppHandle, k: &str, name: &str, url: &str, at: i64, test: boo
         .resizable(false)
         .decorations(false)
         .transparent(true)
+        .background_color(tauri::window::Color(0, 0, 0, 0)) // see-through around the rounded card
         .shadow(false)
         .always_on_top(true)
         .skip_taskbar(true)
