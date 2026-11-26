@@ -36,7 +36,7 @@ const BRIDGE: &str = r#"
   };
   window.UltraQuranNative = {
     desktop: true,
-    version: () => "windows-1.0.2",
+    version: () => "windows-1.0.3",
     schedulePrayers: (json) => { call("schedule_prayers", { json: String(json) }); },
     clearPrayers: () => { call("clear_prayers"); },
     testAdhan: (name, url, seconds) => { call("test_adhan", { name: String(name || ""), url: String(url || ""), seconds: Number(seconds) || 5 }); },
@@ -56,37 +56,28 @@ const BRIDGE: &str = r#"
     x: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>',
   };
   let full = true;
+  // like every Windows program: minimize, full screen, close at the top-right corner (close at the far
+  // right). The side rail moves down a little to make room for them above it.
   const css = `
-    .uqwin { display: inline-flex; gap: 8px; margin-inline-start: 10px; padding-inline-start: 12px; border-inline-start: 1px solid #d9b36c40; }
-    .uqwin .btn-icon { all: unset; box-sizing: border-box; width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%; cursor: pointer;
+    .uqwin { position: fixed; z-index: 2147483000; top: 14px; right: 14px; display: flex; direction: ltr; gap: 6px; padding: 6px;
+      border-radius: 999px; background: linear-gradient(180deg, #0f3a36f0, #0a2c28f0); box-shadow: inset 0 0 0 1px #d9b36c55, 0 8px 22px #0007; }
+    .uqwin .btn-icon { all: unset; box-sizing: border-box; width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 50%; cursor: pointer;
       color: #f0c879; background: #0824238c; box-shadow: inset 0 0 0 1px #d9b36c4d; transition: background .15s, color .15s; }
-    .uqwin .btn-icon .icon { width: 19px; height: 19px; }
-    .uqwin [data-w="close"]:hover { background: #c8524a; border-color: #c8524a; color: #fff; }
-    .uqwin [data-w]:hover { color: #1b140a; background: #d9b36c; }`;
+    .uqwin .btn-icon .icon { width: 18px; height: 18px; }
+    .uqwin [data-w]:hover { color: #1b140a; background: #d9b36c; }
+    .uqwin [data-w="close"]:hover { background: #c8524a; color: #fff; box-shadow: none; }
+    @media (min-width: 1024px) { .tabs { top: 74px !important; } }
+    @media (max-width: 1023px) { .uqwin { top: auto; bottom: calc(var(--tabbar, 64px) + 12px); right: 12px; } }`;
   const group = () => {
-    const g = document.createElement("span");
+    const g = document.createElement("div");
     g.className = "uqwin";
     g.innerHTML = `<button class="btn-icon" data-w="min" aria-label="تصغير" title="تصغير">${ico.min}</button>` +
       `<button class="btn-icon" data-w="fs" aria-label="ملء الشاشة" title="ملء الشاشة (F11)">${full ? ico.fsOff : ico.fsOn}</button>` +
       `<button class="btn-icon" data-w="close" aria-label="إغلاق" title="إغلاق (البرنامج يفضل جنب الساعة عشان الأذان)">${ico.x}</button>`;
     return g;
   };
-  // inside the top bar when the page has one; pages without it (the home page on a wide screen) get the
-  // same buttons floating at the top corner
-  const place = () => {
-    const top = document.getElementById("top");
-    const shown = top && top.offsetParent !== null && top.getBoundingClientRect().height > 0;
-    const floating = document.querySelector("body > .uqwin");
-    if (shown) {
-      if (floating) floating.remove();
-      if (!top.querySelector(".uqwin")) top.appendChild(group());
-    } else if (!floating) {
-      const g = group();
-      g.style.cssText = "position:fixed;top:16px;left:20px;z-index:2147483000;margin:0;padding:6px;gap:6px;border:1px solid #d9b36c40;border-radius:999px;background:#0a2c28e6;box-shadow:0 8px 22px #0007";
-      document.body.appendChild(g);
-    }
-  };
-  const toggle = async () => { const on = await call("win_toggle_fullscreen"); if (typeof on === "boolean") full = on; document.querySelectorAll(".uqwin").forEach((g) => { const n = group(); n.style.cssText = g.style.cssText; g.replaceWith(n); }); };
+  const place = () => { if (!document.querySelector("body > .uqwin")) document.body.appendChild(group()); };
+  const toggle = async () => { const on = await call("win_toggle_fullscreen"); if (typeof on === "boolean") full = on; document.querySelectorAll(".uqwin").forEach((g) => g.replaceWith(group())); };
   document.addEventListener("click", (e) => {
     const b = e.target.closest && e.target.closest(".uqwin [data-w]");
     if (!b) return;
@@ -100,9 +91,7 @@ const BRIDGE: &str = r#"
     const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
     place();
     // the site redraws its top bar on every page: put the buttons back each time
-    let q = 0;
-    new MutationObserver(() => { if (!q) q = requestAnimationFrame(() => { q = 0; place(); }); }).observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("resize", place);
+    new MutationObserver(place).observe(document.body, { childList: true });
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

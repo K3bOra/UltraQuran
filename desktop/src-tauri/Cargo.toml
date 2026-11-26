@@ -1,6 +1,6 @@
 [package]
 name = "ultraquran-desktop"
-version = "1.0.2"
+version = "1.0.3"
 description = "Ultra Quran for Windows"
 authors = ["Ahmed El-Hadary"]
 edition = "2021"
