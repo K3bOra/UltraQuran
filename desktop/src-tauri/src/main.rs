@@ -36,7 +36,7 @@ const BRIDGE: &str = r#"
   };
   window.UltraQuranNative = {
     desktop: true,
-    version: () => "windows-1.0.0",
+    version: () => "windows-1.0.1",
     schedulePrayers: (json) => { call("schedule_prayers", { json: String(json) }); },
     clearPrayers: () => { call("clear_prayers"); },
     testAdhan: (name, url, seconds) => { call("test_adhan", { name: String(name || ""), url: String(url || ""), seconds: Number(seconds) || 5 }); },
@@ -47,6 +47,57 @@ const BRIDGE: &str = r#"
     openBatterySettings: () => {},
     openNotificationSettings: () => {},
   };
+  // full screen like Ultra Stalker: no Windows title bar, so a small gold control strip slides down
+  // from the top-left corner when the mouse reaches the top edge (F11 also toggles full screen)
+  const css = `
+    #uqwin { position: fixed; top: 0; left: 50%; z-index: 2147483647; display: flex; gap: 6px; padding: 7px 8px;
+      transform: translate(-50%, -100%); transition: transform .22s ease; direction: rtl;
+      background: linear-gradient(180deg, #0f3a36f2, #0a2c28f2); border: 1px solid #d9b36c88; border-top: 0;
+      border-radius: 0 0 16px 16px; box-shadow: 0 10px 26px #0009; font: 600 13px "Cairo", "Segoe UI", sans-serif; }
+    #uqwin.show { transform: translate(-50%, 0); }
+    #uqwin button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
+      border-radius: 999px; color: #fbf5e6; background: #ffffff12; border: 1px solid #ffffff1f; }
+    #uqwin button:hover { background: #d9b36c; color: #1b140a; }
+    #uqwin svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #uqedge { position: fixed; top: 0; left: 0; right: 0; height: 6px; z-index: 2147483646; }`;
+  const ico = {
+    min: '<svg viewBox="0 0 24 24"><path d="M5 18h14"/></svg>',
+    fs: '<svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>',
+    x: '<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg>',
+  };
+  const build = () => {
+    if (document.getElementById("uqwin")) return;
+    const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+    const edge = document.createElement("div"); edge.id = "uqedge";
+    const bar = document.createElement("div"); bar.id = "uqwin";
+    bar.innerHTML = `<button data-w="min">${ico.min}تصغير</button><button data-w="fs">${ico.fs}<span>خروج من ملء الشاشة</span></button><button data-w="hide">${ico.x}إخفاء جنب الساعة</button>`;
+    document.body.append(edge, bar);
+    let t = 0;
+    const show = () => { clearTimeout(t); bar.classList.add("show"); };
+    const hide = () => { t = setTimeout(() => bar.classList.remove("show"), 700); };
+    edge.addEventListener("mouseenter", show);
+    bar.addEventListener("mouseenter", show);
+    bar.addEventListener("mouseleave", hide);
+    bar.addEventListener("click", async (e) => {
+      const b = e.target.closest("[data-w]"); if (!b) return;
+      const w = b.dataset.w;
+      if (w === "min") call("win_minimize");
+      if (w === "hide") call("win_hide");
+      if (w === "fs") { const on = await call("win_toggle_fullscreen"); sync(on); }
+      bar.classList.remove("show");
+    });
+  };
+  const sync = (on) => {
+    const bar = document.getElementById("uqwin"), edge = document.getElementById("uqedge");
+    if (!bar) return;
+    // out of full screen Windows draws its own title bar, so the strip is not needed
+    bar.style.display = edge.style.display = on === false ? "none" : "";
+  };
+  window.addEventListener("keydown", async (e) => {
+    if (e.key === "F11") { e.preventDefault(); sync(await call("win_toggle_fullscreen")); }
+  }, true);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build); else build();
+  window.addEventListener("load", async () => { build(); sync(await call("win_is_fullscreen")); });
 })();
 "#;
 
@@ -259,6 +310,38 @@ fn open_main(app: AppHandle) {
     show_main(&app);
 }
 
+#[tauri::command]
+fn win_minimize(app: AppHandle) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.minimize();
+    }
+}
+
+#[tauri::command]
+fn win_hide(app: AppHandle) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.hide();
+    }
+}
+
+#[tauri::command]
+fn win_is_fullscreen(app: AppHandle) -> bool {
+    app.get_webview_window("main").and_then(|w| w.is_fullscreen().ok()).unwrap_or(false)
+}
+
+#[tauri::command]
+fn win_toggle_fullscreen(app: AppHandle) -> bool {
+    if let Some(w) = app.get_webview_window("main") {
+        let on = !w.is_fullscreen().unwrap_or(false);
+        let _ = w.set_fullscreen(on);
+        if !on {
+            let _ = w.maximize();
+        }
+        return on;
+    }
+    false
+}
+
 // ---------------------------------------------------------------- the clock
 fn start_scheduler(app: AppHandle) {
     thread::spawn(move || loop {
@@ -297,7 +380,10 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_main(app)))
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
-        .invoke_handler(tauri::generate_handler![schedule_prayers, clear_prayers, test_adhan, stop_adhan, open_main])
+        .invoke_handler(tauri::generate_handler![
+            schedule_prayers, clear_prayers, test_adhan, stop_adhan, open_main,
+            win_minimize, win_hide, win_is_fullscreen, win_toggle_fullscreen
+        ])
         .setup(|app| {
             let dir = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("UltraQuran"));
             let _ = fs::create_dir_all(&dir);
@@ -320,6 +406,7 @@ fn main() {
                 .inner_size(1280.0, 820.0)
                 .min_inner_size(420.0, 600.0)
                 .center()
+                .fullscreen(true) // full screen like Ultra Stalker; F11 or the top strip leaves it
                 .visible(!minimized)
                 .initialization_script(BRIDGE)
                 .additional_browser_args(BROWSER_ARGS)
