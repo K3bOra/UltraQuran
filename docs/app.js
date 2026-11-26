@@ -2117,9 +2117,18 @@ function adhanTick() {
       notifyPrayer(k, t[k]);
     }
   }
-  if ($("#pcount")) refreshCountdown();
-  if ($("#hcount")) refreshHomePrayer();
 }
+// the countdowns on the home page and the prayer page tick every second on every platform. They used to
+// be refreshed at the end of adhanTick, which returns early inside the Android app / Windows program
+// (the adhan is played natively there) and before a city is chosen, so the numbers stood still.
+function clockTick() {
+  if (!META) return;
+  try {
+    if ($("#pcount")) refreshCountdown();
+    if ($("#hcount")) refreshHomePrayer();
+  } catch {}
+}
+setInterval(clockTick, 1000);
 async function notifyPrayer(k, at) {
   if (!("Notification" in window) || Notification.permission !== "granted" || !prayerCfg().notify) return;
   const body = `حان الآن موعد أذان ${PNAME[k]} · ${fmtClock(at)}`;

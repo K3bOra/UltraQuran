@@ -36,7 +36,7 @@ const BRIDGE: &str = r#"
   };
   window.UltraQuranNative = {
     desktop: true,
-    version: () => "windows-1.0.1",
+    version: () => "windows-1.0.2",
     schedulePrayers: (json) => { call("schedule_prayers", { json: String(json) }); },
     clearPrayers: () => { call("clear_prayers"); },
     testAdhan: (name, url, seconds) => { call("test_adhan", { name: String(name || ""), url: String(url || ""), seconds: Number(seconds) || 5 }); },
@@ -47,57 +47,64 @@ const BRIDGE: &str = r#"
     openBatterySettings: () => {},
     openNotificationSettings: () => {},
   };
-  // full screen like Ultra Stalker: no Windows title bar, so a small gold control strip slides down
-  // from the top-left corner when the mouse reaches the top edge (F11 also toggles full screen)
-  const css = `
-    #uqwin { position: fixed; top: 0; left: 50%; z-index: 2147483647; display: flex; gap: 6px; padding: 7px 8px;
-      transform: translate(-50%, -100%); transition: transform .22s ease; direction: rtl;
-      background: linear-gradient(180deg, #0f3a36f2, #0a2c28f2); border: 1px solid #d9b36c88; border-top: 0;
-      border-radius: 0 0 16px 16px; box-shadow: 0 10px 26px #0009; font: 600 13px "Cairo", "Segoe UI", sans-serif; }
-    #uqwin.show { transform: translate(-50%, 0); }
-    #uqwin button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
-      border-radius: 999px; color: #fbf5e6; background: #ffffff12; border: 1px solid #ffffff1f; }
-    #uqwin button:hover { background: #d9b36c; color: #1b140a; }
-    #uqwin svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    #uqedge { position: fixed; top: 0; left: 0; right: 0; height: 6px; z-index: 2147483646; }`;
+  // full screen like Ultra Stalker: no Windows title bar; the program's own minimize / full-screen / close
+  // buttons sit at the end of the site's top bar (left side in Arabic), in the site's own button style
   const ico = {
-    min: '<svg viewBox="0 0 24 24"><path d="M5 18h14"/></svg>',
-    fs: '<svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>',
-    x: '<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg>',
+    min: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 12h12"/></svg>',
+    fsOff: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
+    fsOn: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+    x: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>',
   };
-  const build = () => {
-    if (document.getElementById("uqwin")) return;
-    const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
-    const edge = document.createElement("div"); edge.id = "uqedge";
-    const bar = document.createElement("div"); bar.id = "uqwin";
-    bar.innerHTML = `<button data-w="min">${ico.min}تصغير</button><button data-w="fs">${ico.fs}<span>خروج من ملء الشاشة</span></button><button data-w="hide">${ico.x}إخفاء جنب الساعة</button>`;
-    document.body.append(edge, bar);
-    let t = 0;
-    const show = () => { clearTimeout(t); bar.classList.add("show"); };
-    const hide = () => { t = setTimeout(() => bar.classList.remove("show"), 700); };
-    edge.addEventListener("mouseenter", show);
-    bar.addEventListener("mouseenter", show);
-    bar.addEventListener("mouseleave", hide);
-    bar.addEventListener("click", async (e) => {
-      const b = e.target.closest("[data-w]"); if (!b) return;
-      const w = b.dataset.w;
-      if (w === "min") call("win_minimize");
-      if (w === "hide") call("win_hide");
-      if (w === "fs") { const on = await call("win_toggle_fullscreen"); sync(on); }
-      bar.classList.remove("show");
-    });
+  let full = true;
+  const css = `
+    .uqwin { display: inline-flex; gap: 8px; margin-inline-start: 10px; padding-inline-start: 12px; border-inline-start: 1px solid #d9b36c40; }
+    .uqwin .btn-icon { all: unset; box-sizing: border-box; width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%; cursor: pointer;
+      color: #f0c879; background: #0824238c; box-shadow: inset 0 0 0 1px #d9b36c4d; transition: background .15s, color .15s; }
+    .uqwin .btn-icon .icon { width: 19px; height: 19px; }
+    .uqwin [data-w="close"]:hover { background: #c8524a; border-color: #c8524a; color: #fff; }
+    .uqwin [data-w]:hover { color: #1b140a; background: #d9b36c; }`;
+  const group = () => {
+    const g = document.createElement("span");
+    g.className = "uqwin";
+    g.innerHTML = `<button class="btn-icon" data-w="min" aria-label="تصغير" title="تصغير">${ico.min}</button>` +
+      `<button class="btn-icon" data-w="fs" aria-label="ملء الشاشة" title="ملء الشاشة (F11)">${full ? ico.fsOff : ico.fsOn}</button>` +
+      `<button class="btn-icon" data-w="close" aria-label="إغلاق" title="إغلاق (البرنامج يفضل جنب الساعة عشان الأذان)">${ico.x}</button>`;
+    return g;
   };
-  const sync = (on) => {
-    const bar = document.getElementById("uqwin"), edge = document.getElementById("uqedge");
-    if (!bar) return;
-    // out of full screen Windows draws its own title bar, so the strip is not needed
-    bar.style.display = edge.style.display = on === false ? "none" : "";
+  // inside the top bar when the page has one; pages without it (the home page on a wide screen) get the
+  // same buttons floating at the top corner
+  const place = () => {
+    const top = document.getElementById("top");
+    const shown = top && top.offsetParent !== null && top.getBoundingClientRect().height > 0;
+    const floating = document.querySelector("body > .uqwin");
+    if (shown) {
+      if (floating) floating.remove();
+      if (!top.querySelector(".uqwin")) top.appendChild(group());
+    } else if (!floating) {
+      const g = group();
+      g.style.cssText = "position:fixed;top:16px;left:20px;z-index:2147483000;margin:0;padding:6px;gap:6px;border:1px solid #d9b36c40;border-radius:999px;background:#0a2c28e6;box-shadow:0 8px 22px #0007";
+      document.body.appendChild(g);
+    }
   };
-  window.addEventListener("keydown", async (e) => {
-    if (e.key === "F11") { e.preventDefault(); sync(await call("win_toggle_fullscreen")); }
+  const toggle = async () => { const on = await call("win_toggle_fullscreen"); if (typeof on === "boolean") full = on; document.querySelectorAll(".uqwin").forEach((g) => { const n = group(); n.style.cssText = g.style.cssText; g.replaceWith(n); }); };
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest && e.target.closest(".uqwin [data-w]");
+    if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    if (b.dataset.w === "min") call("win_minimize");
+    if (b.dataset.w === "close") call("win_hide");
+    if (b.dataset.w === "fs") toggle();
   }, true);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build); else build();
-  window.addEventListener("load", async () => { build(); sync(await call("win_is_fullscreen")); });
+  window.addEventListener("keydown", (e) => { if (e.key === "F11") { e.preventDefault(); toggle(); } }, true);
+  const boot = () => {
+    const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+    place();
+    // the site redraws its top bar on every page: put the buttons back each time
+    let q = 0;
+    new MutationObserver(() => { if (!q) q = requestAnimationFrame(() => { q = 0; place(); }); }).observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", place);
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();
 "#;
 
@@ -335,6 +342,7 @@ fn win_toggle_fullscreen(app: AppHandle) -> bool {
         let on = !w.is_fullscreen().unwrap_or(false);
         let _ = w.set_fullscreen(on);
         if !on {
+            // still without a title bar: fill the screen above the taskbar
             let _ = w.maximize();
         }
         return on;
@@ -406,7 +414,8 @@ fn main() {
                 .inner_size(1280.0, 820.0)
                 .min_inner_size(420.0, 600.0)
                 .center()
-                .fullscreen(true) // full screen like Ultra Stalker; F11 or the top strip leaves it
+                .decorations(false) // no Windows title bar: the program's own buttons are in the site's top bar
+                .fullscreen(true) // full screen like Ultra Stalker; F11 or the button switches to a maximized window
                 .visible(!minimized)
                 .initialization_script(BRIDGE)
                 .additional_browser_args(BROWSER_ARGS)
