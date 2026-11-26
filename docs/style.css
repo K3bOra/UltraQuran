@@ -2144,3 +2144,4 @@ body.immersive .leaf-in.qpc { background: linear-gradient(180deg, #fffaf0, #fbf3
 }
 body.immersive .imm-exit { box-shadow: 0 4px 14px #0004; }
 #wmore[hidden], .lpcard[hidden] { display: none; }
+.in-app .rail-app { display: none !important; }

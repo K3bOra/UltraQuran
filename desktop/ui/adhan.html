@@ -5,169 +5,112 @@
 <title>أذان</title>
 <style>
   @font-face { font-family: "Cairo"; src: url("Cairo-SemiBold.ttf") format("truetype"); font-weight: 600; }
-  :root {
-    --gold: #d9b36c; --gold2: #f6dea0; --gold3: #9c7633; --paper: #fbf5e6; --mist: #b9cfc4; --night: #061c1a;
-    /* the sky changes with the prayer (set by script) */
-    --sky1: #0f4a40; --sky2: #0a2e2a; --sky3: #051a18; --glow: #f6dea055;
-  }
+  :root { --gold: #d9b36c; --gold2: #f6dea0; --gold3: #9c7633; --paper: #fbf5e6; --mist: #d3dfd8; --shade: 6, 16, 22; }
   * { box-sizing: border-box; margin: 0; }
   html, body { height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; }
   body { font: 600 15px/1.6 "Cairo", "Segoe UI", Tahoma, sans-serif; color: var(--paper); padding: 12px; }
 
-  /* ---------- the frame: double gold line, ornamented corners, a shimmer sweeping across ---------- */
-  .card {
-    position: relative; isolation: isolate; height: 100%; overflow: hidden; border-radius: 28px;
-    background: radial-gradient(130% 120% at 80% -10%, var(--sky1) 0%, var(--sky2) 48%, var(--sky3) 100%);
-    box-shadow: 0 24px 60px #000c, 0 0 0 1px #00000080, inset 0 1px 0 #ffffff26;
-    animation: rise .7s cubic-bezier(.18, .9, .22, 1.12) both;
-  }
-  @keyframes rise { from { transform: translateY(60px) scale(.94); opacity: 0; filter: blur(6px); } to { transform: none; opacity: 1; filter: none; } }
-  .card.out { animation: fall .4s ease-in both; }
+  .card { position: relative; isolation: isolate; height: 100%; overflow: hidden; border-radius: 26px; background: #081a1f;
+    box-shadow: 0 26px 60px #000d, 0 0 0 1px #000a; animation: rise .8s cubic-bezier(.18, .9, .22, 1.08) both; }
+  @keyframes rise { from { transform: translateY(70px) scale(.95); opacity: 0; filter: blur(8px); } to { transform: none; opacity: 1; filter: none; } }
+  .card.out { animation: fall .45s ease-in both; }
   @keyframes fall { to { transform: translateY(40px) scale(.97); opacity: 0; filter: blur(4px); } }
-  .frame { position: absolute; inset: 0; border-radius: 28px; pointer-events: none; z-index: 5;
-    border: 1.6px solid transparent;
-    background: linear-gradient(135deg, var(--gold2), var(--gold3) 30%, var(--gold) 50%, var(--gold3) 70%, var(--gold2)) border-box;
+
+  /* ---- the photograph of the prayer's hour, with a slow cinematic push-in ---- */
+  .photo { position: absolute; inset: 0; z-index: -3; background: center/cover no-repeat; transform-origin: 18% 60%;
+    animation: push 40s ease-out both; }
+  @keyframes push { from { transform: scale(1.02); } to { transform: scale(1.14); } }
+  /* the text side (right in Arabic) darkened softly so the words stay readable; the mosque stays bright */
+  .veil { position: absolute; inset: 0; z-index: -2;
+    background:
+      linear-gradient(270deg, rgba(var(--shade), .86) 0%, rgba(var(--shade), .70) 34%, rgba(var(--shade), .18) 62%, rgba(var(--shade), 0) 78%),
+      linear-gradient(0deg, rgba(var(--shade), .55) 0%, rgba(var(--shade), 0) 40%); }
+  .vignette { position: absolute; inset: 0; z-index: -1; box-shadow: inset 0 0 90px #000a; border-radius: 26px; }
+
+  /* ---- gold frame ---- */
+  .frame { position: absolute; inset: 0; border-radius: 26px; pointer-events: none; z-index: 5; border: 1.5px solid transparent;
+    background: linear-gradient(135deg, #fff1c4, var(--gold3) 28%, var(--gold) 50%, var(--gold3) 72%, #fff1c4) border-box;
     -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-  .frame.inner { inset: 7px; border-radius: 22px; border-width: 1px; opacity: .45; }
-  .shine { position: absolute; inset: 0; z-index: 6; pointer-events: none; border-radius: 28px; overflow: hidden; }
-  .shine::after { content: ""; position: absolute; top: -50%; width: 38%; height: 200%; left: -60%; transform: rotate(18deg);
-    background: linear-gradient(90deg, transparent, #fff3d01f 45%, #fff6dd40 50%, #fff3d01f 55%, transparent);
-    animation: sweep 6s ease-in-out .6s infinite; }
-  @keyframes sweep { 0% { left: -60%; } 35%, 100% { left: 130%; } }
-  .orn { position: absolute; width: 46px; height: 46px; z-index: 6; color: var(--gold); pointer-events: none; }
-  .orn svg { width: 100%; height: 100%; }
-  .orn.tl { top: 2px; left: 2px; } .orn.tr { top: 2px; right: 2px; transform: scaleX(-1); }
-  .orn.bl { bottom: 2px; left: 2px; transform: scaleY(-1); } .orn.br { bottom: 2px; right: 2px; transform: scale(-1, -1); }
+  .frame.inner { inset: 7px; border-radius: 20px; border-width: 1px; opacity: .35; }
+  .shine { position: absolute; inset: 0; z-index: 6; pointer-events: none; border-radius: 26px; overflow: hidden; }
+  .shine::after { content: ""; position: absolute; top: -50%; width: 30%; height: 200%; left: -50%; transform: rotate(18deg);
+    background: linear-gradient(90deg, transparent, #fff3d014 45%, #fff6dd30 50%, #fff3d014 55%, transparent); animation: sweep 7s ease-in-out 1s infinite; }
+  @keyframes sweep { 0% { left: -50%; } 30%, 100% { left: 130%; } }
 
-  /* ---------- the sky: geometric stars, light rays, floating gold dust, mosque skyline ---------- */
-  .pattern { position: absolute; inset: 0; z-index: -3; opacity: .09;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23f6dea0' stroke-width='1'%3E%3Cpath d='M28 6l6.4 15.6L50 28l-15.6 6.4L28 50l-6.4-15.6L6 28l15.6-6.4z'/%3E%3Cpath d='M12.4 12.4h31.2v31.2H12.4z' transform='rotate(45 28 28)'/%3E%3C/g%3E%3C/svg%3E") 0 0/56px 56px;
-    mask-image: radial-gradient(120% 90% at 20% 50%, #000 20%, transparent 75%); -webkit-mask-image: radial-gradient(120% 90% at 20% 50%, #000 20%, transparent 75%); }
-  .rays { position: absolute; z-index: -2; top: -140px; right: 40px; width: 300px; height: 420px; opacity: .55;
-    background: conic-gradient(from 180deg at 50% 0%, transparent 0 160deg, var(--glow) 172deg, transparent 180deg, var(--glow) 188deg, transparent 200deg 360deg);
-    filter: blur(10px); animation: breathe 5s ease-in-out infinite; }
-  @keyframes breathe { 50% { opacity: .25; } }
-  canvas#dust { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; }
-  .skyline { position: absolute; left: 0; right: 0; bottom: 0; height: 74px; z-index: -1; color: var(--gold); opacity: .2; }
-  .skyline svg { width: 100%; height: 100%; }
-  .stars { position: absolute; inset: 0; z-index: -2; display: none; }
-  .night .stars { display: block; }
-  .stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; animation: tw 3s ease-in-out infinite; }
-  @keyframes tw { 50% { opacity: .2; } }
-
-  /* ---------- the mihrab: the muezzin inside a pointed arch, a lantern swinging above ---------- */
-  .layout { position: relative; height: 100%; display: flex; gap: 24px; padding: 26px 30px 22px 26px; }
-  .mihrab { position: relative; flex: none; width: 150px; display: flex; align-items: center; }
-  .arch { position: relative; width: 150px; height: 200px; margin-top: 10px; filter: drop-shadow(0 10px 22px #000a); }
-  .arch svg.shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  .arch .pic { position: absolute; inset: 9px 9px 2px; clip-path: url(#archClip); background: radial-gradient(circle at 50% 30%, #1d7a61, #0b3a33); display: grid; place-items: center; }
-  .arch .pic img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.92) contrast(1.05); opacity: 0; transition: opacity .8s; }
-  .arch .pic img.on { opacity: 1; }
-  .arch .pic .ph { color: var(--gold); width: 64px; height: 64px; opacity: .85; }
-  .arch .pic::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, #061c1acc, transparent 45%); }
-  .lantern { position: absolute; top: -34px; left: 50%; transform-origin: 50% 0; width: 26px; height: 56px; color: var(--gold2); margin-left: -13px;
-    animation: swing 3.4s ease-in-out infinite; filter: drop-shadow(0 0 8px #f6dea0aa); z-index: 2; }
-  @keyframes swing { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
-  .waves { position: absolute; left: 50%; top: 55%; width: 150px; height: 150px; margin: -75px 0 0 -75px; pointer-events: none; z-index: -1; }
-  .waves i { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid #f6dea055; animation: wave 2.6s ease-out infinite; }
-  .waves i:nth-child(2) { animation-delay: .85s; } .waves i:nth-child(3) { animation-delay: 1.7s; }
-  @keyframes wave { from { transform: scale(.75); opacity: 1; } to { transform: scale(1.65); opacity: 0; } }
-  .paused .waves { opacity: 0; transition: opacity .6s; }
-
-  /* ---------- text ---------- */
-  .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  .kicker { display: flex; align-items: center; gap: 8px; color: var(--gold); font-size: 13px; letter-spacing: .3px; padding-left: 34px; }
-  .kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: #6ff0b8; box-shadow: 0 0 0 3px #6ff0b826, 0 0 12px #6ff0b8; }
-  .done .kicker .dot { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
-  .eq { display: inline-flex; gap: 3px; align-items: flex-end; height: 14px; }
-  .eq span { width: 3px; border-radius: 2px; background: linear-gradient(var(--gold2), var(--gold)); animation: eq 1s ease-in-out infinite; }
-  .eq span:nth-child(2) { animation-delay: .25s; } .eq span:nth-child(3) { animation-delay: .5s; } .eq span:nth-child(4) { animation-delay: .12s; } .eq span:nth-child(5) { animation-delay: .38s; }
-  @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 14px; } }
+  /* ---- content, on the sky side ---- */
+  .content { position: absolute; top: 0; bottom: 0; right: 0; width: 60%; padding: 26px 32px 22px 18px; display: flex; flex-direction: column; }
+  .kicker { display: flex; align-items: center; gap: 9px; color: var(--gold2); font-size: 13px; letter-spacing: .4px; text-shadow: 0 1px 6px #000; }
+  .kicker .dot { width: 8px; height: 8px; border-radius: 50%; background: #74f0bd; box-shadow: 0 0 0 3px #74f0bd30, 0 0 12px #74f0bd; animation: blink 1.6s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: .45; } }
+  .done .kicker .dot { background: var(--gold); box-shadow: 0 0 10px var(--gold); animation: none; }
+  .eq { display: inline-flex; gap: 3px; align-items: flex-end; height: 13px; }
+  .eq span { width: 3px; border-radius: 2px; background: var(--gold2); animation: eq 1s ease-in-out infinite; }
+  .eq span:nth-child(2) { animation-delay: .25s; } .eq span:nth-child(3) { animation-delay: .5s; } .eq span:nth-child(4) { animation-delay: .12s; }
+  @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 13px; } }
   .paused .eq span { animation: none; height: 3px; }
-  .divider { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; color: var(--gold); }
-  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold) 60%, transparent); }
-  .divider svg { width: 13px; height: 13px; }
-  h1 { font: 700 46px/1.2 "Cairo", sans-serif; letter-spacing: -.5px; margin-top: 2px;
-    background: linear-gradient(180deg, #fffbee 0%, var(--gold2) 45%, var(--gold) 80%, var(--gold3) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 3px 14px #f6dea033); }
-  .sub { font-size: 14.5px; color: var(--mist); }
-  .row { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
-  .clock { font: 700 27px/1 "Cairo", sans-serif; color: var(--paper); letter-spacing: .5px; }
-  .clock small { font-size: 14px; color: var(--gold); margin-inline-start: 5px; }
-  .city { font-size: 13.5px; color: var(--mist); display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: #ffffff0f; border: 1px solid #ffffff14; }
+
+  h1 { margin-top: 6px; font: 700 50px/1.15 "Cairo", sans-serif; letter-spacing: -.5px;
+    background: linear-gradient(180deg, #fffdf4 0%, #fbe7b4 40%, var(--gold) 82%, #b88d45 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 14px #000c); }
+  .sub { font-size: 15px; color: var(--mist); text-shadow: 0 1px 8px #000; }
+  .rule { height: 1px; margin: 12px 0 10px; width: 78%; background: linear-gradient(270deg, var(--gold), #d9b36c55 60%, transparent); }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .clock { font: 700 28px/1 "Cairo", sans-serif; color: #fff; text-shadow: 0 2px 10px #000; }
+  .clock small { font-size: 14px; color: var(--gold2); margin-inline-start: 5px; }
+  .city { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 11px; border-radius: 999px; font-size: 13px; color: var(--paper);
+    background: #ffffff18; border: 1px solid #ffffff22; backdrop-filter: blur(8px); }
   .city:empty { display: none; }
-  .city svg { width: 14px; height: 14px; color: var(--gold); }
-  .voice { margin-top: 8px; font-size: 13.5px; color: var(--mist); min-height: 22px; }
-  .voice b { color: var(--gold2); font-weight: 600; }
+  .city svg { width: 14px; height: 14px; color: var(--gold2); }
 
-  .bar { position: relative; margin-top: auto; height: 3px; border-radius: 3px; background: #ffffff1c; }
+  .voice { display: flex; align-items: center; gap: 10px; margin-top: 12px; min-height: 40px; opacity: 0; transition: opacity .6s; }
+  .voice.on { opacity: 1; }
+  .voice .av { flex: none; width: 40px; height: 40px; border-radius: 50%; padding: 2px; background: conic-gradient(from 200deg, #fff1c4, var(--gold), var(--gold3), #fff1c4); }
+  .voice .av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .voice small { display: block; font-size: 11.5px; color: var(--mist); line-height: 1.3; }
+  .voice b { font-size: 14.5px; color: var(--paper); line-height: 1.3; }
+
+  .bar { margin-top: auto; height: 3px; border-radius: 3px; background: #ffffff26; position: relative; }
   .bar i { position: absolute; top: 0; bottom: 0; right: 0; width: 0; border-radius: 3px; background: linear-gradient(270deg, var(--gold3), var(--gold2)); transition: width .5s linear; }
-  .bar i::after { content: ""; position: absolute; left: -4px; top: 50%; width: 9px; height: 9px; border-radius: 50%; transform: translateY(-50%); background: #fff6dd; box-shadow: 0 0 12px 3px #f6dea0aa; }
+  .bar i::after { content: ""; position: absolute; left: -4px; top: 50%; width: 9px; height: 9px; border-radius: 50%; transform: translateY(-50%); background: #fff7e2; box-shadow: 0 0 12px 3px #f6dea0aa; }
 
-  .dua { display: none; margin-top: auto; padding: 8px 14px; border-radius: 14px; text-align: center;
-    background: linear-gradient(180deg, #ffffff12, #ffffff05); border: 1px solid #d9b36c40; font: 600 13.5px/1.8 "Cairo", sans-serif; color: var(--paper); }
-  .dua small { display: block; font-size: 11.5px; color: var(--gold); letter-spacing: .3px; }
+  .dua { display: none; margin-top: auto; padding: 9px 14px; border-radius: 14px; text-align: center; font: 600 13.5px/1.85 "Cairo", sans-serif; color: var(--paper);
+    background: rgba(var(--shade), .55); border: 1px solid #d9b36c55; backdrop-filter: blur(10px); }
+  .dua small { display: block; font-size: 11.5px; color: var(--gold2); }
   .done .dua { display: block; animation: rise .6s ease both; }
-  .done .bar, .done .voice, .done .sub { display: none; }
+  .done .bar, .done .voice, .done .sub, .done .rule { display: none; }
   .done h1 { font-size: 40px; }
+  .done .content { width: 66%; }
+  .done .dua { font-size: 13px; line-height: 1.75; padding: 7px 12px; }
   .done .row { margin-top: 4px; }
 
   .btns { display: flex; gap: 10px; margin-top: 14px; }
   button { font: 600 14.5px "Cairo", sans-serif; border: 0; cursor: pointer; height: 42px; border-radius: 999px; padding: 0 18px;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .12s, filter .15s; }
   button:hover { filter: brightness(1.08); } button:active { transform: scale(.97); }
-  .primary { flex: 1; color: #1b140a; background: linear-gradient(180deg, #fff1c4, var(--gold2) 35%, var(--gold) 100%);
-    box-shadow: 0 6px 18px #d9b36c55, inset 0 1px 0 #ffffffaa, inset 0 -2px 0 #9c763355; }
-  .ghost { color: var(--paper); background: #ffffff12; border: 1px solid #d9b36c66; }
-  .x { position: absolute; top: 20px; left: 22px; z-index: 7; width: 30px; height: 30px; padding: 0; color: var(--mist); background: #00000040; border: 1px solid #ffffff1a; }
+  .primary { flex: 1; color: #1b140a; background: linear-gradient(180deg, #fff2c8, var(--gold2) 35%, var(--gold) 100%); box-shadow: 0 8px 20px #0008, inset 0 1px 0 #ffffffbb, inset 0 -2px 0 #9c763366; }
+  .ghost { color: var(--paper); background: #ffffff16; border: 1px solid #ffffff30; backdrop-filter: blur(10px); }
+  .x { position: absolute; top: 18px; left: 20px; z-index: 7; width: 30px; height: 30px; padding: 0; color: #fff; background: #0006; border: 1px solid #ffffff26; backdrop-filter: blur(6px); }
   svg.i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute">
-  <defs><clipPath id="archClip" clipPathUnits="objectBoundingBox"><path d="M0,1 V0.42 C0,0.24 0.22,0.1 0.5,0 C0.78,0.1 1,0.24 1,0.42 V1 Z"/></clipPath></defs>
-</svg>
-<div class="card" id="card">
-  <div class="pattern"></div><div class="rays"></div><div class="stars" id="stars"></div>
-  <canvas id="dust"></canvas>
-  <div class="skyline"><svg viewBox="0 0 600 74" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.4">
-    <path d="M0 74V60h40V48h14v12h30V40c0-10 8-18 18-22 10 4 18 12 18 22v20h26V30h4v-8h4v8h4v30h40V52c0-14 14-26 30-32 16 6 30 18 30 32v8h34V44h10v-8h2v8h10v16h40V50c0-8 8-14 16-18 8 4 16 10 16 18v10h30V36h3v-6h3v6h3v24h50V52h20v8h40v14"/></svg></div>
-
+<div class="card paused" id="card">
+  <div class="photo" id="photo"></div><div class="veil"></div><div class="vignette"></div>
   <div class="frame"></div><div class="frame inner"></div><div class="shine"></div>
-  <span class="orn tl"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 30V14c0-4.4 3.6-8 8-8h16"/><path d="M11 24v-6c0-3.9 3.1-7 7-7h6"/><path d="M14 14l3-3 3 3-3 3z" fill="currentColor"/></svg></span>
-  <span class="orn tr"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 30V14c0-4.4 3.6-8 8-8h16"/><path d="M11 24v-6c0-3.9 3.1-7 7-7h6"/><path d="M14 14l3-3 3 3-3 3z" fill="currentColor"/></svg></span>
-  <span class="orn bl"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 30V14c0-4.4 3.6-8 8-8h16"/><path d="M11 24v-6c0-3.9 3.1-7 7-7h6"/><path d="M14 14l3-3 3 3-3 3z" fill="currentColor"/></svg></span>
-  <span class="orn br"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 30V14c0-4.4 3.6-8 8-8h16"/><path d="M11 24v-6c0-3.9 3.1-7 7-7h6"/><path d="M14 14l3-3 3 3-3 3z" fill="currentColor"/></svg></span>
-
   <button class="x" id="close" aria-label="إغلاق"><svg class="i" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
 
-  <div class="layout">
-    <div class="mihrab">
-      <div class="arch">
-        <div class="waves"><i></i><i></i><i></i></div>
-        <svg class="lantern" viewBox="0 0 26 56" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M13 0v12"/><path d="M8 14h10l-1.5 4h-7z" fill="currentColor" fill-opacity=".25"/><path d="M8.5 18c-3 3-4 7-4 11s1 8 4 11h9c3-3 4-7 4-11s-1-8-4-11z"/><path d="M13 22c2 2 2.6 4.6 2.6 7s-.6 5-2.6 7c-2-2-2.6-4.6-2.6-7s.6-5 2.6-7z" fill="currentColor" fill-opacity=".6"/><path d="M9 40l1.5 5h5L17 40M13 45v6"/><circle cx="13" cy="53" r="1.6" fill="currentColor"/></svg>
-        <svg class="shape" viewBox="0 0 150 200" fill="none">
-          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1c4"/><stop offset=".45" stop-color="#d9b36c"/><stop offset="1" stop-color="#9c7633"/></linearGradient></defs>
-          <path d="M2 198V86C2 50 34 24 75 2c41 22 73 48 73 84v112z" stroke="url(#g)" stroke-width="2.4" fill="#0b2f2a"/>
-          <path d="M9 198V88C9 56 38 32 75 11c37 21 66 45 66 77v110" stroke="#d9b36c" stroke-opacity=".45" stroke-width="1"/>
-        </svg>
-        <div class="pic" id="pic"><svg class="ph i" viewBox="0 0 24 24"><path d="M12 3c-3 3-6 4.5-6 9h12c0-4.5-3-6-6-9zM6 12v8h12v-8M10 20v-4a2 2 0 0 1 4 0v4M12 3V1.5"/></svg></div>
-      </div>
-    </div>
-
-    <div class="txt">
-      <div class="kicker"><span class="dot"></span><span id="kick">حان الآن موعد الأذان</span><span class="eq"><span></span><span></span><span></span><span></span><span></span></span></div>
-      <div class="divider"><svg viewBox="0 0 14 14"><path d="M7 0l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="currentColor"/></svg></div>
-      <h1 id="title">أذان الصلاة</h1>
-      <div class="sub" id="sub"></div>
-      <div class="row"><span class="clock" id="clock"></span><span class="city" id="city"></span></div>
-      <div class="voice" id="voice"></div>
-      <div class="bar"><i id="prog"></i></div>
-      <div class="dua"><small>✦ دعاء بعد الأذان ✦</small>اللهم رب هذه الدعوة التامة والصلاة القائمة، آتِ محمداً الوسيلة والفضيلة، وابعثه مقاماً محموداً الذي وعدته</div>
-      <div class="btns">
-        <button class="primary" id="stop"><svg class="i" viewBox="0 0 24 24" id="stopI"><rect x="7" y="7" width="10" height="10" rx="2"/></svg><span id="stopT">إيقاف الأذان</span></button>
-        <button class="ghost" id="open"><svg class="i" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13"/></svg>افتح ألترا قرآن</button>
-      </div>
+  <div class="content">
+    <div class="kicker"><span class="dot"></span><span id="kick">حان الآن موعد الأذان</span><span class="eq"><span></span><span></span><span></span><span></span></span></div>
+    <h1 id="title">أذان الصلاة</h1>
+    <div class="sub" id="sub"></div>
+    <div class="rule"></div>
+    <div class="row"><span class="clock" id="clock"></span><span class="city" id="city"></span></div>
+    <div class="voice" id="voice"><span class="av" id="av" hidden></span><span><small>بصوت فضيلة الشيخ</small><b id="vname"></b></span></div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="dua"><small>✦ دعاء بعد الأذان ✦</small>اللهم رب هذه الدعوة التامة والصلاة القائمة، آتِ محمداً الوسيلة والفضيلة، وابعثه مقاماً محموداً الذي وعدته</div>
+    <div class="btns">
+      <button class="primary" id="stop"><svg class="i" viewBox="0 0 24 24" id="stopI"><rect x="7" y="7" width="10" height="10" rx="2"/></svg><span id="stopT">إيقاف الأذان</span></button>
+      <button class="ghost" id="open"><svg class="i" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13"/></svg>افتح ألترا قرآن</button>
     </div>
   </div>
 </div>
@@ -181,62 +124,40 @@
   const esc = (s) => String(s || "").replace(/[<>&"]/g, "");
   const card = $("card"), a = $("a");
 
-  // ---- the prayer and its sky
+  // ---- the prayer: its photograph and words
   const P = {
-    fajr:    { n: "الفجر",  sub: "الصلاة خير من النوم",                sky: ["#2b3f6b", "#13304a", "#06161f"], glow: "#ffc8a055", night: 1 },
-    dhuhr:   { n: "الظهر",  sub: "حيّ على الصلاة · حيّ على الفلاح",     sky: ["#16705e", "#0c3f38", "#05201d"], glow: "#fff1c466" },
-    asr:     { n: "العصر",  sub: "حافظوا على الصلوات والصلاة الوسطى",  sky: ["#5b6a2e", "#2a3f2c", "#0b1f1b"], glow: "#ffd58a66" },
-    maghrib: { n: "المغرب", sub: "حيّ على الصلاة · حيّ على الفلاح",     sky: ["#7a3f2c", "#3a2a33", "#0d1820"], glow: "#ffb27a66" },
-    isha:    { n: "العشاء", sub: "حيّ على الصلاة · حيّ على الفلاح",     sky: ["#1d2d55", "#0f1d36", "#050b16"], glow: "#c8d4ff44", night: 1 },
+    fajr:    { n: "الفجر",  sub: "الصلاة خير من النوم",               shade: "8, 14, 34" },
+    dhuhr:   { n: "الظهر",  sub: "حيّ على الصلاة · حيّ على الفلاح",    shade: "8, 30, 52" },
+    asr:     { n: "العصر",  sub: "حافظوا على الصلوات والصلاة الوسطى", shade: "40, 22, 6" },
+    maghrib: { n: "المغرب", sub: "حيّ على الصلاة · حيّ على الفلاح",    shade: "30, 8, 18" },
+    isha:    { n: "العشاء", sub: "حيّ على الصلاة · حيّ على الفلاح",    shade: "4, 8, 26" },
   };
-  const p = P[C.k] || null;
-  const root = document.documentElement.style;
-  if (p) { root.setProperty("--sky1", p.sky[0]); root.setProperty("--sky2", p.sky[1]); root.setProperty("--sky3", p.sky[2]); root.setProperty("--glow", p.glow); }
-  if (p && p.night) {
-    card.classList.add("night");
-    const st = $("stars");
-    for (let i = 0; i < 40; i++) {
-      const s = document.createElement("i");
-      s.style.cssText = `left:${Math.random() * 100}%;top:${Math.random() * 60}%;animation-delay:${Math.random() * 3}s;opacity:${.3 + Math.random() * .7}`;
-      st.appendChild(s);
-    }
-  }
-  $("title").textContent = C.test ? "تجربة الأذان" : p ? `أذان ${p.n}` : C.name ? `أذان ${String(C.name).replace(/^صلاة\s+/, "")}` : "أذان الصلاة";
+  // a test shows the photograph of the current hour
+  const hour = new Date().getHours();
+  const auto = hour < 6 ? "fajr" : hour < 14 ? "dhuhr" : hour < 17 ? "asr" : hour < 19 ? "maghrib" : "isha";
+  const key = P[C.k] ? C.k : auto;
+  const p = P[key];
+  $("photo").style.backgroundImage = `url("${key}.jpg")`;
+  document.documentElement.style.setProperty("--shade", p.shade);
+
+  $("title").textContent = C.test ? "تجربة الأذان" : P[C.k] ? `أذان ${p.n}` : C.name ? `أذان ${String(C.name).replace(/^صلاة\s+/, "")}` : "أذان الصلاة";
   $("kick").textContent = C.test ? "كده الأذان هيشتغل في ميعاده" : "حان الآن موعد الأذان";
-  $("sub").textContent = C.test ? "البرنامج هيأذّن في كل صلاة حتى وهو جنب الساعة" : p ? p.sub : "حيّ على الصلاة · حيّ على الفلاح";
+  $("sub").textContent = C.test ? "البرنامج هيأذّن في كل صلاة حتى وهو جنب الساعة" : p.sub;
   const at = C.at ? new Date(C.at) : new Date();
   const parts = new Intl.DateTimeFormat("ar-EG", { hour: "numeric", minute: "2-digit" }).formatToParts(at);
   const ap = parts.find((x) => x.type === "dayPeriod");
   $("clock").innerHTML = `${esc(parts.filter((x) => x.type !== "dayPeriod").map((x) => x.value).join("").trim())}${ap ? `<small>${esc(ap.value)}</small>` : ""}`;
   if (C.city) $("city").innerHTML = `<svg class="i" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>${esc(C.city)}`;
 
-  // ---- floating gold dust
-  const cv = $("dust"), cx = cv.getContext("2d");
-  let W = 0, H = 0;
-  const size = () => { const r = devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W * r; cv.height = H * r; cx.setTransform(r, 0, 0, r, 0, 0); };
-  size(); addEventListener("resize", size);
-  const dots = Array.from({ length: 46 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: .5 + Math.random() * 1.6, s: .12 + Math.random() * .35, a: Math.random() * 6.28, o: .25 + Math.random() * .6 }));
-  (function draw() {
-    cx.clearRect(0, 0, W, H);
-    for (const d of dots) {
-      d.y -= d.s; d.a += .02; d.x += Math.sin(d.a) * .25;
-      if (d.y < -4) { d.y = H + 4; d.x = Math.random() * W; }
-      const g = cx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r * 3);
-      g.addColorStop(0, `rgba(255,236,190,${d.o})`); g.addColorStop(1, "rgba(255,236,190,0)");
-      cx.fillStyle = g; cx.beginPath(); cx.arc(d.x, d.y, d.r * 3, 0, 6.28); cx.fill();
-    }
-    requestAnimationFrame(draw);
-  })();
-
   // ---- closing: the voice fades out instead of being cut
   let closing = false;
   const close = () => {
     if (closing) return; closing = true;
     const v0 = a.volume, t0 = performance.now();
-    const fade = () => { const k = Math.min(1, (performance.now() - t0) / 350); a.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(fade); else a.pause(); };
+    const fade = () => { const k = Math.min(1, (performance.now() - t0) / 400); a.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(fade); else a.pause(); };
     fade();
     card.classList.add("out");
-    setTimeout(() => call("stop_adhan"), 400);
+    setTimeout(() => call("stop_adhan"), 450);
   };
   $("close").onclick = close;
   $("stop").onclick = close;
@@ -247,11 +168,12 @@
   fetch((C.site || "") + "data/adhan.json").then((r) => r.json()).then((list) => {
     const row = list.find((x) => x[3] === C.url);
     if (!row) return;
-    $("voice").innerHTML = `بصوت فضيلة الشيخ <b>${esc(row[1])}</b>`;
+    $("vname").textContent = row[1];
+    $("voice").classList.add("on");
     return fetch((C.site || "") + "data/meta.json").then((r) => r.json()).then((m) => {
       if (!(m.portraits || []).includes(row[0])) return;
       const img = new Image();
-      img.onload = () => { const pic = $("pic"); pic.innerHTML = ""; pic.appendChild(img); requestAnimationFrame(() => img.classList.add("on")); };
+      img.onload = () => { const av = $("av"); av.appendChild(img); av.hidden = false; };
       img.src = `${C.site}img/p/${row[0]}.webp`;
     });
   }).catch(() => {});

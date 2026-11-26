@@ -15,7 +15,19 @@ const IS_ANDROID = /android/i.test(navigator.userAgent);
 const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const IS_PHONE = IS_ANDROID || IS_IOS || matchMedia("(pointer: coarse)").matches;
 const APK_URL = "app/UltraQuran.apk";
+const IS_WINDOWS = /Windows NT/i.test(navigator.userAgent) && !IS_PHONE;
+const DESKTOP = !!(window.UltraQuranNative && window.UltraQuranNative.desktop);   // the Windows program
+const WIN_URL = "https://github.com/K3bOra/UltraQuran/releases/download/windows/UltraQuran-Setup.exe";
 if (NATIVE) document.documentElement.classList.add("in-app");
+// the desktop rail offers the Windows program to Windows visitors (the Android app to the others)
+if (!NATIVE && /Windows NT/i.test(navigator.userAgent)) {
+  const ra = document.querySelector(".rail-app");
+  if (ra) {
+    ra.href = "https://github.com/K3bOra/UltraQuran/releases/download/windows/UltraQuran-Setup.exe";
+    ra.removeAttribute("download");
+    ra.querySelector("span").innerHTML = "برنامج الكمبيوتر<small>الأذان بكارت فخم · مجاناً</small>";
+  }
+}
 let nativeSig = "";
 function nativePlayback(t, playing) {
   if (!NATIVE) return;
@@ -2337,9 +2349,9 @@ async function prayer(parts) {
     <div class="btn-row"><button class="btn ghost" data-act="testAdhan">${ic("play")}جرّب الأذان</button></div>
 
     <div class="sec-h"><h2>التنبيهات</h2></div>
-    ${NATIVE ? `<div class="setting app-ok"><span class="grow"><b>${c.auto ? "أكّد مدينتك عشان الأذان يشتغل" : "الأذان شغال حتى والتطبيق مقفول ✓"}</b><small>التطبيق بيشغّل الأذان بصوت الشيخ في ميعاده والشاشة مقفولة، وبيحفظ صوت الأذان على الموبايل عشان يشتغل من غير نت</small></span></div>
+    ${NATIVE ? `<div class="setting app-ok"><span class="grow"><b>${c.auto ? "أكّد مدينتك عشان الأذان يشتغل" : DESKTOP ? "الأذان شغال حتى والبرنامج مقفول ✓" : "الأذان شغال حتى والتطبيق مقفول ✓"}</b><small>${DESKTOP ? "البرنامج بيشغّل الأذان بكارت فخم في ميعاده حتى وهو مقفول جنب الساعة، وبيحفظ صوت الأذان على الكمبيوتر عشان يشتغل من غير نت" : "التطبيق بيشغّل الأذان بصوت الشيخ في ميعاده والشاشة مقفولة، وبيحفظ صوت الأذان على الموبايل عشان يشتغل من غير نت"}</small></span></div>
       ${(() => { try { return NATIVE.batteryFree() ? "" : `<div class="setting"><span class="grow"><b>اسمح للتطبيق يشتغل في الخلفية</b><small>بعض الموبايلات بتقفل التطبيقات لتوفير البطارية، وده ممكن يأخر الأذان</small></span><button class="btn" style="height:38px;padding:0 14px" data-act="battery">السماح</button></div>`; } catch { return ""; } })()}
-      <div class="setting"><span class="grow"><b>إشعارات التطبيق</b><small>لو الإشعارات مقفولة، الأذان مش هيبان على الشاشة</small></span><button class="btn ghost" style="height:38px;padding:0 14px" data-act="appNotify">الإعدادات</button></div>
+      ${DESKTOP ? "" : `<div class="setting"><span class="grow"><b>إشعارات التطبيق</b><small>لو الإشعارات مقفولة، الأذان مش هيبان على الشاشة</small></span><button class="btn ghost" style="height:38px;padding:0 14px" data-act="appNotify">الإعدادات</button></div>`}
       <div style="display:none">` : ""}
     <div class="setting"><span class="grow"><b>إشعار وقت الصلاة</b><small>إشعار على الموبايل مع الأذان</small></span>
       <button class="switch" data-act="notify" aria-pressed="${!!c.notify && typeof Notification !== "undefined" && Notification.permission === "granted"}" aria-label="إشعار وقت الصلاة"><i></i></button></div>
@@ -2463,6 +2475,9 @@ function installCard(force) {
   if (IS_ANDROID) return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png?v=2" alt=""></span>
     <span class="grow"><b>تطبيق ألترا قرآن لأندرويد</b><small>كل محتوى الموقع، والأذان بصوت الشيخ في ميعاده حتى والتطبيق مقفول</small></span>
     <span class="install-btns"><a class="btn" style="height:38px;padding:0 16px" href="${APK_URL}" download>تحميل</a></span></div>`;
+  if (IS_WINDOWS) return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png?v=2" alt=""></span>
+    <span class="grow"><b>برنامج ألترا قرآن للكمبيوتر</b><small>كل محتوى الموقع، والأذان بكارت فخم في ميعاده حتى والبرنامج مقفول جنب الساعة</small></span>
+    <span class="install-btns"><a class="btn" style="height:38px;padding:0 16px" href="${WIN_URL}">تحميل للويندوز</a></span></div>`;
   if (isStandalone() || (!force && S.installHidden)) return "";
   return `<div class="install-card"><span class="install-ic"><img src="icons/icon-192.png?v=2" alt=""></span>
     <span class="grow"><b>ثبّت ألترا قرآن كتطبيق</b><small>أيقونة على الشاشة الرئيسية، يفتح ملء الشاشة، والأذان والإشعارات يشتغلوا أحسن</small></span>
@@ -2806,7 +2821,7 @@ document.addEventListener("click", async (e) => {
     case "beadReset": { const b = el.parentElement.querySelector("[data-bead]"); b.dataset.c = 0; $(".cnt", b).textContent = "0"; b.classList.remove("done"); $(".rounds", b).textContent = `الهدف ${n2a(+b.dataset.bead)}`; if (b.dataset.key && S.tasbih) { delete S.tasbih[b.dataset.key]; save(true); } toast("العداد رجع صفر"); break; }
     case "pbell": { const c = prayerCfg(); const k = el.dataset.k; c.on[k] = !c.on[k]; save(true); toast(c.on[k] ? `أذان ${PNAME[k]} مفعّل` : `أذان ${PNAME[k]} متوقف`); sessionStorage.setItem("keep-scroll", "1"); route(); break; }
     case "testAdhan": {
-      if (NATIVE) { const m = await resolveMuezzin("dhuhr"); NATIVE.testAdhan("تجربة", m.u, 8); toast("الأذان هيشتغل بعد 8 ثواني. اقفل الشاشة وجرّب", 5000); }
+      if (NATIVE) { const m = await resolveMuezzin("dhuhr"); NATIVE.testAdhan("تجربة", m.u, 8); toast(DESKTOP ? "كارت الأذان هيظهر بعد 8 ثواني. صغّر البرنامج أو اقفله وجرّب" : "الأذان هيشتغل بعد 8 ثواني. اقفل الشاشة وجرّب", 5000); }
       else playAdhan("dhuhr", true);
       break;
     }
