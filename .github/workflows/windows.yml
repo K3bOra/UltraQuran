@@ -1,0 +1,46 @@
+name: Build Windows app
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ["desktop/**", ".github/workflows/windows.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: "desktop/src-tauri -> target" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Build the installer
+        working-directory: desktop/src-tauri
+        run: npx --yes @tauri-apps/cli@2 build --bundles nsis
+      - name: Collect
+        shell: bash
+        run: |
+          f=$(ls desktop/src-tauri/target/release/bundle/nsis/*.exe | head -1)
+          cp "$f" UltraQuran-Setup.exe
+          ls -la UltraQuran-Setup.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UltraQuran-Windows
+          path: UltraQuran-Setup.exe
+      # same download link every time: https://github.com/K3bOra/UltraQuran/releases/download/windows/UltraQuran-Setup.exe
+      # (never marked "latest": install.sh reads releases/latest for the receiver packages)
+      - name: Publish on the "windows" release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view windows >/dev/null 2>&1; then
+            gh release create windows --title "Ultra Quran for Windows" --latest=false \
+              --notes "برنامج ألترا قرآن للكمبيوتر (ويندوز 10 و11): المصحف والقراء والمكتبات، والأذان بكارت فخم في ميعاده حتى والبرنامج جنب الساعة."
+          fi
+          gh release upload windows UltraQuran-Setup.exe --clobber
