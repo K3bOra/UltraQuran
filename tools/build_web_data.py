@@ -109,12 +109,37 @@ meta["edmap"] = {str(r[0]): p[0] for _, people in groups for p in people for r i
 dump("meta.json", meta)
 dump("radios.json", [[r[1], r[2]] for r in cat["radios"]])
 
+# The receiver shows a QR code for an item's source page (Miraath al-Anbiya); on the site the page is a link.
+# tools/source-links.json: QR image name -> the address it encodes (read once from the plugin's PNGs).
+SCAN = "امسح الرمز لفتح صفحة المصدر على موقع ميراث الأنبياء."
+try:
+    SOURCE_LINKS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "source-links.json"), encoding="utf-8"))
+except (IOError, ValueError):
+    SOURCE_LINKS = {}
+
+
+def link_sources(node):
+    if isinstance(node, dict):
+        qr = node.get("source_qr")
+        if isinstance(qr, str) and qr.split(".")[0] in SOURCE_LINKS:
+            node["src"] = SOURCE_LINKS[qr.split(".")[0]]
+            del node["source_qr"]
+            if isinstance(node.get("body"), str) and SCAN in node["body"]:
+                node["body"] = node["body"].replace(SCAN, "").strip()
+        for value in node.values():
+            link_sources(value)
+    elif isinstance(node, list):
+        for value in node:
+            link_sources(value)
+    return node
+
+
 for f in os.listdir(os.path.join(DATA, "lib")):
     # yt-<id>.json and 19.json (their index) become data/yt/ below; 16 (دولة التلاوة) has its own
     # auto-updated page on the site (#/tv, data/yt/dawla.json)
     if f.startswith("yt-") or f in ("16.json.gz", "19.json.gz"):
         continue
-    dump("lib/" + f.replace(".json.gz", ".json"), load("lib/" + f))
+    dump("lib/" + f.replace(".json.gz", ".json"), link_sources(load("lib/" + f)))
 
 
 # ---- the plugin's YouTube library (319 sheikhs) -> data/yt/index.json + data/yt/s/<key>.json ----

@@ -1172,6 +1172,8 @@ const SEC_ICON = { 1: "mic", 2: "tafsir", 3: "quote", 4: "lantern", 5: "palm", 6
 const SEC_ART = { 15: "l15-mahmoud", 24: "l24-lectures" };
 const lpImg = (name) => (name ? `img/lp/${name}.webp` : null);
 const ytSecs = (d) => { const p = String(d || "").split(":").map(Number); return p.some(isNaN) ? 0 : p.reduce((a, v) => a * 60 + v, 0); };
+// the source page of an item (Miraath al-Anbiya …): the receiver shows a QR code, the site a link
+const srcBtn = (k) => (typeof k.src === "string" && /^https:\/\//.test(k.src) ? `<a class="btn ghost src-btn" href="${esc(k.src)}" target="_blank" rel="noopener">${icSm("share", 17)}${/miraath\.net/.test(k.src) ? "افتح المصدر على موقع ميراث الأنبياء" : "افتح صفحة المصدر"}</a>` : "");
 const isYt = (k) => !kidsOf(k) && typeof k.youtube_id === "string" && typeof k.audio !== "string";
 
 function countLeaves(n) {
@@ -1222,7 +1224,8 @@ async function lib(parts) {
       ${img ? `<span class="avatar"><img src="${img}" alt="" decoding="async"></span>` : `<span class="avatar">${icSm(KIND_IC[kind], 34)}</span>`}
       <div><span class="kind">${esc(node.type_label || root.title)}</span><h2>${esc(node.title)}</h2>
       <p>${esc(node.badge || node.count_label || "")}</p></div></section>
-      ${node.summary || node.body ? `<p class="lead">${esc(node.summary || node.body)}</p>` : ""}`;
+      ${node.summary || node.body ? `<p class="lead">${esc(node.summary || node.body)}</p>` : ""}
+      ${srcBtn(node) ? `<div class="btn-row">${srcBtn(node)}</div>` : ""}`;
   }
 
   // ---- body: folders as cards, leaves as list or video grid
@@ -1373,6 +1376,7 @@ function leafView(node, base, root) {
       const t = ytTrack(k.youtube_id, k.title, root.title, ytSecs(k.duration));
       track = `<div class="btn-row"><button class="btn" data-play="${reg([t])}:0">${ic("video")}شاهد الفيديو</button></div>`;
     }
+    if (srcBtn(k)) track = track ? track.replace('</div>', `${srcBtn(k)}</div>`) : `<div class="btn-row">${srcBtn(k)}</div>`;
     const key = `${parentPath}/${i}`;
     const c0 = (S.tasbih && S.tasbih[key]) || 0;
     const tas = k.counter ? `<div class="tasbih"><button class="bead ${c0 && c0 % k.counter === 0 ? "done" : ""}" data-bead="${k.counter}" data-key="${esc(key)}" data-c="${c0}" aria-label="اضغط للتسبيح"><span><span class="cnt">${n2a(c0)}</span><small class="rounds">${c0 >= k.counter ? `أتممت ${n2a(Math.floor(c0 / k.counter))} مرة` : `الهدف ${n2a(k.counter)}`}</small></span></button>
@@ -2169,6 +2173,20 @@ function hijriParts(date, tz) {
   } catch {}
   return { d: o.day, m: o.month, y: o.year || o.relatedYear };
 }
+// 00:00 of `date`'s calendar day in time zone `tz`, as a Date
+function midnightIn(tz, date) {
+  const [y, m, d] = ymdIn(tz, date);
+  const guess = Date.UTC(y, m - 1, d);
+  const off = (t) => {
+    const o = {};
+    for (const p of new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }).formatToParts(new Date(t)))
+      if (p.type !== "literal") o[p.type] = +p.value;
+    return Date.UTC(o.year, o.month - 1, o.day, o.hour, o.minute, o.second) - t;
+  };
+  let t = guess - off(guess);
+  t = guess - off(t);                 // second pass settles a daylight-saving change on that day
+  return new Date(t);
+}
 let RMD = null;
 function ramadanPlan() {
   const c = prayerCfg();
@@ -2180,8 +2198,10 @@ function ramadanPlan() {
   let i = 0, p = null;
   for (; i < 400; i++) { p = hijriParts(new Date(Date.now() + i * 864e5), tz); if (p.m === 9 && p.d === 1) break; }
   if (i >= 400) return (RMD = { key, ok: false });
-  const eve = dayTimes(i - 1).maghrib;           // the night of 1 Ramadan starts at this maghrib
+  // the count runs to 12 midnight that starts the first day of fasting (the way people count it), in the
+  // user's time zone; it used to run to the maghrib before, so the hours looked 7 hours off
   const firstDay = new Date(Date.now() + i * 864e5);
+  const eve = midnightIn(tz, firstDay);
   let date = "";
   try { date = new Intl.DateTimeFormat("ar-EG-u-nu-latn", { weekday: "long", day: "numeric", month: "long", timeZone: tz }).format(firstDay); } catch {}
   return (RMD = { key, ok: true, h, year: p.y, eve: eve.getTime(), date, tz });
