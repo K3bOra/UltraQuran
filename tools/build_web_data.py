@@ -112,6 +112,10 @@ dump("radios.json", [[r[1], r[2]] for r in cat["radios"]])
 # The receiver shows a QR code for an item's source page (Miraath al-Anbiya); on the site the page is a link.
 # tools/source-links.json: QR image name -> the address it encodes (read once from the plugin's PNGs).
 SCAN = "امسح الرمز لفتح صفحة المصدر على موقع ميراث الأنبياء."
+SCAN2 = "امسح الرمز بالموبايل لفتح المرجع الأصلي."
+# the plugin's tool and Ramadan cards open receiver screens; on the site they open the matching page
+LINKS = {"ramadan_today": "#/prayer", "ramadan_khatma": "#/khatma", "prayers": "#/prayer", "search": "#/search",
+         "memorize": "#/hifz", "zakat": "#/lib/33", "hadith": "#/lib/34", "hadith_search": "#/search?in=hadith"}
 try:
     SOURCE_LINKS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "source-links.json"), encoding="utf-8"))
 except (IOError, ValueError):
@@ -126,6 +130,15 @@ def link_sources(node):
             del node["source_qr"]
             if isinstance(node.get("body"), str) and SCAN in node["body"]:
                 node["body"] = node["body"].replace(SCAN, "").strip()
+        url = node.get("source_url")
+        if isinstance(url, str) and url.startswith("https://") and "src" not in node:
+            node["src"] = url
+            node.pop("source_qr", None)
+        if isinstance(node.get("body"), str) and SCAN2 in node["body"]:
+            node["body"] = node["body"].replace(SCAN2, "").strip()
+        tool = node.get("utility") or node.get("action")
+        if isinstance(tool, str) and tool in LINKS:
+            node["link"] = LINKS[tool]
         for value in node.values():
             link_sources(value)
     elif isinstance(node, list):
@@ -200,6 +213,34 @@ dump("yt/index.json", yt_index)
 print("youtube folders", len(keys), "videos", sum(v[0] for v in keys.values()), "added from plugin", added)
 for f in os.listdir(os.path.join(DATA, "tafsir")):
     dump("tafsir/" + f.replace(".json.gz", ".json"), load("tafsir/" + f))
+
+# ---- the lessons with pictures (prayer & wudu, Hajj & Umrah): photos -> img/study, narration -> data/study-voices
+st_dir = os.path.join(OUT, "img", "study")
+os.makedirs(st_dir, exist_ok=True)
+photo_dir = os.path.join(SRC, "art", "study-photos")
+for f in sorted(os.listdir(photo_dir)) if os.path.isdir(photo_dir) else []:
+    if f.endswith(".png"):
+        im = Image.open(os.path.join(photo_dir, f)).convert("RGB")
+        w = min(640, im.width)
+        im.resize((w, round(im.height * w / im.width)), Image.LANCZOS).save(
+            os.path.join(st_dir, f[:-4] + ".webp"), "WEBP", quality=80, method=6)
+voice_dir = os.path.join(DATA, "study-voices")
+if os.path.isdir(voice_dir):
+    os.makedirs(os.path.join(OUT, "data", "study-voices"), exist_ok=True)
+    for f in os.listdir(voice_dir):
+        with open(os.path.join(voice_dir, f), "rb") as a, open(os.path.join(OUT, "data", "study-voices", f), "wb") as b:
+            b.write(a.read())
+
+# ---- hadith search index: one row per hadith [file, index, number, text without harakat] (loaded only when searching)
+HARAKAT = re.compile("[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]")
+hrows = []
+for f in sorted(os.listdir(os.path.join(DATA, "lib"))):
+    m = re.match(r"(hadith-[a-z]+-\d+)\.json\.gz$", f)
+    if m:
+        for i, item in enumerate(load("lib/" + f).get("items", [])):
+            hrows.append([m.group(1), i, str(item.get("source_number") or ""), " ".join(HARAKAT.sub("", item.get("body") or "").split())])
+dump("hadith-index.json", hrows)
+print("hadith search rows", len(hrows))
 
 # portraits -> small webp
 pdir = os.path.join(OUT, "img", "p")

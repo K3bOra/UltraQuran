@@ -505,6 +505,9 @@ const TILES = [
   { t: "دولة التلاوة", m: "الموسمين كاملين بالصوت والصورة", ic: "tv", go: "#/tv", cls: "dawla" },
   { t: "الشيخ الشعراوي", m: "خواطر التفسير صوتاً وصورة", ic: "mic", go: "#/lib/1", p: 999 },
   { t: "المصحف والتفسير", m: "604 صفحة بروايتي حفص وورش", ic: "book", go: "#/mushaf" },
+  { t: "رمضان", m: "ختمتي والإمساكية والتراويح والفتاوى", ic: "lantern", go: "#/lib/26" },
+  { t: "تحفيظ القرآن", m: "استماع وترديد آية بآية · 13 قارئ", ic: "repeat", go: "#/hifz" },
+  { t: "تراث إذاعة القرآن", m: "24 برنامجاً · 2728 تسجيلاً", ic: "radio", go: "#/lib/29", lp: "l29-legacy" },
   { t: "الشيخ كشك", m: "خطب ودروس · 1678 مادة", ic: "mic", go: "#/r/950", p: 950 },
   { t: "المبتهلون", m: "19 مبتهلاً · الابتهالات والتواشيح", ic: "star", go: "#/quran/m", p: 951 },
   { t: "د. مصطفى محمود", m: "العلم والإيمان · 1973 مادة", ic: "atom", go: "#/lib/15", lp: "l15-mahmoud" },
@@ -528,6 +531,11 @@ const TILES = [
   { t: "ميراث الأنبياء", m: "دروس وصوتيات وفتاوى", ic: "books", go: "#/lib/11/7" },
   { t: "عالم الأطفال", m: "المصحف المعلم وجزء عمّ · 157 مادة", ic: "kid", go: "#/lib/12" },
   { t: "التقويم الإسلامي", m: "التاريخ الهجري والمواسم · 52 مادة", ic: "moon", go: "#/lib/13" },
+  { t: "الصلاة والوضوء", m: "نتعلّم خطوة خطوة بالصور", ic: "p-noon", go: "#/lib/27" },
+  { t: "الحج والعمرة", m: "دليل المناسك المصوّر", ic: "dome", go: "#/lib/28" },
+  { t: "مكتبة الحديث", m: "البخاري ومسلم والأربعون · 14982 نصاً", ic: "quote", go: "#/lib/34" },
+  { t: "الزكاة والصدقة", m: "شرح مبسّط وفتاوى من مصادرها", ic: "heart", go: "#/lib/33" },
+  { t: "أدوات المسلم", m: "المواقيت والبحث والتحفيظ والحديث", ic: "star", go: "#/lib/30" },
   { t: "المسابقات", m: "120 سؤالاً بالنتيجة", ic: "q", go: "#/quiz" },
   { t: "البحث في القرآن", m: "ابحث بكلمة من أي آية", ic: "search", go: "#/search?in=quran" },
 ];
@@ -563,6 +571,8 @@ let renderToken = 0;
 async function route() {
   if (history.state?.sheet || history.state?.video) return;
   closeSheet(true); closeVideo(true); stopCompass();
+  if (!location.hash.startsWith("#/hifz")) hifzStop();
+  if (LESSON_VOICE) LESSON_VOICE.pause();
   if (!location.hash.startsWith("#/mushaf")) { document.body.classList.remove("immersive"); BOOK = null; if (FOLLOW.on) stopFollow(); }
   const hash = location.hash.replace(/^#\/?/, "");
   const [path, qs] = hash.split("?");
@@ -574,6 +584,7 @@ async function route() {
   setTab(parts[0] || "");
   const R = {
     "": home, quran: quranGallery, r: reciter, mushaf, index: mushafIndex, radio, lib, quiz, saved, search, prayer, tv: dawla, watch,
+    hifz, khatma,
   }[parts[0] || ""] || home;
   try {
     const html = await R(parts.slice(1), new URLSearchParams(qs || ""));
@@ -1245,9 +1256,10 @@ async function radio() {
 const kidsOf = (n) => n && (n.folders || n.items || n.children || null);
 const nodeTitle = (n) => n.title || "";
 const SEC_ICON = { 1: "mic", 2: "tafsir", 3: "quote", 4: "lantern", 5: "palm", 6: "ship", 7: "dome", 8: "beads", 9: "video", 11: "books", 12: "kid", 13: "moon",
-  15: "atom", 17: "film", 18: "daf", 23: "wave", 24: "mic", 25: "shield" };
+  15: "atom", 17: "film", 18: "daf", 23: "wave", 24: "mic", 25: "shield", 26: "lantern", 27: "p-noon", 28: "dome", 29: "radio",
+  30: "star", 33: "heart", 34: "quote" };
 // cover picture of a whole section (the plugin's gallery posters, img/lp/<name>.webp)
-const SEC_ART = { 15: "l15-mahmoud", 24: "l24-lectures" };
+const SEC_ART = { 15: "l15-mahmoud", 24: "l24-lectures", 29: "l29-legacy" };
 const lpImg = (name) => (name ? `img/lp/${name}.webp` : null);
 const ytSecs = (d) => { const p = String(d || "").split(":").map(Number); return p.some(isNaN) ? 0 : p.reduce((a, v) => a * 60 + v, 0); };
 // the source page of an item (Miraath al-Anbiya …): the receiver shows a QR code, the site a link
@@ -1267,15 +1279,27 @@ function folderKind(n) {
 }
 const KIND_IC = { video: "video", audio: "mic", text: "text" };
 
+// big folders (preachers' archives, hadith books) live in their own file and load when opened
+const REF_RE = /^(?:visual-r7-[a-z0-9-]+|hadith-(?:bukhari|muslim|nawawi)-\d+)$/;
+async function refKids(n) {
+  if (n && !kidsOf(n) && typeof n.folder_ref === "string" && REF_RE.test(n.folder_ref)) {
+    const d = await getJSON(`data/lib/${n.folder_ref}.json`);
+    n.items = (d && d.items) || [];
+  }
+  return n;
+}
+
 async function lib(parts) {
   const sec = parts[0];
   if (sec === "14") { location.replace("#/quiz"); return null; }
   const root = await getJSON(`data/lib/${sec}.json`);
   let node = root; const trail = [];
-  for (const p of parts.slice(1)) { const k = kidsOf(node); if (!k || !k[+p]) break; node = k[+p]; trail.push(+p); }
+  for (const p of parts.slice(1)) { await refKids(node); const k = kidsOf(node); if (!k || !k[+p]) break; node = k[+p]; trail.push(+p); }
+  await refKids(node);
   const kids = kidsOf(node);
   setTop(nodeTitle(node));
   const base = `#/lib/${sec}${trail.length ? "/" + trail.join("/") : ""}`;
+  if (!kids && Array.isArray(node.steps)) return lessonView(node, root);
   if (!kids) return leafView(node, base, root);
 
   const posterId = node.poster_id || (root.bio && sec === "1" ? 999 : null);
@@ -1309,7 +1333,7 @@ async function lib(parts) {
 
   // ---- body: folders as cards, leaves as list or video grid
   let folders = [], leaves = [];
-  kids.forEach((k, i) => (kidsOf(k) ? folders : leaves).push([k, i]));
+  kids.forEach((k, i) => (kidsOf(k) || (k.folder_ref && REF_RE.test(k.folder_ref)) ? folders : leaves).push([k, i]));
   let body = "", preach = "";
   if (node === root && sec === "9") {
     const idx = await ytIndex();
@@ -1393,9 +1417,9 @@ async function lib(parts) {
     if (others.length) {
       body += `<div class="sec-h"><h2>${others.some(([k]) => k.counter) ? "المسبحة والأذكار" : "المواضيع"}</h2><span class="count">${n2a(others.length)}</span></div>
         <div class="fgrid">${others.map(([k, i]) => {
-          const go = k.edition ? `#/r/${META.edmap[k.edition] || ""}/${k.edition}` : `${base}/${i}`;
-          const icon = k.counter ? "beads" : k.edition ? "play" : "text";
-          return `<a class="fcard k-${k.counter ? "mujawwad" : k.edition ? "audio" : "text"}" href="${go}">
+          const go = k.link || (k.edition ? `#/r/${META.edmap[k.edition] || ""}/${k.edition}` : `${base}/${i}`);
+          const icon = k.counter ? "beads" : k.link ? "star" : k.steps ? "book" : k.edition ? "play" : "text";
+          return `<a class="fcard k-${k.counter ? "mujawwad" : k.edition || k.link ? "audio" : "text"}" href="${go}">
             <span class="fcard-top"><span class="rcard-ic">${icSm(icon, 20)}</span>${k.counter ? `<span class="pill">${(S.tasbih && S.tasbih[`${base}/${i}`]) ? `${n2a(S.tasbih[`${base}/${i}`])} / ` : ""}${n2a(k.counter)} مرة</span>` : ""}</span>
             <b>${esc(k.title)}</b>${k.subtitle || k.badge ? `<small class="fsub">${esc(k.badge || k.subtitle)}</small>` : ""}</a>`;
         }).join("")}</div>`;
@@ -1478,7 +1502,7 @@ function leafView(node, base, root) {
   let parent = root;
   const trail = parentPath.replace(/^#\/lib\/\d+\/?/, "").split("/").filter(Boolean).map(Number);
   for (const i of trail) parent = kidsOf(parent)[i];
-  const sibs = (kidsOf(parent) || []).map((k, i) => [k, i]).filter(([k]) => !kidsOf(k) && (k.body || k.counter || (k.audio && k.body)));
+  const sibs = (kidsOf(parent) || []).map((k, i) => [k, i]).filter(([k]) => !kidsOf(k) && !k.link && !k.steps && (k.body || k.counter || (k.audio && k.body)));
   if (!sibs.some(([, i]) => i === myIndex)) sibs.splice(0, sibs.length, [node, myIndex]);
   const start = Math.max(0, sibs.findIndex(([, i]) => i === myIndex));
   const total = sibs.length;
@@ -1534,6 +1558,215 @@ function leafView(node, base, root) {
       <button class="navbtn" id="dkNext" aria-label="التالي">${ic("chev").replace('class="icon"', 'class="icon flip"')}</button>
     </div>
     <div class="deck" id="deck" dir="rtl" tabindex="0" style="--rfs:${S.fs || 1}">${sibs.map(slide).join("")}</div>`;
+}
+
+/* ---------------- RECEIVER TOOLS ON THE SITE: memorization, Ramadan khatma, picture lessons ---------------- */
+// verse-by-verse recordings (everyayah.com, every folder checked complete) — Egyptian sheikhs first, like the plugin
+const HIFZ_RECITERS = [
+  ["محمود خليل الحصري", "Husary_64kbps"], ["الحصري · المصحف المعلّم", "Husary_Muallim_128kbps"], ["الحصري · مجوّد", "Husary_128kbps_Mujawwad"],
+  ["محمد صديق المنشاوي", "Minshawy_Murattal_128kbps"], ["المنشاوي · المعلّم مع الأطفال", "Minshawy_Teacher_128kbps"], ["المنشاوي · مجوّد", "Minshawy_Mujawwad_192kbps"],
+  ["عبد الباسط عبد الصمد", "Abdul_Basit_Murattal_64kbps"], ["عبد الباسط · مجوّد", "Abdul_Basit_Mujawwad_128kbps"], ["محمد محمود الطبلاوي", "Mohammad_al_Tablaway_128kbps"],
+  ["محمود علي البنا", "Mahmoud_Ali_Al_Banna_32kbps"], ["أحمد نعينع", "Ahmed_Neana_128kbps"], ["محمد جبريل", "Muhammad_Jibreel_64kbps"], ["مشاري راشد العفاسي", "Alafasy_64kbps"],
+];
+const HIFZ_REP = [1, 2, 3, 5, 10], HIFZ_GAP = [0, 2, 4, 6, 10];
+let HIFZ = null;
+const pad3 = (n) => String(n).padStart(3, "0");
+function hifzCfg() {
+  S.hifz ||= { s: 1, a: 1, r: HIFZ_RECITERS[0][1], n: 3, g: 4, auto: true };
+  if (!HIFZ_RECITERS.some((x) => x[1] === S.hifz.r)) S.hifz.r = HIFZ_RECITERS[0][1];
+  return S.hifz;
+}
+function hifzStatus(text, on) {
+  const el = $("#hst"); if (el) el.textContent = text;
+  const b = $("#hplay"); if (b) b.innerHTML = on ? `${ic("pause")}إيقاف` : `${ic("play")}استمع وردّد`;
+}
+function hifzStop(msg) {
+  if (!HIFZ) return;
+  clearTimeout(HIFZ.timer); HIFZ.on = false; HIFZ.audio.pause();
+  hifzStatus(msg || "الموضع محفوظ · دوس «استمع وردّد» تبدأ", false);
+}
+function hifzOnce() {
+  const c = hifzCfg();
+  if (!HIFZ.on) return;
+  HIFZ.played++;
+  HIFZ.audio.src = `https://everyayah.com/data/${c.r}/${pad3(c.s)}${pad3(c.a)}.mp3`;
+  HIFZ.audio.play().catch(() => hifzStop("تعذّر تشغيل التلاوة · اتأكد من النت وجرّب تاني"));
+  hifzStatus(`بنسمع الآية · المرة ${n2a(HIFZ.played)} من ${n2a(c.n)}`, true);
+}
+function hifzPlay() {
+  if (HIFZ?.on) { hifzStop(); return; }
+  if (!A.paused) A.pause();
+  if (!HIFZ) {
+    HIFZ = { audio: new Audio(), on: false, played: 0, timer: 0 };
+    HIFZ.audio.addEventListener("ended", () => {
+      const c = hifzCfg();
+      if (!HIFZ.on) return;
+      if (HIFZ.played < c.n) { hifzStatus(`دورك تردّد… (${n2a(c.g)} ثوانٍ)`, true); HIFZ.timer = setTimeout(hifzOnce, Math.max(150, c.g * 1000)); return; }
+      if (c.auto && c.a < META.verses[c.s - 1]) {
+        hifzStatus("دورك تردّد… وبعدها الآية اللي بعدها", true);
+        HIFZ.timer = setTimeout(() => { if (!HIFZ.on) return; c.a++; save(true); hifzShow(); HIFZ.played = 0; hifzOnce(); }, Math.max(150, c.g * 1000));
+        return;
+      }
+      hifzStop("خلّصت التكرار · دوس «التالية» وكمّل");
+    });
+    HIFZ.audio.addEventListener("error", () => { if (HIFZ.on) hifzStop("تعذّر تشغيل التلاوة · اتأكد من النت وجرّب تاني"); });
+  }
+  HIFZ.on = true; HIFZ.played = 0; hifzOnce();
+}
+function hifzShow() {
+  const c = hifzCfg();
+  const total = META.verses[c.s - 1];
+  c.a = Math.min(Math.max(1, c.a | 0), total);
+  const row = QURAN.find((r) => r[0] === c.s && r[1] === c.a);
+  const t = $("#hayah"); if (!t) return;
+  t.textContent = row ? row[3].replace(/^﻿/, "") : "";
+  $("#hpos").textContent = `سورة ${META.chapters[c.s - 1]} · الآية ${n2a(c.a)} من ${n2a(total)}`;
+  $("#hbar").style.width = `${(c.a / total) * 100}%`;
+  $("#hnum").value = c.a; $("#hnum").max = total;
+  $("#hread").href = `#/mushaf/${row ? row[2] : META.spages[c.s - 1]}`;
+}
+async function hifz() {
+  setTop("تحفيظ القرآن");
+  QURAN ||= await getJSON("data/quran.json");
+  const c = hifzCfg();
+  const opt = (arr, cur, label) => arr.map((v, i) => `<option value="${i}" ${v === cur ? "selected" : ""}>${label(v)}</option>`).join("");
+  after(() => {
+    hifzShow();
+    const step = (d) => { hifzStop(); c.a += d; save(true); hifzShow(); };
+    $("#hprev").onclick = () => step(-1);
+    $("#hnext").onclick = () => step(1);
+    $("#hplay").onclick = hifzPlay;
+    $("#hsura").onchange = (e) => { hifzStop(); c.s = +e.target.value + 1; c.a = 1; save(true); hifzShow(); };
+    $("#hrec").onchange = (e) => { hifzStop(); c.r = HIFZ_RECITERS[+e.target.value][1]; save(true); };
+    $("#hrep").onchange = (e) => { c.n = HIFZ_REP[+e.target.value]; save(true); };
+    $("#hgap").onchange = (e) => { c.g = HIFZ_GAP[+e.target.value]; save(true); };
+    $("#hauto").onchange = (e) => { c.auto = e.target.checked; save(true); };
+    $("#hnum").onchange = (e) => { hifzStop(); c.a = +e.target.value || 1; save(true); hifzShow(); };
+    if (HIFZ?.on) hifzStatus("بنسمع الآية…", true);
+  });
+  return `<section class="shero"><span class="medal">${icSm("repeat", 34)}</span><h2>تحفيظ القرآن</h2>
+      <p>اسمع الآية من الشيخ، وردّدها وراه في وقت الترديد، وكمّل آية بآية. الموقع بيحفظ آخر آية وقفت عندها.</p></section>
+    <article class="reader hifz-card">
+      <div class="sub" id="hpos"></div><span class="dkprog"><i id="hbar"></i></span>
+      <div class="hifz-ayah" id="hayah" dir="rtl"></div>
+      <p class="hifz-st" id="hst">الموضع محفوظ · دوس «استمع وردّد» تبدأ</p>
+      <div class="btn-row hifz-nav"><button class="btn ghost" id="hprev">${icSm("chev", 16).replace('class="icon"', 'class="icon"')}السابقة</button>
+        <button class="btn" id="hplay">${ic("play")}استمع وردّد</button>
+        <button class="btn ghost" id="hnext">التالية${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</button></div>
+    </article>
+    <div class="sec-h"><h2>الإعدادات</h2></div>
+    <label class="setting"><span class="grow"><b>السورة</b></span><select id="hsura">${META.chapters.map((n, i) => `<option value="${i}" ${i + 1 === c.s ? "selected" : ""}>${n2a(i + 1)} · ${esc(n)}</option>`).join("")}</select></label>
+    <label class="setting"><span class="grow"><b>روح لآية رقم</b></span><input id="hnum" type="number" min="1" inputmode="numeric" style="width:90px"></label>
+    <label class="setting"><span class="grow"><b>القارئ</b><small>المشايخ المصريين الأول</small></span><select id="hrec">${HIFZ_RECITERS.map((r, i) => `<option value="${i}" ${r[1] === c.r ? "selected" : ""}>${esc(r[0])}</option>`).join("")}</select></label>
+    <label class="setting"><span class="grow"><b>عدد مرات التكرار</b></span><select id="hrep">${opt(HIFZ_REP, c.n, (v) => `${n2a(v)} ${v === 1 ? "مرة" : "مرات"}`)}</select></label>
+    <label class="setting"><span class="grow"><b>ثواني الترديد</b><small>الوقت اللي بتردّد فيه بعد الشيخ</small></span><select id="hgap">${opt(HIFZ_GAP, c.g, (v) => `${n2a(v)} ثوانٍ`)}</select></label>
+    <label class="setting"><span class="grow"><b>كمّل للآية اللي بعدها لوحده</b></span><input id="hauto" type="checkbox" ${c.auto ? "checked" : ""}></label>
+    <div class="btn-row"><a class="btn ghost" id="hread" href="#/mushaf/1">${icSm("book", 17)}افتح الصفحة في المصحف</a></div>
+    <p class="note">التلاوات آية بآية من موقع everyayah.com.</p>`;
+}
+
+// ---- Ramadan khatma: one or two khatmas in 29 or 30 days, split by Mushaf pages (same plan as the plugin)
+function khatmaRanges(plan, day) {
+  const total = 604 * plan.count, out = [];
+  let first = Math.floor(((day - 1) * total) / plan.days);
+  const end = Math.floor((day * total) / plan.days);
+  while (first < end) {
+    const cycle = Math.floor(first / 604), bound = Math.min(end, (cycle + 1) * 604);
+    out.push([cycle + 1, (first % 604) + 1, bound - cycle * 604]);
+    first = bound;
+  }
+  return out;
+}
+function ramadanDay() {
+  try {
+    const p = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "numeric" }).formatToParts(new Date());
+    const m = +p.find((x) => x.type === "month").value, d = +p.find((x) => x.type === "day").value;
+    return m === 9 ? d : 0;
+  } catch { return 0; }
+}
+async function khatma(parts) {
+  setTop("ختمتي");
+  const plan = S.khatma;
+  after(() => {
+    $$("[data-kplan]").forEach((b) => b.onclick = () => {
+      const [count, days] = b.dataset.kplan.split(",").map(Number);
+      if (S.khatma && !confirm("هتبدأ خطة جديدة ويتمسح تقدّم الخطة الحالية. موافق؟")) return;
+      S.khatma = { count, days, done: [] }; save(true); sessionStorage.setItem("keep-scroll", "1"); route();
+    });
+    $$("[data-kdone]").forEach((b) => b.onclick = () => {
+      const d = +b.dataset.kdone, done = S.khatma.done;
+      const i = done.indexOf(d); if (i >= 0) done.splice(i, 1); else { done.push(d); toast(`تمّ ورد اليوم ${n2a(d)} ✓`); }
+      save(true); sessionStorage.setItem("keep-scroll", "1"); route();
+    });
+  });
+  const setup = `<div class="sec-h"><h2>${plan ? "خطة جديدة" : "اختار خطتك"}</h2></div><div class="chips">${[[1, 30], [1, 29], [2, 30], [2, 29]].map(([c, d]) =>
+    `<button class="chip" data-kplan="${c},${d}" aria-pressed="${!!plan && plan.count === c && plan.days === d}">${c === 1 ? "ختمة واحدة" : "ختمتان"} · ${n2a(d)} يوم</button>`).join("")}</div>`;
+  const head = `<section class="shero"><span class="medal">${icSm("lantern", 34)}</span><h2>ختمتي في رمضان</h2>
+    <p>الموقع بيقسّم صفحات المصحف على أيام الشهر، وانت بتعلّم على كل ورد لما تخلّصه.</p>
+    ${plan ? `<div class="stats"><span><b>${n2a(plan.done.length)}</b>من ${n2a(plan.days)} ورد</span><span><b>${n2a(plan.count)}</b>${plan.count === 1 ? "ختمة" : "ختمات"}</span></div>` : ""}</section>`;
+  if (!plan) return head + setup;
+  const rd = ramadanDay();
+  const today = rd && rd <= plan.days ? rd : (Array.from({ length: plan.days }, (_, i) => i + 1).find((d) => !plan.done.includes(d)) || plan.days);
+  const row = (d) => {
+    const parts = khatmaRanges(plan, d), done = plan.done.includes(d);
+    return `<div class="setting kday ${done ? "done" : ""} ${d === today ? "today" : ""}"><span class="grow"><b>${d === today ? "ورد النهارده · " : ""}اليوم ${n2a(d)}</b>
+      <small>${parts.map(([c, a, b]) => `${plan.count > 1 ? `الختمة ${n2a(c)}: ` : ""}صفحة ${n2a(a)}–${n2a(b)}`).join("  ·  ")}</small></span>
+      <a class="btn ghost" href="#/mushaf/${parts[0] ? parts[0][1] : 1}">${icSm("book", 16)}اقرأ</a>
+      <button class="btn ${done ? "" : "ghost"}" data-kdone="${d}">${done ? `${icSm("check", 16)}تمّ` : "علّم تمّ"}</button></div>`;
+  };
+  return head + `<div class="sec-h"><h2>الأوراد</h2><span class="count">${n2a(plan.days)}</span></div>
+    ${row(today)}${Array.from({ length: plan.days }, (_, i) => i + 1).filter((d) => d !== today).map(row).join("")}` + setup;
+}
+
+// ---- lessons with photos (prayer & wudu, Hajj & Umrah): steps, narration and a short quiz
+let LESSON_VOICE = null;
+function lessonView(node, root) {
+  const steps = node.steps || [], qs = node.questions || [];
+  after(() => {
+    $$("[data-voice]").forEach((b) => b.onclick = () => {
+      LESSON_VOICE ||= new Audio();
+      if (!A.paused) A.pause();
+      LESSON_VOICE.src = `data/study-voices/${b.dataset.voice}.mp3`;
+      LESSON_VOICE.play().catch(() => toast("الصوت مشتغلش"));
+    });
+    $$("[data-lq]").forEach((b) => b.onclick = () => {
+      const box = b.closest(".lq"), q = qs[+box.dataset.q];
+      if (box.classList.contains("answered")) return;
+      box.classList.add("answered");
+      $$("button", box).forEach((x) => x.classList.add(+x.dataset.lq === q.answer ? "right" : x === b ? "wrong" : "dim"));
+      box.querySelector(".lq-ex").hidden = false;
+      box.querySelector(".lq-ex").textContent = (+b.dataset.lq === q.answer ? "إجابة صحيحة ✓ " : "الإجابة الصح متعلّمة بالأخضر. ") + (q.explanation || "");
+    });
+  });
+  const icon = { water: "p-dawn", mat: "p-noon", hajj: "dome", kaaba: "dome" }[node.icon] || "book";
+  return `<section class="shero"><span class="medal">${icSm(icon, 34)}</span><h2>${esc(node.title)}</h2>
+      <p>${esc(node.subtitle || "")}</p><div class="stats"><span><b>${n2a(steps.length)}</b>خطوة</span>${qs.length ? `<span><b>${n2a(qs.length)}</b>سؤال</span>` : ""}</div></section>
+    <ol class="lsteps">${steps.map((st, i) => `<li class="lstep">
+      ${st.picture ? `<img src="img/study/${esc(st.picture)}.webp" alt="" loading="lazy" decoding="async">` : ""}
+      <div class="lstep-t"><span class="rnum">${n2a(i + 1)}</span><b>${esc(st.title)}</b>
+      ${st.voice ? `<button class="btn ghost" data-voice="${esc(st.voice)}" aria-label="اسمع الخطوة">${icSm("play", 15)}اسمع</button>` : ""}</div>
+      <p>${esc(st.body || "")}</p>${st.hint ? `<small>${esc(st.hint)}</small>` : ""}</li>`).join("")}</ol>
+    ${qs.length ? `<div class="sec-h"><h2>اختبر نفسك</h2><span class="count">${n2a(qs.length)}</span></div>${qs.map((q, i) => `<div class="lq" data-q="${i}"><b>${esc(q.q)}</b>
+      <div class="lq-o">${q.options.map((o, j) => `<button class="chip" data-lq="${j}">${esc(o)}</button>`).join("")}</div><p class="lq-ex" hidden></p></div>`).join("")}` : ""}
+    ${node.source ? `<p class="note">المصدر: ${esc(node.source)}</p>` : ""}`;
+}
+
+// ---- hadith search (Bukhari, Muslim, the Forty): a compact index loaded only when it is used
+let HIDX = null;
+async function hadithIndex() {
+  if (HIDX) return HIDX;
+  const [rows, root] = await Promise.all([getJSON("data/hadith-index.json"), getJSON("data/lib/34.json")]);
+  const where = {};
+  kidsOf(root).forEach((book, b) => (kidsOf(book) || []).forEach((f, j) => { if (f.folder_ref) where[f.folder_ref] = [b, j, book.title, f.title]; }));
+  HIDX = rows.map((r) => ({ ref: r[0], i: r[1], num: r[2], text: r[3], n: qnorm(r[3]), at: where[r[0]] }));
+  return HIDX;
+}
+async function hadithSearch(q) {
+  const all = await hadithIndex();
+  const v = qnorm(q);
+  const hits = /^[0-9٠-٩]+$/.test(v) ? all.filter((h) => qnorm(h.num) === v.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+    : (() => { const w = v.split(" ").filter(Boolean); return all.filter((h) => w.every((x) => h.n.includes(x))); })();
+  return hits;
 }
 
 /* ---------------- QUIZ ---------------- */
@@ -2804,7 +3037,7 @@ async function saved() {
 let LIBINDEX = null;
 async function buildIndex() {
   if (LIBINDEX) return LIBINDEX;
-  const secs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 17, 18, 23, 24, 25];
+  const secs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 17, 18, 23, 24, 25, 26, 27, 28, 29, 30, 33];
   const out = [];
   const roots = await Promise.all(secs.map((s) => getJSON(`data/lib/${s}.json`).catch(() => null)));
   roots.forEach((root, k) => {
@@ -2851,10 +3084,11 @@ function ayahHTML(r) {
 }
 
 async function search(parts, qs) {
-  const onlyQuran = qs.get("in") === "quran";
-  setTop(onlyQuran ? "البحث في القرآن" : "بحث");
+  const onlyQuran = qs.get("in") === "quran", onlyHadith = qs.get("in") === "hadith";
+  setTop(onlyQuran ? "البحث في القرآن" : onlyHadith ? "البحث في الأحاديث" : "بحث");
   const q0 = qs.get("q") || "";
-  const hint = onlyQuran ? "اكتب كلمة أو جزء من آية، زي «الصابرين» أو «ربنا آتنا»." : "اكتب اسم قارئ، سورة، شيخ، موضوع زي «الصبر»، أو كلمة من آية.";
+  const hint = onlyQuran ? "اكتب كلمة أو جزء من آية، زي «الصابرين» أو «ربنا آتنا»."
+    : onlyHadith ? "اكتب كلمات من الحديث زي «إنما الأعمال بالنيات»، أو رقم الحديث." : "اكتب اسم قارئ، سورة، شيخ، موضوع زي «الصبر»، أو كلمة من آية.";
   after(() => {
     const inp = $("#q");
     inp.value = q0;
@@ -2864,10 +3098,23 @@ async function search(parts, qs) {
     if (q0) run(q0);
   });
   async function run(q) {
-    history.replaceState(history.state, "", `#/search?${onlyQuran ? "in=quran&" : ""}q=${encodeURIComponent(q)}`);
+    history.replaceState(history.state, "", `#/search?${onlyQuran ? "in=quran&" : onlyHadith ? "in=hadith&" : ""}q=${encodeURIComponent(q)}`);
     const v = norm(q), box = $("#res");
-    if (qnorm(q).length < 2) { box.innerHTML = `<p class="note">${hint}</p>`; return; }
+    if (qnorm(q).length < 2 && !(onlyHadith && /^[0-9٠-٩]+$/.test(q.trim()))) { box.innerHTML = `<p class="note">${hint}</p>`; return; }
     box.innerHTML = `<p class="note">جاري البحث…</p>`;
+    if (onlyHadith) {
+      let hits = [];
+      try { hits = await hadithSearch(q); } catch { box.innerHTML = `<div class="empty"><b>البحث مشتغلش</b>غالباً النت فصل. جرّب تاني.</div>`; return; }
+      if ($("#q").value !== q) return;
+      const shown = hits.slice(0, 120);
+      box.innerHTML = hits.length ? `<div class="sec-h"><h2>الأحاديث</h2><span class="count">${n2a(hits.length)}</span></div>
+        <ul class="list">${shown.map((h) => `<li><a class="row folder" href="${h.at ? `#/lib/34/${h.at[0]}/${h.at[1]}/${h.i}` : "#/lib/34"}"><span class="ic">${ic("quote")}</span>
+          <span class="grow"><span class="t">${esc(h.text.length > 170 ? h.text.slice(0, 170) + "…" : h.text)}</span>
+          <span class="s">${esc(h.at ? `${h.at[2]} · ${h.at[3]}` : "")}${h.num ? ` · رقم ${esc(h.num)}` : ""}</span></span></a></li>`).join("")}</ul>
+        ${hits.length > shown.length ? `<p class="note">ظاهر أول ${n2a(shown.length)} حديث. زوّد كلمة عشان تضيّق البحث.</p>` : ""}`
+        : `<div class="empty"><b>مفيش أحاديث فيها «${esc(q)}»</b>جرّب كلمة واحدة، أو اكتبها من غير تشكيل.</div>`;
+      return;
+    }
     let ay;
     try { ay = await ayahSearch(q, onlyQuran ? 300 : 3); } catch { ay = { list: [], total: 0 }; }
     if ($("#q").value !== q) return;
@@ -2904,9 +3151,10 @@ async function search(parts, qs) {
     updatePlayerUI(false);
   }
   return `<div class="chips" role="group" aria-label="نطاق البحث">
-      <a class="chip" href="#/search${q0 ? `?q=${encodeURIComponent(q0)}` : ""}" aria-pressed="${!onlyQuran}">كل الأقسام</a>
-      <a class="chip" href="#/search?in=quran${q0 ? `&q=${encodeURIComponent(q0)}` : ""}" aria-pressed="${onlyQuran}">آيات القرآن</a></div>
-    <label class="search">${ic("search")}<input id="q" type="search" placeholder="${onlyQuran ? "ابحث بكلمة من الآية" : "ابحث في كل الأقسام"}" autocomplete="off" enterkeyhint="search"></label><div id="res"><p class="note">${hint}</p></div>`;
+      <a class="chip" href="#/search${q0 ? `?q=${encodeURIComponent(q0)}` : ""}" aria-pressed="${!onlyQuran && !onlyHadith}">كل الأقسام</a>
+      <a class="chip" href="#/search?in=quran${q0 ? `&q=${encodeURIComponent(q0)}` : ""}" aria-pressed="${onlyQuran}">آيات القرآن</a>
+      <a class="chip" href="#/search?in=hadith${q0 ? `&q=${encodeURIComponent(q0)}` : ""}" aria-pressed="${onlyHadith}">الأحاديث</a></div>
+    <label class="search">${ic("search")}<input id="q" type="search" placeholder="${onlyQuran ? "ابحث بكلمة من الآية" : onlyHadith ? "ابحث بكلمة من الحديث أو رقمه" : "ابحث في كل الأقسام"}" autocomplete="off" enterkeyhint="search"></label><div id="res"><p class="note">${hint}</p></div>`;
 }
 
 /* ======================================================================
