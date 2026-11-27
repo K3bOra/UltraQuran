@@ -113,6 +113,7 @@ dump("radios.json", [[r[1], r[2]] for r in cat["radios"]])
 # tools/source-links.json: QR image name -> the address it encodes (read once from the plugin's PNGs).
 SCAN = "امسح الرمز لفتح صفحة المصدر على موقع ميراث الأنبياء."
 SCAN2 = "امسح الرمز بالموبايل لفتح المرجع الأصلي."
+WUDU_PICS = ["water", "hands-close", "rinse", "face", None, None, "feet", "check"]
 # the plugin's tool and Ramadan cards open receiver screens; on the site they open the matching page
 LINKS = {"ramadan_today": "#/prayer", "ramadan_khatma": "#/khatma", "prayers": "#/prayer", "search": "#/search",
          "memorize": "#/hifz", "zakat": "#/lib/33", "hadith": "#/lib/34", "hadith_search": "#/search?in=hadith"}
@@ -152,7 +153,16 @@ for f in os.listdir(os.path.join(DATA, "lib")):
     # auto-updated page on the site (#/tv, data/yt/dawla.json)
     if f.startswith("yt-") or f in ("16.json.gz", "19.json.gz"):
         continue
-    dump("lib/" + f.replace(".json.gz", ".json"), link_sources(load("lib/" + f)))
+    doc = link_sources(load("lib/" + f))
+    if f == "27.json.gz":
+        for item in doc.get("items", []):
+            if item.get("id") == "wudu" and len(item.get("steps", [])) == len(WUDU_PICS):
+                for step, pic in zip(item["steps"], WUDU_PICS):
+                    if pic:
+                        step["picture"] = pic
+                    else:
+                        step.pop("picture", None)
+    dump("lib/" + f.replace(".json.gz", ".json"), doc)
 
 
 # ---- the plugin's YouTube library (319 sheikhs) -> data/yt/index.json + data/yt/s/<key>.json ----
@@ -218,7 +228,26 @@ for f in os.listdir(os.path.join(DATA, "tafsir")):
 st_dir = os.path.join(OUT, "img", "study")
 os.makedirs(st_dir, exist_ok=True)
 photo_dir = os.path.join(SRC, "art", "study-photos")
-for f in sorted(os.listdir(photo_dir)) if os.path.isdir(photo_dir) else []:
+# the receiver's pictures carry its frame, blurred side bands and caption plates: the site takes the photo alone
+STUDY_BOX = {
+    "arafat": (90, 18, 633, 552), "tawaf": (90, 18, 633, 518), "water": (18, 50, 706, 518), "hands-close": (110, 165, 450, 420),
+    "bow": (208, 18, 514, 552), "finish": (208, 18, 514, 552), "mat": (208, 18, 514, 552), "sit": (208, 18, 514, 552),
+    "stand": (208, 18, 514, 552), "takbir": (208, 18, 514, 552), "check": (18, 88, 706, 481), "jamarat": (18, 88, 706, 481),
+    "cut": (18, 30, 706, 503), "face": (18, 32, 692, 503), "feet": (18, 46, 706, 521), "rinse": (180, 70, 543, 552),
+    "ihram": (106, 18, 616, 526), "kaaba": (18, 76, 706, 547), "mina": (18, 55, 706, 512), "muzdalifah": (18, 28, 706, 423),
+    "prostrate": (181, 18, 541, 552), "route": (54, 18, 667, 518), "sai": (18, 21, 706, 547),
+}
+STUDY_FILE = {"hands-close": "hands"}
+# wudu: the receiver shows one tap photo for three steps and a mouth-rinsing photo for wiping the head.
+# On the site every step gets its own matching photo; a step with no fitting photo shows none rather than a wrong one.
+for name, box in sorted(STUDY_BOX.items()) if os.path.isdir(photo_dir) else []:
+    path = os.path.join(photo_dir, STUDY_FILE.get(name, name) + ".png")
+    if os.path.isfile(path):
+        im = Image.open(path).convert("RGB").crop(box)
+        w = min(640, im.width)
+        im.resize((w, round(im.height * w / im.width)), Image.LANCZOS).save(
+            os.path.join(st_dir, name + ".webp"), "WEBP", quality=82, method=6)
+for f in []:
     if f.endswith(".png"):
         im = Image.open(os.path.join(photo_dir, f)).convert("RGB")
         w = min(640, im.width)

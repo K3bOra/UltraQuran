@@ -1742,7 +1742,8 @@ function lessonView(node, root) {
   return `<section class="shero"><span class="medal">${icSm(icon, 34)}</span><h2>${esc(node.title)}</h2>
       <p>${esc(node.subtitle || "")}</p><div class="stats"><span><b>${n2a(steps.length)}</b>خطوة</span>${qs.length ? `<span><b>${n2a(qs.length)}</b>سؤال</span>` : ""}</div></section>
     <ol class="lsteps">${steps.map((st, i) => `<li class="lstep">
-      ${st.picture ? `<img src="img/study/${esc(st.picture)}.webp" alt="" loading="lazy" decoding="async">` : ""}
+      ${st.picture ? `<span class="lph"><img src="img/study/${esc(st.picture)}.webp?v=3" alt="${esc(st.title)}" loading="lazy" decoding="async"></span>`
+        : `<span class="lph lph-empty" aria-hidden="true"><b>${n2a(i + 1)}</b><small>${esc(st.title)}</small></span>`}
       <div class="lstep-t"><span class="rnum">${n2a(i + 1)}</span><b>${esc(st.title)}</b>
       ${st.voice ? `<button class="btn ghost" data-voice="${esc(st.voice)}" aria-label="اسمع الخطوة">${icSm("play", 15)}اسمع</button>` : ""}</div>
       <p>${esc(st.body || "")}</p>${st.hint ? `<small>${esc(st.hint)}</small>` : ""}</li>`).join("")}</ol>

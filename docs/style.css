@@ -2231,7 +2231,13 @@ body.immersive .imm-exit { box-shadow: 0 4px 14px #0004; }
 @media (min-width: 760px) { .lsteps { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1200px) { .lsteps { grid-template-columns: repeat(3, 1fr); } }
 .lstep { border-radius: var(--radius-lg); overflow: hidden; background: var(--paper); color: #2a2418; border: 1px solid var(--line); display: flex; flex-direction: column; }
-.lstep img { width: 100%; aspect-ratio: 725 / 570; object-fit: cover; display: block; background: var(--deep); }
+.lsteps { align-items: start; }
+.lstep .lph { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: radial-gradient(circle at 50% 40%, var(--jade), var(--night)); border-bottom: 1px solid var(--line); }
+.lstep .lph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.lstep .lph-empty { display: grid; place-items: center; align-content: center; gap: 6px; color: var(--gold); }
+.lstep .lph-empty::before { content: ""; position: absolute; inset: 14px; border: 1px solid #d9b36c55; border-radius: 16px; }
+.lstep .lph-empty b { font: 700 54px/1 var(--kufi); }
+.lstep .lph-empty small { margin: 0; color: var(--parchment); font: 600 18px/1.4 var(--kufi); }
 .lstep-t { display: flex; align-items: center; gap: 10px; padding: 12px 14px 0; }
 .lstep-t b { flex: 1; font: 600 17px/1.5 var(--kufi); color: var(--emerald); }
 .lstep-t .rnum { position: static; }
