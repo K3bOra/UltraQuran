@@ -1,15 +1,24 @@
 {
-  "version": "1.5",
-  "name": "Ultra Quran 1.5",
-  "notes_ar": [
-    "٢٥ قسمًا على الرئيسية، ٢٩٩ قارئًا، ١٩ مبتهلًا و١٧٧ إذاعة.",
-    "٤٣ مسلسلًا و١٬٦١١ حلقة، أرشيف ميراث الأنبياء ومعارض البوسترات.",
-    "تحميل الصور الأصلية تلقائيًا على الهارد مع نسخة تثبيت أخف."
+  "version": "1.6.0",
+  "name": "Ultra Quran 1.6.0",
+  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.6.0/UltraQuran_Open.ipk",
+  "ipk_sha256": "feeaeaf1898d55f03de469f3c52280e15abc6d491c2f041c2ea1165c4f81cb00",
+  "ipk_size": 39394612,
+  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.6.0/UltraQuran_DreamOS.deb",
+  "deb_sha256": "3f56cfc5d1a7b2857fbf970d8eb2605f746723881a103c6690d607717d4db9bf",
+  "deb_size": 38117936,
+  "notes": [
+    "30 home sections with Ramadan, Prayer and Wudu, Hajj and Umrah, Cairo Quran Radio Heritage, and Muslim Tools.",
+    "33 additional preacher and scholar folders in Islamic Visuals, bringing the section to 50 folders and 22,148 entries.",
+    "Cairo Quran Radio Heritage has 2,728 recordings in 24 collections. Dawlet El Tlawa has a separate highlights folder for each season.",
+    "Redrawn icons, Ramadan decorations, and a compact upcoming prayer display.",
+    "Smaller installers with up to 1080p artwork bundled. Optional visuals and 1440p artwork download to mounted storage; verified earlier asset packs are reused."
   ],
-  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.5/UltraQuran_Open.ipk",
-  "ipk_sha256": "035794db3d80e998037b3f8f0c9aa783668aa1a6a64b7921892d588fddd6d4b5",
-  "ipk_size": 29942540,
-  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.5/UltraQuran_DreamOS.deb",
-  "deb_sha256": "82345d0a7d8a908166903adedc2e8c05d6b079ff939f85e49c04d1d803862951",
-  "deb_size": 29264048
+  "notes_ar": [
+    "٣٠ قسم في الرئيسية مع موسوعة رمضان والصلاة والوضوء والحج والعمرة وتراث إذاعة القرآن وأدوات المسلم.",
+    "٣٣ فولدر إضافي للدعاة والعلماء. إجمالي المرئيات الإسلامية ٥٠ فولدر و٢٢٬١٤٨ مادة.",
+    "٢٬٧٢٨ تسجيلًا في ٢٤ مجموعة من تراث الإذاعة، وفولدر مقتطفات وتصفيات لكل موسم من دولة التلاوة.",
+    "أيقونات مرسومة من جديد، وزينة رمضان والخيامية، وعرض الصلاة القادمة وموعد اللي بعدها.",
+    "ملفات تثبيت أخف مع واجهة مدمجة حتى 1080p. الصور والكروت عالية الدقة بتنزل على الهارد أو الفلاشة، مع إعادة استخدام الحزم القديمة السليمة."
+  ]
 }
