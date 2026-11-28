@@ -49,17 +49,17 @@ Royal Emerald design: emerald glass, calm gold and a gilded Mushaf frame set wit
 
 <div align="center">
 
-### Ultra Quran V1.1.0
+### Ultra Quran V1.7.0
 
 </div>
 
-<ul dir="rtl">
-<li>رقم الإصدار بقى ظاهر على الشمال في آخر الشريط اللي تحت في كل الشاشات.</li>
-<li>إصلاح 129 اسم متلخبط: ابتهالات الشيخ نصر الدين طوبار النادرة (83 ابتهال) بقت مرقّمة من 01 لـ 83 ومعاها السنة الهجرية لو معروفة، والأسامي التركي عند طوبار والفشني والبهتيمي اتكتبت بالعربي، واتشالت أكواد يوتيوب من تلاوات السيد سعيد، واتصلحت كلمات لازقة في عبد الباسط وخالد الجليل وغيرهم.</li>
-</ul>
+- 101 مسلسل إسلامي وتاريخي بـ3,451 حلقة، مع بوستر لكل مسلسل وتحديث الأعداد على الرئيسية.
+- عالم الأطفال في 7 أقسام، فيه 25 مسلسل كارتون بـ873 حلقة ومسابقة من 24 سؤال.
+- حزم Lite أخف وفيها بوسترات مصغّرة. الصور الكاملة بتتنزّل تلقائيًا عند فتح البلجن مع وجود تخزين مركّب قابل للكتابة، والحزم القديمة المتنزّلة بتفضل قابلة لإعادة الاستخدام.
 
-- The plugin version is now shown at the left end of the bottom bar on every screen.
-- 129 garbled titles fixed: Sheikh Nasr El-Din Tobar's 83 rare ibtihalat (already corrupted on the Internet Archive) are now numbered 01-83 with the Hijri year where known; Turkish file names for Tobar, El-Feshni and El-Bahtimi are written in Arabic; YouTube codes glued to El-Sayed Saeed's recitations and words stuck together for Abdul Basit, Khaled Al-Jalil and others are cleaned up.
+- 101 Islamic and historical series with 3,451 episodes and a poster for each title.
+- Seven children’s sections with 25 animated series, 873 episodes and a 24-question quiz.
+- The Lite packages include compact poster previews. Full artwork downloads automatically when the plugin is opened with mounted writable storage, and previously downloaded art packs are reused.
 
 [Release notes and downloads](https://github.com/K3bOra/UltraQuran/releases/latest) · [Version history](CHANGELOG.md)
 

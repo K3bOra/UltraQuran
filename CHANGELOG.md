@@ -5,6 +5,14 @@ The current version and download data are in [update.json](https://github.com/K3
 
 الإصدار الحالي وبيانات التحميل موجودين في [update.json](https://github.com/K3bOra/UltraQuran/releases/latest/download/update.json).
 
+## V1.7.0
+
+- 101 Islamic and historical series with 3,451 episodes and a poster for each title.<br>101 مسلسل إسلامي وتاريخي بـ3,451 حلقة، مع بوستر لكل مسلسل وتحديث الأعداد على الرئيسية.
+- Seven children’s sections with 25 animated series, 873 episodes and a 24-question quiz.<br>عالم الأطفال في 7 أقسام، فيه 25 مسلسل كارتون بـ873 حلقة ومسابقة من 24 سؤال.
+- The Lite packages include compact poster previews. Full artwork downloads automatically when the plugin is opened with mounted writable storage, and previously downloaded art packs are reused.<br>حزم Lite أخف وفيها بوسترات مصغّرة. الصور الكاملة بتتنزّل تلقائيًا عند فتح البلجن مع وجود تخزين مركّب قابل للكتابة، والحزم القديمة المتنزّلة بتفضل قابلة لإعادة الاستخدام.
+
+[Release and downloads](https://github.com/K3bOra/UltraQuran/releases/tag/v1.7.0)
+
 ## V1.1.0
 ### الجديد في V1.1.0
 

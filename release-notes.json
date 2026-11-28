@@ -1,11 +1,25 @@
 {
-  "version": "1.1.0",
+  "version": "1.7.0",
   "notes": [
-    "The plugin version is now shown at the left end of the bottom bar on every screen.",
-    "129 garbled titles fixed: Sheikh Nasr El-Din Tobar's 83 rare ibtihalat (already corrupted on the Internet Archive) are now numbered 01-83 with the Hijri year where known; Turkish file names for Tobar, El-Feshni and El-Bahtimi are written in Arabic; YouTube codes glued to El-Sayed Saeed's recitations and words stuck together for Abdul Basit, Khaled Al-Jalil and others are cleaned up."
+    "101 Islamic and historical series with 3,451 episodes and a poster for each title.",
+    "Seven children’s sections with 25 animated series, 873 episodes and a 24-question quiz.",
+    "The Lite packages include compact poster previews. Full artwork downloads automatically when the plugin is opened with mounted writable storage, and previously downloaded art packs are reused."
   ],
   "notes_ar": [
-    "رقم الإصدار بقى ظاهر على الشمال في آخر الشريط اللي تحت في كل الشاشات.",
-    "إصلاح 129 اسم متلخبط: ابتهالات الشيخ نصر الدين طوبار النادرة (83 ابتهال) بقت مرقّمة من 01 لـ 83 ومعاها السنة الهجرية لو معروفة، والأسامي التركي عند طوبار والفشني والبهتيمي اتكتبت بالعربي، واتشالت أكواد يوتيوب من تلاوات السيد سعيد، واتصلحت كلمات لازقة في عبد الباسط وخالد الجليل وغيرهم."
-  ]
+    "101 مسلسل إسلامي وتاريخي بـ3,451 حلقة، مع بوستر لكل مسلسل وتحديث الأعداد على الرئيسية.",
+    "عالم الأطفال في 7 أقسام، فيه 25 مسلسل كارتون بـ873 حلقة ومسابقة من 24 سؤال.",
+    "حزم Lite أخف وفيها بوسترات مصغّرة. الصور الكاملة بتتنزّل تلقائيًا عند فتح البلجن مع وجود تخزين مركّب قابل للكتابة، والحزم القديمة المتنزّلة بتفضل قابلة لإعادة الاستخدام."
+  ],
+  "staged_sha256": {
+    "UltraQuran_DreamOS.deb": "f1855ace5e1247e10b5788f2c853ec5cbcb581133c92ab0924255e9d0ebb5683",
+    "UltraQuran_Open.ipk": "a84fd51d68ffca04eef6c3fdb855fbe981cd0a6a44e45e457634ff267a0a06b3"
+  },
+  "external_art": {
+    "filename": "UltraQuran_library_art_v1.tar.gz",
+    "files": 110,
+    "size": 9635371,
+    "unpacked": 9634819,
+    "sha256": "254ff16085fc374666f725b93ac4005815e2765bb1330c9aa20368a83d4d7777",
+    "url": "https://github.com/K3bOra/UltraQuran/releases/download/assets-v1.7/UltraQuran_library_art_v1.tar.gz"
+  }
 }
