@@ -451,7 +451,18 @@ function stopVideoSource(el) {
   el.load();
 }
 
+function playNativeVideo(el, url) {
+  el.src = url;
+  el.play().catch(() => {});
+}
+
 async function playStream(el, t) {
+  const native = el.canPlayType("application/vnd.apple.mpegurl");
+  const current = () => V.list[V.i] === t && $("#video").classList.contains("open");
+  if (native && (IS_IOS || !window.MediaSource)) {
+    playNativeVideo(el, t.u);
+    return;
+  }
   try {
     hlsReady ||= new Promise((resolve, reject) => {
       const script = document.createElement("script");
@@ -461,8 +472,8 @@ async function playStream(el, t) {
       document.head.append(script);
     }).catch((error) => { hlsReady = null; throw error; });
     const Hls = await hlsReady;
-    if (V.list[V.i] !== t || !$("#video").classList.contains("open") || V.hls) return;
-    if (!Hls?.isSupported()) { toast("المتصفح لا يدعم تشغيل البث"); return; }
+    if (!current() || V.hls) return;
+    if (!Hls?.isSupported()) throw new Error("HLS playback unavailable");
     const hls = new Hls();
     V.hls = hls;
     hls.on(Hls.Events.ERROR, (_, info) => {
@@ -474,7 +485,9 @@ async function playStream(el, t) {
     hls.loadSource(t.u);
     hls.attachMedia(el);
   } catch {
-    if (V.list[V.i] === t && $("#video").classList.contains("open")) toast("البث مشتغلش، جرّب تاني");
+    if (!current()) return;
+    if (native) playNativeVideo(el, t.u);
+    else toast("البث مشتغلش، جرّب تاني");
   }
 }
 function ytSrc(id) {
@@ -512,11 +525,10 @@ function showVideo() {
     $$(`.vcard[data-yt="${t.yt}"], .epcard[data-yt="${t.yt}"]`).forEach((c) => c.classList.add("seen"));
   } else {
     $("#vFrame").innerHTML = ""; box.hidden = true; el.hidden = false;
-    if (/\.m3u8(?:[?#]|$)/i.test(t.u) && !el.canPlayType("application/vnd.apple.mpegurl")) {
+    if (/\.m3u8(?:[?#]|$)/i.test(t.u)) {
       playStream(el, t);
     } else {
-      el.src = t.u;
-      el.play().catch(() => {});
+      playNativeVideo(el, t.u);
     }
   }
   const many = V.list.length > 1;
