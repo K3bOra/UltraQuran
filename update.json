@@ -1,24 +1,20 @@
 {
-  "version": "1.6.0",
-  "name": "Ultra Quran 1.6.0",
-  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.6.0/UltraQuran_Open.ipk",
-  "ipk_sha256": "feeaeaf1898d55f03de469f3c52280e15abc6d491c2f041c2ea1165c4f81cb00",
-  "ipk_size": 39394612,
-  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.6.0/UltraQuran_DreamOS.deb",
-  "deb_sha256": "3f56cfc5d1a7b2857fbf970d8eb2605f746723881a103c6690d607717d4db9bf",
-  "deb_size": 38117936,
+  "version": "1.7.0",
+  "name": "Ultra Quran 1.7.0",
+  "ipk": "https://github.com/K3bOra/UltraQuran/releases/download/v1.7.0/UltraQuran_Open.ipk",
+  "ipk_sha256": "a84fd51d68ffca04eef6c3fdb855fbe981cd0a6a44e45e457634ff267a0a06b3",
+  "ipk_size": 40209098,
+  "deb": "https://github.com/K3bOra/UltraQuran/releases/download/v1.7.0/UltraQuran_DreamOS.deb",
+  "deb_sha256": "f1855ace5e1247e10b5788f2c853ec5cbcb581133c92ab0924255e9d0ebb5683",
+  "deb_size": 38897936,
   "notes": [
-    "30 home sections with Ramadan, Prayer and Wudu, Hajj and Umrah, Cairo Quran Radio Heritage, and Muslim Tools.",
-    "33 additional preacher and scholar folders in Islamic Visuals, bringing the section to 50 folders and 22,148 entries.",
-    "Cairo Quran Radio Heritage has 2,728 recordings in 24 collections. Dawlet El Tlawa has a separate highlights folder for each season.",
-    "Redrawn icons, Ramadan decorations, and a compact upcoming prayer display.",
-    "Smaller installers with up to 1080p artwork bundled. Optional visuals and 1440p artwork download to mounted storage; verified earlier asset packs are reused."
+    "101 Islamic and historical series with 3,451 episodes and a poster for each title.",
+    "Seven children’s sections with 25 animated series, 873 episodes and a 24-question quiz.",
+    "The Lite packages include compact poster previews. Full artwork downloads automatically when the plugin is opened with mounted writable storage, and previously downloaded art packs are reused."
   ],
   "notes_ar": [
-    "٣٠ قسم في الرئيسية مع موسوعة رمضان والصلاة والوضوء والحج والعمرة وتراث إذاعة القرآن وأدوات المسلم.",
-    "٣٣ فولدر إضافي للدعاة والعلماء. إجمالي المرئيات الإسلامية ٥٠ فولدر و٢٢٬١٤٨ مادة.",
-    "٢٬٧٢٨ تسجيلًا في ٢٤ مجموعة من تراث الإذاعة، وفولدر مقتطفات وتصفيات لكل موسم من دولة التلاوة.",
-    "أيقونات مرسومة من جديد، وزينة رمضان والخيامية، وعرض الصلاة القادمة وموعد اللي بعدها.",
-    "ملفات تثبيت أخف مع واجهة مدمجة حتى 1080p. الصور والكروت عالية الدقة بتنزل على الهارد أو الفلاشة، مع إعادة استخدام الحزم القديمة السليمة."
+    "101 مسلسل إسلامي وتاريخي بـ3,451 حلقة، مع بوستر لكل مسلسل وتحديث الأعداد على الرئيسية.",
+    "عالم الأطفال في 7 أقسام، فيه 25 مسلسل كارتون بـ873 حلقة ومسابقة من 24 سؤال.",
+    "حزم Lite أخف وفيها بوسترات مصغّرة. الصور الكاملة بتتنزّل تلقائيًا عند فتح البلجن مع وجود تخزين مركّب قابل للكتابة، والحزم القديمة المتنزّلة بتفضل قابلة لإعادة الاستخدام."
   ]
 }
