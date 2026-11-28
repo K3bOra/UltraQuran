@@ -1,6 +1,6 @@
 """Convert the Ultra Quran plugin data into small JSON files for the web app.
 
-Usage: python3 -I tools/build_web_data.py <unpacked plugin dir> docs
+Usage: python3 -I tools/build_web_data.py <unpacked plugin dir> docs [--library-only SECTION ...]
 
 Run it after every plugin update so the web app (docs/) gets the new catalog.
 """
@@ -14,7 +14,7 @@ import time
 
 from PIL import Image
 
-SRC, OUT = sys.argv[1], sys.argv[2]
+SRC, OUT = sys.argv[1:3]
 DATA = os.path.join(SRC, "data")
 
 
@@ -48,6 +48,82 @@ def const(name):
 
 
 DUR_TAIL = re.compile(r"\s*[·•\-–|]\s*\d{1,2}:\d{2}(?::\d{2})?\s*$")
+
+# tools/source-links.json: QR image name -> the address it encodes (read once from the plugin's PNGs).
+SCAN = "امسح الرمز لفتح صفحة المصدر على موقع ميراث الأنبياء."
+SCAN2 = "امسح الرمز بالموبايل لفتح المرجع الأصلي."
+WUDU_PICS = ["water", "hands-close", "rinse", "face", None, None, "feet", "check"]
+# the plugin's tool and Ramadan cards open receiver screens; on the site they open the matching page
+LINKS = {"ramadan_today": "#/prayer", "ramadan_khatma": "#/khatma", "prayers": "#/prayer", "search": "#/search",
+         "memorize": "#/hifz", "zakat": "#/lib/33", "hadith": "#/lib/34", "hadith_search": "#/search?in=hadith"}
+try:
+    SOURCE_LINKS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "source-links.json"), encoding="utf-8"))
+except (IOError, ValueError):
+    SOURCE_LINKS = {}
+
+
+def link_sources(node):
+    if isinstance(node, dict):
+        qr = node.get("source_qr")
+        if isinstance(qr, str) and qr.split(".")[0] in SOURCE_LINKS:
+            node["src"] = SOURCE_LINKS[qr.split(".")[0]]
+            del node["source_qr"]
+            if isinstance(node.get("body"), str) and SCAN in node["body"]:
+                node["body"] = node["body"].replace(SCAN, "").strip()
+        url = node.get("source_url")
+        if isinstance(url, str) and url.startswith("https://") and "src" not in node:
+            node["src"] = url
+            node.pop("source_qr", None)
+        if isinstance(node.get("body"), str) and SCAN2 in node["body"]:
+            node["body"] = node["body"].replace(SCAN2, "").strip()
+        tool = node.get("utility") or node.get("action")
+        if isinstance(tool, str) and tool in LINKS:
+            node["link"] = LINKS[tool]
+        if node.get("study_section") in (27, 28):
+            node["link"] = "#/lib/%d" % node["study_section"]
+        for value in node.values():
+            link_sources(value)
+    elif isinstance(node, list):
+        for value in node:
+            link_sources(value)
+    return node
+
+
+def export_libraries(selected=()):
+    for f in sorted(os.listdir(os.path.join(DATA, "lib"))):
+        if not f.endswith(".json.gz") or f.startswith("yt-") or f == "19.json.gz":
+            continue
+        key = f[:-len(".json.gz")]
+        if selected and key not in selected:
+            continue
+        doc = link_sources(load("lib/" + f))
+        if key == "12":
+            series = {item["id"]: item for item in load("lib/17.json.gz")["items"] if item.get("id")}
+            for group in doc["items"]:
+                for item in group.get("children", []):
+                    if item.get("series_ref"):
+                        item["episode_count"] = len(series[item["series_ref"]]["children"])
+        if key == "16":
+            # Full episodes already have their live-updated page at #/tv.
+            clips = [item for item in doc["items"] if item.get("poster", "").startswith("l16-clips-")]
+            total = sum(len(item["children"]) for item in clips)
+            doc = {"title": "مقتطفات دولة التلاوة", "sub": "%d مقطع من الموسمَين" % total,
+                   "items": clips}
+        if key == "27":
+            for item in doc.get("items", []):
+                if item.get("id") == "wudu" and len(item.get("steps", [])) == len(WUDU_PICS):
+                    for step, pic in zip(item["steps"], WUDU_PICS):
+                        if pic:
+                            step["picture"] = pic
+                        else:
+                            step.pop("picture", None)
+        dump("lib/" + key + ".json", doc)
+
+
+if sys.argv[3:4] == ["--library-only"]:
+    export_libraries(sys.argv[4:])
+    sys.exit(0)
+
 
 cat = load("catalog.json.gz")
 bios = load("bios.json.gz")
@@ -110,59 +186,7 @@ dump("meta.json", meta)
 dump("radios.json", [[r[1], r[2]] for r in cat["radios"]])
 
 # The receiver shows a QR code for an item's source page (Miraath al-Anbiya); on the site the page is a link.
-# tools/source-links.json: QR image name -> the address it encodes (read once from the plugin's PNGs).
-SCAN = "امسح الرمز لفتح صفحة المصدر على موقع ميراث الأنبياء."
-SCAN2 = "امسح الرمز بالموبايل لفتح المرجع الأصلي."
-WUDU_PICS = ["water", "hands-close", "rinse", "face", None, None, "feet", "check"]
-# the plugin's tool and Ramadan cards open receiver screens; on the site they open the matching page
-LINKS = {"ramadan_today": "#/prayer", "ramadan_khatma": "#/khatma", "prayers": "#/prayer", "search": "#/search",
-         "memorize": "#/hifz", "zakat": "#/lib/33", "hadith": "#/lib/34", "hadith_search": "#/search?in=hadith"}
-try:
-    SOURCE_LINKS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "source-links.json"), encoding="utf-8"))
-except (IOError, ValueError):
-    SOURCE_LINKS = {}
-
-
-def link_sources(node):
-    if isinstance(node, dict):
-        qr = node.get("source_qr")
-        if isinstance(qr, str) and qr.split(".")[0] in SOURCE_LINKS:
-            node["src"] = SOURCE_LINKS[qr.split(".")[0]]
-            del node["source_qr"]
-            if isinstance(node.get("body"), str) and SCAN in node["body"]:
-                node["body"] = node["body"].replace(SCAN, "").strip()
-        url = node.get("source_url")
-        if isinstance(url, str) and url.startswith("https://") and "src" not in node:
-            node["src"] = url
-            node.pop("source_qr", None)
-        if isinstance(node.get("body"), str) and SCAN2 in node["body"]:
-            node["body"] = node["body"].replace(SCAN2, "").strip()
-        tool = node.get("utility") or node.get("action")
-        if isinstance(tool, str) and tool in LINKS:
-            node["link"] = LINKS[tool]
-        for value in node.values():
-            link_sources(value)
-    elif isinstance(node, list):
-        for value in node:
-            link_sources(value)
-    return node
-
-
-for f in os.listdir(os.path.join(DATA, "lib")):
-    # yt-<id>.json and 19.json (their index) become data/yt/ below; 16 (دولة التلاوة) has its own
-    # auto-updated page on the site (#/tv, data/yt/dawla.json)
-    if f.startswith("yt-") or f in ("16.json.gz", "19.json.gz"):
-        continue
-    doc = link_sources(load("lib/" + f))
-    if f == "27.json.gz":
-        for item in doc.get("items", []):
-            if item.get("id") == "wudu" and len(item.get("steps", [])) == len(WUDU_PICS):
-                for step, pic in zip(item["steps"], WUDU_PICS):
-                    if pic:
-                        step["picture"] = pic
-                    else:
-                        step.pop("picture", None)
-    dump("lib/" + f.replace(".json.gz", ".json"), doc)
+export_libraries()
 
 
 # ---- the plugin's YouTube library (319 sheikhs) -> data/yt/index.json + data/yt/s/<key>.json ----

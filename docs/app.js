@@ -440,7 +440,56 @@ function toggleFav(t) {
 
 /* ---- video ---- */
 // mp4 files play in <video>; YouTube plays inside the page (youtube-nocookie, no related videos)
-const V = { list: [], i: 0 };
+const V = { list: [], i: 0, hls: null };
+let hlsReady;
+const HLS_SRC = "https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js";
+
+function stopVideoSource(el) {
+  if (V.hls) { V.hls.destroy(); V.hls = null; }
+  el.pause();
+  el.removeAttribute("src");
+  el.load();
+}
+
+function playNativeVideo(el, url) {
+  el.src = url;
+  el.play().catch(() => {});
+}
+
+async function playStream(el, t) {
+  const native = el.canPlayType("application/vnd.apple.mpegurl");
+  const current = () => V.list[V.i] === t && $("#video").classList.contains("open");
+  if (native && (IS_IOS || !window.MediaSource)) {
+    playNativeVideo(el, t.u);
+    return;
+  }
+  try {
+    hlsReady ||= new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = HLS_SRC;
+      script.onload = () => resolve(window.Hls);
+      script.onerror = () => { script.remove(); reject(new Error("HLS library unavailable")); };
+      document.head.append(script);
+    }).catch((error) => { hlsReady = null; throw error; });
+    const Hls = await hlsReady;
+    if (!current() || V.hls) return;
+    if (!Hls?.isSupported()) throw new Error("HLS playback unavailable");
+    const hls = new Hls();
+    V.hls = hls;
+    hls.on(Hls.Events.ERROR, (_, info) => {
+      if (info.fatal && V.hls === hls) toast("البث مشتغلش، جرّب تاني");
+    });
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      if (V.hls === hls) el.play().catch(() => {});
+    });
+    hls.loadSource(t.u);
+    hls.attachMedia(el);
+  } catch {
+    if (!current()) return;
+    if (native) playNativeVideo(el, t.u);
+    else toast("البث مشتغلش، جرّب تاني");
+  }
+}
 function ytSrc(id) {
   const o = encodeURIComponent(location.origin);
   return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&hl=ar&cc_lang_pref=ar&color=white&origin=${o}`;
@@ -463,8 +512,9 @@ function showVideo() {
   $("#vTitle").textContent = t.t;
   $("#vSub").textContent = t.yt ? [t.s, t.ch].filter(Boolean).filter((x, k, a) => a.indexOf(x) === k).join(" · ") : (t.s || "");
   v.classList.toggle("yt", !!t.yt);
+  stopVideoSource(el);
   if (t.yt) {
-    el.pause(); el.removeAttribute("src"); el.load(); el.hidden = true;
+    el.hidden = true;
     box.hidden = false;
     $("#vFrame").innerHTML = `<iframe src="${ytSrc(t.yt)}" title="${esc(t.t)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
     S.ytSeen ||= {};
@@ -475,7 +525,11 @@ function showVideo() {
     $$(`.vcard[data-yt="${t.yt}"], .epcard[data-yt="${t.yt}"]`).forEach((c) => c.classList.add("seen"));
   } else {
     $("#vFrame").innerHTML = ""; box.hidden = true; el.hidden = false;
-    el.src = t.u; el.play().catch(() => {});
+    if (/\.m3u8(?:[?#]|$)/i.test(t.u)) {
+      playStream(el, t);
+    } else {
+      playNativeVideo(el, t.u);
+    }
   }
   const many = V.list.length > 1;
   $("#vPrev").hidden = !many || V.i === 0;
@@ -492,7 +546,7 @@ function stepVideo(d) {
 function closeVideo(fromPop) {
   const v = $("#video");
   if (!v.classList.contains("open")) return;
-  $("#vEl").pause(); $("#vEl").removeAttribute("src"); $("#vEl").load();
+  stopVideoSource($("#vEl"));
   $("#vFrame").innerHTML = "";
   v.classList.remove("open", "yt"); v.setAttribute("aria-hidden", "true");
   if (!fromPop && history.state?.video) history.back();
@@ -512,7 +566,7 @@ const TILES = [
   { t: "المبتهلون", m: "19 مبتهلاً · الابتهالات والتواشيح", ic: "star", go: "#/quran/m", p: 951 },
   { t: "د. مصطفى محمود", m: "العلم والإيمان · 1973 مادة", ic: "atom", go: "#/lib/15", lp: "l15-mahmoud" },
   { t: "المكتبة المرئية", m: "تلاوات وخواطر وابتهالات نادرة", ic: "video", go: "#/watch" },
-  { t: "المسلسلات الإسلامية", m: "43 مسلسلاً · 1611 حلقة", ic: "film", go: "#/lib/17", lp: "l17-0" },
+  { t: "المسلسلات الإسلامية", m: "101 مسلسل · 3451 حلقة", ic: "film", go: "#/lib/17", lp: "l17-0" },
   { t: "المرئيات الإسلامية", m: "25 داعية وعالِم · 8100+ فيديو", ic: "video", go: "#/lib/9", lp: "l9-0" },
   { t: "المديح", m: "المديح النبوي والإنشاد · 948 فيديو", ic: "daf", go: "#/lib/18", lp: "l18-0" },
   { t: "التفسير وعلومه", m: "الطبري وابن كثير · 1520 مادة", ic: "tafsir", go: "#/lib/2" },
@@ -529,7 +583,7 @@ const TILES = [
   { t: "إذاعات القرآن", m: "177 إذاعة بث مباشر", ic: "radio", go: "#/radio" },
   { t: "المكتبة الإسلامية", m: "زاد المعاد والمتون", ic: "books", go: "#/lib/11" },
   { t: "ميراث الأنبياء", m: "دروس وصوتيات وفتاوى", ic: "books", go: "#/lib/11/7" },
-  { t: "عالم الأطفال", m: "المصحف المعلم وجزء عمّ · 157 مادة", ic: "kid", go: "#/lib/12" },
+  { t: "عالم الأطفال", m: "25 مسلسل كارتون · 873 حلقة", ic: "kid", go: "#/lib/12" },
   { t: "التقويم الإسلامي", m: "التاريخ الهجري والمواسم · 52 مادة", ic: "moon", go: "#/lib/13" },
   { t: "الصلاة والوضوء", m: "نتعلّم خطوة خطوة بالصور", ic: "p-noon", go: "#/lib/27" },
   { t: "الحج والعمرة", m: "دليل المناسك المصوّر", ic: "dome", go: "#/lib/28" },
@@ -1085,6 +1139,7 @@ async function dawla(parts) {
     ${seasons.length > 1 ? `<div class="chips season-chips" role="group" aria-label="المواسم">${seasons.map((s) => `<a class="chip" href="#/tv/${s.n}" aria-pressed="${s === season}">${esc(s.title)} · ${n2a(s.eps.length)} ${s.eps.length > 10 ? "حلقة" : "حلقات"}</a>`).join("")}</div>` : ""}
     <div class="sec-h"><h2>${esc(season.title)}</h2><span class="count">${esc(season.years || "")}</span></div>
     <div class="epgrid">${cards}</div>
+    <div class="btn-row"><a class="btn ghost" href="#/lib/16">${icSm("video", 16)}مقتطفات وتصفيات الموسمَين</a></div>
     <p class="yt-src">${icSm("video", 14)} الحلقات من القناة الرسمية للبرنامج على يوتيوب · ${esc(d.by || "")}</p>`;
 }
 
@@ -1256,7 +1311,7 @@ async function radio() {
 const kidsOf = (n) => n && (n.folders || n.items || n.children || null);
 const nodeTitle = (n) => n.title || "";
 const SEC_ICON = { 1: "mic", 2: "tafsir", 3: "quote", 4: "lantern", 5: "palm", 6: "ship", 7: "dome", 8: "beads", 9: "video", 11: "books", 12: "kid", 13: "moon",
-  15: "atom", 17: "film", 18: "daf", 23: "wave", 24: "mic", 25: "shield", 26: "lantern", 27: "p-noon", 28: "dome", 29: "radio",
+  15: "atom", 16: "tv", 17: "film", 18: "daf", 23: "wave", 24: "mic", 25: "shield", 26: "lantern", 27: "p-noon", 28: "dome", 29: "radio",
   30: "star", 33: "heart", 34: "quote" };
 // cover picture of a whole section (the plugin's gallery posters, img/lp/<name>.webp)
 const SEC_ART = { 15: "l15-mahmoud", 24: "l24-lectures", 29: "l29-legacy" };
@@ -1268,7 +1323,9 @@ const isYt = (k) => !kidsOf(k) && typeof k.youtube_id === "string" && typeof k.a
 
 function countLeaves(n) {
   const k = kidsOf(n);
-  if (!k) return { a: typeof n.audio === "string" && !n.video ? 1 : 0, v: n.video || n.youtube_id ? 1 : 0, t: !n.audio && !n.youtube_id && n.body ? 1 : 0 };
+  if (!k) return { a: typeof n.audio === "string" && !n.video ? 1 : 0,
+    v: n.episode_count || (n.video || n.youtube_id ? 1 : 0),
+    t: !n.audio && !n.youtube_id && !n.series_ref && n.body ? 1 : 0 };
   return k.reduce((acc, c) => { const x = countLeaves(c); acc.a += x.a; acc.v += x.v; acc.t += x.t; return acc; }, { a: 0, v: 0, t: 0 });
 }
 function folderKind(n) {
@@ -1282,7 +1339,12 @@ const KIND_IC = { video: "video", audio: "mic", text: "text" };
 // big folders (preachers' archives, hadith books) live in their own file and load when opened
 const REF_RE = /^(?:visual-r7-[a-z0-9-]+|hadith-(?:bukhari|muslim|nawawi)-\d+)$/;
 async function refKids(n) {
-  if (n && !kidsOf(n) && typeof n.folder_ref === "string" && REF_RE.test(n.folder_ref)) {
+  if (!n || kidsOf(n)) return n;
+  if (n.series_ref) {
+    const library = await getJSON("data/lib/17.json");
+    const series = library.items.find((item) => item.id === n.series_ref);
+    n.items = kidsOf(series) || [];
+  } else if (typeof n.folder_ref === "string" && REF_RE.test(n.folder_ref)) {
     const d = await getJSON(`data/lib/${n.folder_ref}.json`);
     n.items = (d && d.items) || [];
   }
@@ -1299,6 +1361,8 @@ async function lib(parts) {
   const kids = kidsOf(node);
   setTop(nodeTitle(node));
   const base = `#/lib/${sec}${trail.length ? "/" + trail.join("/") : ""}`;
+  if (sec === "12" && Array.isArray(node.questions)) return quizView(node, true);
+  if (node.link && !kids) { location.replace(node.link); return null; }
   if (!kids && Array.isArray(node.steps)) return lessonView(node, root);
   if (!kids) return leafView(node, base, root);
 
@@ -1333,7 +1397,8 @@ async function lib(parts) {
 
   // ---- body: folders as cards, leaves as list or video grid
   let folders = [], leaves = [];
-  kids.forEach((k, i) => (kidsOf(k) || (k.folder_ref && REF_RE.test(k.folder_ref)) ? folders : leaves).push([k, i]));
+  kids.forEach((k, i) => (kidsOf(k) || k.series_ref || (k.folder_ref && REF_RE.test(k.folder_ref))
+    || (sec === "12" && k.poster && (k.link || k.questions)) ? folders : leaves).push([k, i]));
   let body = "", preach = "";
   if (node === root && sec === "9") {
     const idx = await ytIndex();
@@ -1366,7 +1431,7 @@ async function lib(parts) {
     body += `<div class="sec-h"><h2>${preach ? "برامج وسلاسل" : compact && !gallery ? "الفولدرات" : "الأقسام"}</h2><span class="count">${n2a(folders.length)}</span></div>`;
     if (gallery) {
       body += `${compact ? `<label class="search">${ic("search")}<input id="fq" type="search" placeholder="ابحث بالاسم" autocomplete="off"></label>` : ""}
-        <div class="lpgrid" id="ftiles">${folders.map(([k, i]) => `<a class="lpcard ftile" href="${base}/${i}" data-n="${esc(k.title)}">
+        <div class="lpgrid" id="ftiles">${folders.map(([k, i]) => `<a class="lpcard ftile" href="${esc(k.link || `${base}/${i}`)}" data-n="${esc(k.title)}">
           <span class="lp-pic">${k.poster ? `<img src="${lpImg(k.poster)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ""}<span class="lp-ic">${icSm(KIND_IC[folderKind(k)], 26)}</span></span>
           <span class="lp-plate"><b>${esc(k.title)}</b><small>${esc(k.count_label || k.badge || "")}</small></span></a>`).join("")}</div>`;
       if (compact) after(() => {
@@ -1408,6 +1473,9 @@ async function lib(parts) {
           <span class="fmeta">${esc(k.count_label || k.badge || "")}${k.riwayas_label && k.count_label ? `<i>${esc(k.riwayas_label)}</i>` : ""}</span></a>`;
       }).join("")}</div>`;
     }
+  }
+  if (["12", "16", "17"].includes(sec) && leaves.length && leaves.every(([k]) => isYt(k) || (k.video && typeof k.audio === "string"))) {
+    return head + libraryEpisodes(leaves.map(([k]) => k), node, img);
   }
   const yts = leaves.filter(([k]) => isYt(k));
   const others = leaves.filter(([k]) => typeof k.audio !== "string" && !isYt(k));
@@ -1475,8 +1543,38 @@ async function lib(parts) {
           <span class="poster-go">افتح ${icSm("chev", 16).replace('class="icon"', 'class="icon flip"')}</span></a>` + b);
     } else body = ytFolder("s1", rows) + body;
   }
+  if (node === root && sec === "16") return head + `<div class="btn-row"><a class="btn ghost" href="#/tv">${icSm("tv", 16)}الحلقات الكاملة</a></div>` + body;
   if (node === root) return pageWithSide(head, root.bio || null, body);
   return head + body;
+}
+
+function libraryEpisodes(episodes, folder, img) {
+  const tracks = episodes.map((ep) => {
+    const title = ep.subtitle && ep.subtitle !== ep.title ? `${ep.title} · ${ep.subtitle}` : ep.title;
+    const owner = ep.owner || folder.title;
+    if (isYt(ep)) return ytTrack(ep.youtube_id, title, owner, ytSecs(ep.duration), { img: img || ytThumb(ep.youtube_id) });
+    return { t: title, s: owner, d: "فيديو", u: ep.audio, img, v: true, dur: ep.duration || "" };
+  });
+  const list = reg(tracks);
+  const card = (t, i) => t.yt ? ytCard(t, list, i) : videoCard(t, list, i, { thumb: img, label: n2a(i + 1) });
+  const pageSize = 60;
+  if (tracks.length > 12) after(() => {
+    const input = $("#series-search"), grid = $("#series-videos"), more = $("#series-more");
+    let max = pageSize;
+    const render = () => {
+      const q = norm(input.value);
+      const hits = tracks.map((t, i) => [t, i]).filter(([t]) => norm(t.t).includes(q));
+      grid.innerHTML = hits.slice(0, max).map(([t, i]) => card(t, i)).join("");
+      if (!hits.length) grid.textContent = "مفيش نتائج للاسم ده";
+      more.hidden = hits.length <= max;
+    };
+    input.addEventListener("input", () => { max = pageSize; render(); });
+    more.onclick = () => { max += pageSize; render(); };
+  });
+  return `<div class="btn-row"><button class="btn" data-play="${list}:0">${ic("play")}${tracks.length > 1 ? "شغّل من الأول" : "شاهد"}</button></div>
+    ${tracks.length > 12 ? `<label class="search">${ic("search")}<input id="series-search" type="search" placeholder="ابحث في الحلقات" autocomplete="off"></label>` : ""}
+    <div class="vgrid" id="series-videos">${tracks.slice(0, pageSize).map(card).join("")}</div>
+    ${tracks.length > 12 ? `<div class="btn-row"><button class="btn ghost" id="series-more"${tracks.length <= pageSize ? " hidden" : ""}>عرض المزيد</button></div>` : ""}`;
 }
 
 function trackListLib(tracks) {
@@ -1773,14 +1871,21 @@ async function hadithSearch(q) {
 /* ---------------- QUIZ ---------------- */
 async function quiz() {
   setTop("المسابقات");
-  const d = await getJSON("data/lib/14.json");
-  const qs = d.questions.map((q, i) => i).sort(() => Math.random() - 0.5).slice(0, 10);
+  return quizView(await getJSON("data/lib/14.json"), false);
+}
+
+function quizView(d, forKids) {
+  const ids = d.questions.map((_, i) => i);
+  const qs = forKids ? ids : ids.sort(() => Math.random() - 0.5).slice(0, 10);
+  const bestKey = forKids ? "kidsQuizBest" : "quizBest";
   let k = 0, score = 0;
   const draw = () => {
     const box = $("#quiz");
     if (k >= qs.length) {
-      if (score > S.quizBest) { S.quizBest = score; save(true); }
-      box.innerHTML = `<div class="empty"><b>نتيجتك ${n2a(score)} من ${n2a(qs.length)}</b>${score === qs.length ? "ما شاء الله! إجابات كاملة." : score >= 7 ? "نتيجة ممتازة، بارك الله فيك." : "حاول تاني، كل مرة أسئلة مختلفة."}<br>أفضل نتيجة ليك: ${n2a(S.quizBest)}
+      if (score > (S[bestKey] || 0)) { S[bestKey] = score; save(true); }
+      const result = score === qs.length ? "ما شاء الله! إجابات كاملة." :
+        score >= qs.length * 0.7 ? "نتيجة ممتازة، بارك الله فيك." : forKids ? "جرّب تاني واستفد من الشرح." : "حاول تاني، كل مرة أسئلة مختلفة.";
+      box.innerHTML = `<div class="empty"><b>نتيجتك ${n2a(score)} من ${n2a(qs.length)}</b>${result}<br>أفضل نتيجة ليك: ${n2a(S[bestKey] || 0)}
         <div class="btn-row" style="justify-content:center"><button class="btn" id="again">جولة جديدة</button></div></div>`;
       $("#again").onclick = () => route();
       return;
@@ -1802,7 +1907,7 @@ async function quiz() {
     }));
   };
   after(draw);
-  return `<p class="note">${esc(d.sub || "")} · ${n2a(d.questions.length)} سؤال، كل جولة 10 أسئلة عشوائية.</p><div class="quiz" id="quiz"></div>`;
+  return `<p class="note">${esc(d.sub || d.body || "")} · ${n2a(d.questions.length)} سؤال${forKids ? "، مع شرح بعد كل إجابة." : "، كل جولة 10 أسئلة عشوائية."}</p><div class="quiz" id="quiz"></div>`;
 }
 
 /* ---------------- MUSHAF ---------------- */
@@ -3038,7 +3143,7 @@ async function saved() {
 let LIBINDEX = null;
 async function buildIndex() {
   if (LIBINDEX) return LIBINDEX;
-  const secs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 17, 18, 23, 24, 25, 26, 27, 28, 29, 30, 33];
+  const secs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 16, 17, 18, 23, 24, 25, 26, 27, 28, 29, 30, 33];
   const out = [];
   const roots = await Promise.all(secs.map((s) => getJSON(`data/lib/${s}.json`).catch(() => null)));
   roots.forEach((root, k) => {
@@ -3047,8 +3152,8 @@ async function buildIndex() {
       const kids = kidsOf(n);
       (kids || []).forEach((c, i) => {
         const p = path + "/" + i;
-        out.push({ t: c.title, s: root.title, path: `#/lib/${secs[k]}${p}`, audio: typeof c.audio === "string" ? c.audio : null, yt: isYt(c) ? c.youtube_id : null, v: !!c.video, folder: !!kidsOf(c), d: c.subtitle || c.badge || "", n: norm(c.title) });
-        walk(c, p);
+        out.push({ t: c.title, s: root.title, path: c.link || `#/lib/${secs[k]}${p}`, audio: typeof c.audio === "string" ? c.audio : null, yt: isYt(c) ? c.youtube_id : null, v: !!c.video, folder: !!(kidsOf(c) || c.series_ref), d: c.subtitle || c.badge || "", n: norm(c.title) });
+        if (!c.series_ref) walk(c, p);
       });
     };
     walk(root, "");
