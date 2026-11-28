@@ -20,6 +20,38 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify staged packages and external artwork
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, re, subprocess
+          from pathlib import Path
+          from tempfile import TemporaryDirectory
+          from urllib.request import urlopen
+
+          notes = json.loads(Path('release-notes.json').read_text())
+          stage = notes.get('staged_sha256')
+          if stage:
+              names = {'UltraQuran_Open.ipk', 'UltraQuran_DreamOS.deb'}
+              version = notes['version']
+              assert re.fullmatch(r'\d+\.\d+\.\d+', version) and set(stage) == names
+              tag = 'v' + version
+              draft = subprocess.check_output(['gh', 'release', 'view', tag, '--json', 'isDraft'])
+              assert json.loads(draft)['isDraft'], 'Only a draft can be resumed'
+              with TemporaryDirectory() as temp:
+                  subprocess.run(['gh','release','download',tag,'--dir',temp,
+                                  '--pattern','*.ipk','--pattern','*.deb'], check=True)
+                  for name in sorted(names):
+                      payload = (Path(temp) / name).read_bytes()
+                      assert hashlib.sha256(payload).hexdigest() == stage[name], name
+                      (Path('packages') / name).write_bytes(payload)
+          artwork = notes.get('external_art')
+          if artwork:
+              base = 'https://github.com/K3bOra/UltraQuran/releases/download/'
+              assert artwork['url'].startswith(base) and artwork['url'].endswith('/' + artwork['filename'])
+              with urlopen(artwork['url'],timeout=90) as response:
+                  payload = response.read(artwork['size'] + 1)
+              assert len(payload) == artwork['size'] and hashlib.sha256(payload).hexdigest() == artwork['sha256']
+          PY
       - name: Validate both packages and the GitHub page
         run: |
           python3 -B scripts/prepare_release.py
@@ -30,12 +62,16 @@ jobs:
         run: |
           set -euo pipefail
           release_tag=$(python3 -c 'import json; print(json.load(open("dist/release-info.json"))["tag"])')
-          if gh release view "$release_tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          if python3 -c 'import json,sys; sys.exit(not json.load(open("release-notes.json")).get("staged_sha256"))'; then
+            gh release view "$release_tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' | grep -qx true
+            gh release upload "$release_tag" --repo "$GITHUB_REPOSITORY" --clobber dist/update.json dist/RELEASE_NOTES.md dist/SHA256SUMS dist/install.sh
+          elif gh release view "$release_tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo 'This version already exists. Increment the package version; published assets are never overwritten.'
             exit 1
+          else
+            release_title=$(python3 -c 'import json; print(json.load(open("dist/release-info.json"))["title"])')
+            gh release create "$release_tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --title "$release_title" --notes-file dist/notes.md dist/*.ipk dist/*.deb dist/update.json dist/RELEASE_NOTES.md dist/SHA256SUMS dist/install.sh
           fi
-          release_title=$(python3 -c 'import json; print(json.load(open("dist/release-info.json"))["title"])')
-          gh release create "$release_tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --title "$release_title" --notes-file dist/notes.md dist/*.ipk dist/*.deb dist/update.json dist/RELEASE_NOTES.md dist/SHA256SUMS dist/install.sh
           gh release download "$release_tag" --repo "$GITHUB_REPOSITORY" --pattern '*.ipk' --pattern '*.deb' --pattern update.json --pattern RELEASE_NOTES.md --pattern install.sh --pattern SHA256SUMS --dir verified
           python3 -B scripts/prepare_release.py --verify-published verified
           gh release edit "$release_tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
